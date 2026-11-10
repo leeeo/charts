@@ -23,20 +23,38 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 ## 차트 종류
 
 <!-- types:start -->
-차트 종류 7가지, 예제 11개입니다. 모든 예제는 소개 사이트 갤러리에서 밝은·어두운 화면과 스펙 JSON으로 볼 수 있습니다.
+차트 종류 23가지, 예제 29개입니다. 모든 예제는 소개 사이트 갤러리에서 밝은·어두운 화면과 스펙 JSON으로 볼 수 있습니다.
 
 | type | 설명 | 미리보기 |
 |---|---|---|
 | `line` | 선 차트 (결측은 끊김). 11/06 값이 없으면 0이 아니라 선이 끊깁니다. | ![선 차트 (결측은 끊김)](https://charts.leeeo.app/images/line.png) |
 | `area` | 영역 차트 (누적). 누적 영역, 단위는 원. | ![영역 차트 (누적)](https://charts.leeeo.app/images/area.png) |
 | `bar` | 막대 차트 (묶음). 데이터가 없는 칸은 막대가 없습니다. | ![막대 차트 (묶음)](https://charts.leeeo.app/images/bar-grouped.png) |
-| `bar` | 막대 차트 (누적).  | ![막대 차트 (누적)](https://charts.leeeo.app/images/bar-stacked.png) |
+| `bar` | 막대 차트 (누적). | ![막대 차트 (누적)](https://charts.leeeo.app/images/bar-stacked.png) |
 | `bar` | 가로 막대 (긴 한글 라벨). 긴 라벨은 영역을 계산해 잘리지 않습니다. | ![가로 막대 (긴 한글 라벨)](https://charts.leeeo.app/images/bar-horizontal.png) |
 | `bar` | 막대 차트 (100% 누적). 칸마다 합을 100%로 맞추고, 값 상자에는 원래 값도 함께 나옵니다. | ![막대 차트 (100% 누적)](https://charts.leeeo.app/images/bar-percent.png) |
 | `bar` | 막대 차트 (양방향). 음수는 0에서 아래로 쌓입니다. 만족도·증감 비교에 씁니다. | ![막대 차트 (양방향)](https://charts.leeeo.app/images/bar-diverging.png) |
 | `donut` | 도넛 차트. 결측 슬라이스는 고리에서 빠지고 범례에 표시됩니다. | ![도넛 차트](https://charts.leeeo.app/images/donut.png) |
 | `sparkline` | 스파크라인. 표는 스크린 리더에서만 읽힙니다. | ![스파크라인](https://charts.leeeo.app/images/sparkline.png) |
 | `multiples` | 작은 다중 차트 (앱별, 데이터 품질 표시). 같은 축을 공유해 앱 규모를 비교할 수 있습니다. | ![작은 다중 차트 (앱별, 데이터 품질 표시)](https://charts.leeeo.app/images/multiples.png) |
+| `waffle` | 와플 차트: 유입 경로 비율. 한 칸 = 1%. 집계가 빠진 경로는 칸 없이 "데이터 없음"으로 표시합니다. | ![와플 차트: 유입 경로 비율](https://charts.leeeo.app/images/waffle.png) |
+| `waffle` | 와플 차트: 한 칸 = 100건. 칸 하나가 정해진 단위를 나타내면 행 수가 데이터에 맞게 늘어납니다. | ![와플 차트: 한 칸 = 100건](https://charts.leeeo.app/images/waffle-unit.png) |
+| `segmented` | 구성 막대: 매출 구성. 하나의 100% 막대로 비율을 짧게 보여 줍니다. 결측 항목은 막대에서 빠집니다. | ![구성 막대: 매출 구성](https://charts.leeeo.app/images/segmented.png) |
+| `funnel` | 퍼널 차트: 방문에서 결제까지. 단계 사이 숫자는 이전 단계 대비 전환율입니다. 결측 단계 앞뒤의 전환율은 계산하지 않습니다. | ![퍼널 차트: 방문에서 결제까지](https://charts.leeeo.app/images/funnel.png) |
+| `gauge` | 게이지: 월 매출 목표 달성. 회색 구간은 기준선, 굵은 눈금은 목표입니다. | ![게이지: 월 매출 목표 달성](https://charts.leeeo.app/images/gauge.png) |
+| `gauge` | 게이지: 7일 리텐션. 0~100% 범위에 목표선을 함께 표시합니다. | ![게이지: 7일 리텐션](https://charts.leeeo.app/images/gauge-retention.png) |
+| `bullet` | 불릿 차트: 이번 달 KPI. 막대는 실제 값, 세로 눈금은 목표, 배경 음영은 부진/보통 구간입니다. 목표 대비 %로 맞춰 한 축에 놓았습니다. | ![불릿 차트: 이번 달 KPI](https://charts.leeeo.app/images/bullet.png) |
+| `slope` | 기울기 차트 (분기별 앱 매출 비교). 두 시점 사이 앱별 매출 변화를 한눈에 비교합니다. 결측 항목은 선 없이 표시됩니다. | ![기울기 차트 (분기별 앱 매출 비교)](https://charts.leeeo.app/images/slope.png) |
+| `bump` | 순위 변동 차트 (월간 설치 순위). 설치 수로 계산한 앱 순위의 월별 변화입니다. 집계가 없는 달은 선이 끊깁니다. | ![순위 변동 차트 (월간 설치 순위)](https://charts.leeeo.app/images/bump.png) |
+| `stream` | 스트림 그래프 (유입 경로별 방문자). 주간 방문자를 유입 경로별로 쌓아 가운데 기준선 둘레로 흐르게 그립니다. | ![스트림 그래프 (유입 경로별 방문자)](https://charts.leeeo.app/images/stream.png) |
+| `scatter` | 산점도 (세션 시간과 7일 리텐션). 사용자 코호트별 평균 세션 시간과 7일 리텐션의 관계를 앱별 색으로 구분합니다. | ![산점도 (세션 시간과 7일 리텐션)](https://charts.leeeo.app/images/scatter.png) |
+| `bubble` | 버블 차트 (광고 채널 효율). 설치당 비용과 전환율을 축으로, 원 넓이를 매출에 비례시켜 채널을 비교합니다. | ![버블 차트 (광고 채널 효율)](https://charts.leeeo.app/images/bubble.png) |
+| `box` | 앱별 세션 길이 분포. 지난주 표본 세션의 분포입니다. 수염은 1.5 IQR, 점은 이상값이며 웹은 집계 요약값만 있습니다. | ![앱별 세션 길이 분포](https://charts.leeeo.app/images/box.png) |
+| `histogram` | 첫 구매까지 걸린 일수. 설치 후 첫 결제까지의 일수를 7일 단위로 묶었습니다. 기록이 없는 사용자는 결측으로 따로 셉니다. | ![첫 구매까지 걸린 일수](https://charts.leeeo.app/images/histogram.png) |
+| `heatmap` | 설치 주차별 리텐션. 코호트(설치 주)별 N주차 재방문율입니다. 아직 지나지 않은 주차는 데이터 없음으로 표시합니다. | ![설치 주차별 리텐션](https://charts.leeeo.app/images/heatmap.png) |
+| `calendar` | 일별 방문자 캘린더. 6월부터 10월까지 상상플레이 일별 방문자입니다. 로그 장애일과 추석 연휴(집계 없음)는 결측으로 표시합니다. | ![일별 방문자 캘린더](https://charts.leeeo.app/images/calendar.png) |
+| `treemap` | 앱별 · 채널별 월 매출. 사각형 넓이가 매출에 비례합니다. 상상플레이 광고 매출은 아직 정산 전이라 결측으로 표시됩니다. | ![앱별 · 채널별 월 매출](https://charts.leeeo.app/images/treemap.png) |
+| `sankey` | 방문에서 구독까지의 흐름. 띠의 두께가 사용자 수에 비례합니다. 검색 → 체험 경로는 집계 누락으로 결측입니다. | ![방문에서 구독까지의 흐름](https://charts.leeeo.app/images/sankey.png) |
 | `pie` | 파이 차트. 비율이 한눈에 보여야 할 때. 미집계 항목은 원에서 빠지고 범례에 남습니다. | ![파이 차트](https://charts.leeeo.app/images/pie.png) |
 <!-- types:end -->
 
