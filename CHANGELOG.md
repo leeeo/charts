@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+- New chart types (Phase B): lollipop, dumbbell, waterfall, pareto, marimekko, radar, parallel, ridgeline, beeswarm, candlestick, timeline, skyline, sunburst, tree, network, chord, map (Korea 17 provinces).
+- 40 chart types in total; every reference type is covered.
+- `map` boundary data: 통계청 SGIS via vuski/admdongkor (CC BY 4.0), simplified; the attribution line is printed under every map (see NOTICE.md).
+- Value boxes (`kit.tip`) wrap long text (up to 3 lines) and never leave the viewBox (shipped in 0.2.0).
+
 ## 0.2.0
 - New chart types (Phase A): waffle, segmented, funnel, gauge, bullet, slope, bump, stream, scatter, bubble, box, histogram, heatmap, calendar, treemap, sankey, pie.
 - bar: `percent` (100% stacked, requires `stacked`) and diverging stacks (negative values stack below zero).

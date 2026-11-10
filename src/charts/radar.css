@@ -1,0 +1,7 @@
+.lc-radar-ring { fill: none; }
+.lc-radar-tick { font-size: 10.5px; }
+.lc-radar-axis { fill: var(--lc-ink); font-size: 12px; }
+.lc-radar-area { fill: var(--c); fill-opacity: 0.16; stroke: none; }
+.lc-radar-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.lc-radar-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
+.lc-pt:hover .lc-radar-dot, .lc-pt:focus .lc-radar-dot { stroke: var(--lc-ink); stroke-width: 2; }

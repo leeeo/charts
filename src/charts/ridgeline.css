@@ -1,0 +1,6 @@
+.lc-ridge { fill: var(--c); fill-opacity: 0.55; stroke: var(--c); stroke-width: 1.5; stroke-linejoin: round; }
+.lc-ridge-base { stroke: var(--lc-grid); stroke-width: 1; }
+.lc-ridge-med { stroke: var(--lc-ink); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.lc-ridge-label { fill: var(--lc-ink); font-size: 12px; }
+.lc-ridge-na { fill: var(--lc-muted); font-size: 11px; font-style: italic; }
+.lc-pt:hover .lc-ridge, .lc-pt:focus .lc-ridge { fill-opacity: 0.8; stroke: var(--lc-ink); }

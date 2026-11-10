@@ -1,0 +1,13 @@
+.lc-region { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1; }
+.lc-map-0 { fill-opacity: 0.12; } .lc-map-1 { fill-opacity: 0.25; } .lc-map-2 { fill-opacity: 0.39; } .lc-map-3 { fill-opacity: 0.53; }
+.lc-map-4 { fill-opacity: 0.67; } .lc-map-5 { fill-opacity: 0.83; } .lc-map-6 { fill-opacity: 1; }
+.lc-sw.lc-map-0 { opacity: 0.12; } .lc-sw.lc-map-1 { opacity: 0.25; } .lc-sw.lc-map-2 { opacity: 0.39; } .lc-sw.lc-map-3 { opacity: 0.53; }
+.lc-sw.lc-map-4 { opacity: 0.67; } .lc-sw.lc-map-5 { opacity: 0.83; } .lc-sw.lc-map-6 { opacity: 1; }
+.lc-region-na { stroke: var(--lc-muted); stroke-width: 1; }
+.lc-map-nabg { fill: var(--lc-surface); }
+.lc-map-hatch { stroke: var(--lc-muted); opacity: 0.7; }
+.lc-sw.lc-sw-mapna { background: repeating-linear-gradient(45deg, var(--lc-muted) 0 1px, var(--lc-surface) 1px 3px); border: 1px solid var(--lc-muted); box-sizing: border-box; }
+.lc-map-legend { gap: 4px 8px; }
+.lc-maplabel { fill: var(--lc-ink); font-size: 11px; paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.lc-pt:hover .lc-region, .lc-pt:focus .lc-region, .lc-pt:hover .lc-region-na, .lc-pt:focus .lc-region-na { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-src { margin: 6px 0 0; color: var(--lc-muted); font-size: 0.6875rem; overflow-wrap: anywhere; }

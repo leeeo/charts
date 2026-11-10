@@ -1,0 +1,8 @@
+.lc-pareto-bar { fill: var(--c); }
+.lc-pareto-tail { fill-opacity: 0.55; }
+.lc-pareto-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.lc-pareto-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
+.lc-pareto-guide { stroke: var(--lc-muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.lc-pareto-guide-lbl { fill: var(--lc-muted); font-size: 11px; }
+.lc-pt:hover .lc-pareto-dot, .lc-pt:focus .lc-pareto-dot { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-pt-pareto:hover .lc-hit, .lc-pt-pareto:focus .lc-hit { fill: var(--lc-grid); fill-opacity: 0.35; }

@@ -1,0 +1,7 @@
+.lc-tree-link { fill: none; stroke: var(--lc-muted); stroke-opacity: 0.55; stroke-width: 1.5; }
+.lc-node { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
+.lc-node-leaf { fill: var(--lc-surface); stroke: var(--c); stroke-width: 2; }
+.lc-node-na { fill: var(--lc-surface); stroke: var(--lc-muted); stroke-width: 1.5; stroke-dasharray: 2 2; }
+.lc-pt:hover .lc-node, .lc-pt:focus .lc-node { stroke: var(--lc-ink); stroke-width: 2.5; }
+.lc-tree-lbl { fill: var(--lc-ink); font-size: 11px; paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.lc-tree-in { font-weight: 600; }

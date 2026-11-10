@@ -1,0 +1,6 @@
+.lc-lollipop-stem { stroke: var(--c); stroke-width: 2; stroke-linecap: round; }
+.lc-lollipop { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
+.lc-lollipop-val { fill: var(--lc-ink); font-size: 12px; }
+.lc-missing-note { font-size: 12px; }
+.lc-pt:hover .lc-lollipop, .lc-pt:focus .lc-lollipop { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-pt:hover .lc-lollipop-stem, .lc-pt:focus .lc-lollipop-stem { stroke-width: 3; }

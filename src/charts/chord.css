@@ -1,0 +1,5 @@
+.lc-ribbon { fill: var(--c); fill-opacity: 0.55; stroke: var(--c); stroke-opacity: 0.8; stroke-width: 0.5; }
+.lc-carc { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1; }
+.lc-clabel { fill: var(--lc-ink); font-size: 12px; }
+.lc-pt:hover .lc-ribbon, .lc-pt:focus .lc-ribbon { fill-opacity: 0.9; stroke: var(--lc-ink); stroke-width: 1.5; }
+.lc-pt:hover .lc-carc, .lc-pt:focus .lc-carc { stroke: var(--lc-ink); stroke-width: 2; }

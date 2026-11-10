@@ -1,0 +1,9 @@
+.lc-nlink { fill: none; stroke: var(--c); stroke-opacity: 0.5; stroke-linecap: round; }
+.lc-nlink-na { fill: none; stroke: var(--lc-muted); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.8; }
+.lc-narrow { fill: var(--c); fill-opacity: 0.75; }
+.lc-nnode { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
+.lc-nlabel { fill: var(--lc-ink); font-size: 12px; }
+.lc-pt:hover .lc-nlink, .lc-pt:focus .lc-nlink { stroke-opacity: 1; }
+.lc-pt:hover .lc-narrow, .lc-pt:focus .lc-narrow { fill-opacity: 1; }
+.lc-pt:hover .lc-nlink-na, .lc-pt:focus .lc-nlink-na { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-pt:hover .lc-nnode, .lc-pt:focus .lc-nnode { stroke: var(--lc-ink); stroke-width: 2; }

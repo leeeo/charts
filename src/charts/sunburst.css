@@ -1,0 +1,7 @@
+.lc-sb { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
+.lc-sb-d2 { fill-opacity: 0.78; }
+.lc-sb-d3 { fill-opacity: 0.58; }
+.lc-pt:hover .lc-sb, .lc-pt:focus .lc-sb { stroke: var(--lc-ink); stroke-width: 2; fill-opacity: 1; }
+.lc-sb-lbl { fill: var(--lc-ink); font-size: 11px; font-weight: 600; pointer-events: none; }
+.lc-sb-cl { fill: var(--lc-muted); font-size: 12px; }
+.lc-sb-ct { fill: var(--lc-ink); font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }

@@ -1,0 +1,5 @@
+.lc-wf { fill: var(--c); }
+.lc-wf-subtotal { fill-opacity: 0.75; }
+.lc-wf-link { stroke: var(--lc-muted); stroke-width: 1; stroke-dasharray: 3 2; }
+.lc-wf-val { fill: var(--lc-ink); font-size: 12px; }
+.lc-pt:hover .lc-wf, .lc-pt:focus .lc-wf { stroke: var(--lc-ink); stroke-width: 2; }
