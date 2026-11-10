@@ -53,7 +53,11 @@ export interface CartesianBase extends BaseSpec {
 
 export interface LineSpec extends CartesianBase { type: 'line' }
 export interface AreaSpec extends CartesianBase { type: 'area'; stacked?: boolean }
-export interface BarSpec extends CartesianBase { type: 'bar'; stacked?: boolean; horizontal?: boolean }
+/**
+ * Bar chart. `stacked` stacks series per category; negative values stack downward from 0 (diverging bars).
+ * `percent` (requires stacked) scales every category to 100% of its absolute total.
+ */
+export interface BarSpec extends CartesianBase { type: 'bar'; stacked?: boolean; horizontal?: boolean; percent?: boolean }
 export interface SparklineSpec extends CartesianBase { type: 'sparkline' }
 export interface DonutSpec extends BaseSpec { type: 'donut'; slices: Slice[]; centerLabel?: string }
 
@@ -78,4 +82,8 @@ export interface MultiplesSpec extends BaseSpec {
   yMax?: number;
 }
 
-export type ChartSpec = LineSpec | AreaSpec | BarSpec | SparklineSpec | DonutSpec | MultiplesSpec;
+export type CoreSpec = LineSpec | AreaSpec | BarSpec | SparklineSpec | DonutSpec | MultiplesSpec;
+export type ChartSpec = CoreSpec | PluginSpec;
+
+import type { PluginSpec } from './plugin-types.ts';
+export type * from './plugin-types.ts';

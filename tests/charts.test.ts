@@ -29,7 +29,8 @@ test('validateSpec rejects bad input at the boundary', () => {
   assert.equal(bad({ extra: 1 }).path, 'spec.extra');
   assert.equal(bad({ series: [{ id: 's', name: 'S', values: [1, 2] }, { id: 's', name: 'T', values: [1, 2] }] }).path, 'series[1].id');
   assert.throws(() => validateSpec({ type: 'pie' }), ChartSpecError);
-  assert.throws(() => validateSpec({ ...ok, type: 'bar', stacked: true, series: [{ id: 's', name: 'S', values: [-1, 2] }] }), ChartSpecError);
+  assert.throws(() => validateSpec({ ...ok, type: 'area', stacked: true, series: [{ id: 's', name: 'S', values: [-1, 2] }] }), ChartSpecError);
+  assert.throws(() => validateSpec({ ...ok, type: 'bar', percent: true }), ChartSpecError);
 });
 
 test('line chart: null breaks the path, is never plotted as zero, and higher values sit higher', () => {

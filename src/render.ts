@@ -1,268 +1,47 @@
-import type { ChartSpec, DonutSpec, MultiplesSpec, Series, Unit, Value } from './types.ts';
+import type { ChartSpec, CoreSpec, DonutSpec, MultiplesSpec, Series, Value } from './types.ts';
 import { validateSpec } from './validate.ts';
-import { type Fmt, clamp, esc, hash, makeFmt, n2, niceTicks, truncate, tw } from './format.ts';
+import { type Fmt, clamp, esc, hash, makeFmt, n2, truncate, tw } from './format.ts';
+import { type Ctx, MAX_FOCUS, STR, colorAttrs, empty, frame, legend, pct, present, seriesTable, summarize, table, tip, wrapTable } from './kit.ts';
+import { type Domain, domainFor, plot } from './cartesian.ts';
+import { plugins } from './charts/index.ts';
 
 export interface RenderOptions {
   /** Override the viewBox width (e.g. the container width). */
   width?: number;
 }
 
-const STR = {
-  ko: { na: '데이터 없음', missing: '결측', unit: '단위', table: '데이터 표', empty: '표시할 데이터가 없습니다', cat: '구분', value: '값', share: '비율', total: '합계', min: '최소', max: '최대', last: '마지막', items: '개 항목', series: '시리즈', quality: '품질', line: '선 차트', area: '영역 차트', bar: '막대 차트', sparkline: '스파크라인', donut: '도넛 차트', multiples: '작은 다중 차트', panel: '패널' },
-  en: { na: 'No data', missing: 'missing', unit: 'Unit', table: 'Data table', empty: 'No data to display', cat: 'Category', value: 'Value', share: 'Share', total: 'Total', min: 'min', max: 'max', last: 'last', items: ' items', series: 'series', quality: 'Quality', line: 'Line chart', area: 'Area chart', bar: 'Bar chart', sparkline: 'Sparkline', donut: 'Donut chart', multiples: 'Small multiples', panel: 'Panel' },
+const CORE_NAMES = {
+  ko: { line: '선 차트', area: '영역 차트', bar: '막대 차트', sparkline: '스파크라인', donut: '도넛 차트', multiples: '작은 다중 차트' },
+  en: { line: 'Line chart', area: 'Area chart', bar: 'Bar chart', sparkline: 'Sparkline', donut: 'Donut chart', multiples: 'Small multiples' },
 } as const;
-type Dict = (typeof STR)['ko'] | (typeof STR)['en'];
 
-interface Ctx { W: number; H: number; pid: string; t: Dict }
-
-const FS = 12;
-const MAX_FOCUS = 120;
-const cIdx = (i: number): number => (i % 8) + 1;
-const colorAttrs = (i: number, color?: string): string => `lc-c${cIdx(i)}"${color ? ` style="--c:${color}"` : ''}`;
-
-function runs(vals: Value[]): number[][] {
-  const out: number[][] = [];
-  let cur: number[] = [];
-  vals.forEach((v, i) => {
-    if (v === null) { if (cur.length) out.push(cur); cur = []; } else cur.push(i);
-  });
-  if (cur.length) out.push(cur);
-  return out;
-}
-
-const present = (vs: Value[]): number[] => vs.filter((v): v is number => v !== null);
-
-function tip(ctx: Ctx, text: string, ax: number, ay: number): string {
-  const w = tw(text, FS) + 14;
-  const h = FS + 12;
-  const x = clamp(ax - w / 2, 2, ctx.W - w - 2);
-  let y = ay - h - 8;
-  if (y < 2) y = ay + 10;
-  y = clamp(y, 2, ctx.H - h - 2);
-  return `<g class="lc-tip" aria-hidden="true"><rect x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}" rx="4"/><text x="${n2(x + 7)}" y="${n2(y + h / 2 + FS * 0.36)}">${esc(text)}</text></g>`;
-}
-
-interface Domain { min: number; max: number; ticks: number[] }
-
-function domainFor(list: Series[], kind: 'line' | 'area' | 'bar', stacked: boolean, yMin: number | undefined, yMax: number | undefined, count: number): Domain | null {
-  const n = list[0]?.values.length ?? 0;
-  let lo = Infinity;
-  let hi = -Infinity;
-  if (stacked) {
-    for (let i = 0; i < n; i++) {
-      let sum = 0;
-      let any = false;
-      for (const s of list) { const v = s.values[i]; if (v !== null && v !== undefined) { sum += v; any = true; } }
-      if (any) { lo = Math.min(lo, 0); hi = Math.max(hi, sum); }
-    }
-  } else {
-    for (const s of list) for (const v of present(s.values)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
-  }
-  if (!Number.isFinite(lo)) return null;
-  if (kind !== 'line') { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
-  if (yMin !== undefined) lo = yMin;
-  if (yMax !== undefined) hi = yMax;
-  const t = niceTicks(lo, hi, count);
-  return { min: yMin !== undefined ? Math.min(yMin, t.min) : t.min, max: yMax !== undefined ? Math.max(yMax, t.max) : t.max, ticks: t.ticks };
-}
-
-interface PlotOpts {
-  ctx: Ctx; x: number; y: number; w: number; h: number;
-  kind: 'line' | 'area' | 'bar'; horizontal: boolean; stacked: boolean;
-  series: Series[]; sidx: number[]; labels: string[]; fmt: Fmt; dom: Domain;
-  compact: boolean; bare: boolean; xLabel?: string; focus: boolean; panelId?: string; panelName?: string;
-}
-
-/** Draw one cartesian plot. `shapes` go below, `points` (focusable) are emitted last so tips stay on top. */
-function plot(o: PlotOpts): { shapes: string; points: string } {
-  const { ctx, kind, horizontal, stacked, series, labels, dom, fmt, compact, bare } = o;
-  const fs = compact ? 10.5 : FS;
-  const N = labels.length;
-  const tickLabels = dom.ticks.map(fmt);
-  const maxTick = Math.max(0, ...tickLabels.map((t) => tw(t, fs)));
-  const catMax = Math.max(0, ...labels.map((l) => tw(l, fs)));
-  let left: number; let right: number; let top: number; let bottom: number;
-  if (bare) { left = 4; right = 6; top = 4; bottom = 4; }
-  else if (horizontal) {
-    left = Math.min(o.w * 0.4, catMax + 12); right = Math.ceil(tw(tickLabels[tickLabels.length - 1] ?? '', fs) / 2) + 6; top = 6;
-    bottom = fs + 12 + (o.xLabel ? fs + 6 : 0);
-  } else {
-    left = maxTick + 12; right = 10; top = 8; bottom = fs + 12 + (o.xLabel ? fs + 6 : 0);
-  }
-  const px = o.x + left; const py = o.y + top; const pw = Math.max(10, o.w - left - right); const ph = Math.max(10, o.h - top - bottom);
-  const span = dom.max - dom.min || 1;
-  const vv = (v: number): number => (horizontal ? px + ((v - dom.min) / span) * pw : py + ph - ((v - dom.min) / span) * ph);
-  const band = (horizontal ? ph : pw) / N;
-  const cc = (i: number): number => (horizontal ? py : px) + (i + 0.5) * band;
-  const zero = vv(clamp(0, dom.min, dom.max));
-  let s = '';
-  let pts = '';
-
-  if (!bare) {
-    for (const [ti, t] of dom.ticks.entries()) {
-      const p = vv(t);
-      const label = tickLabels[ti] ?? '';
-      if (horizontal) {
-        s += `<line class="lc-grid" x1="${n2(p)}" y1="${n2(py)}" x2="${n2(p)}" y2="${n2(py + ph)}"/>`;
-        const lw = tw(label, fs);
-        s += `<text class="lc-tick" x="${n2(clamp(p - lw / 2, o.x, o.x + o.w - lw))}" y="${n2(py + ph + fs + 5)}">${esc(label)}</text>`;
-      } else {
-        s += `<line class="lc-grid" x1="${n2(px)}" y1="${n2(p)}" x2="${n2(px + pw)}" y2="${n2(p)}"/>`;
-        s += `<text class="lc-tick" x="${n2(px - 6)}" y="${n2(p + fs * 0.35)}" text-anchor="end">${esc(label)}</text>`;
-      }
-    }
-    // category labels, thinned by estimated width
-    const lw = horizontal ? fs + 4 : catMax + 8;
-    // all labels when they fit; truncate (never drop) for few categories; otherwise thin out by width
-    const fitAll = !horizontal && (catMax + 6 <= band || N <= 6);
-    const step = fitAll ? 1 : Math.max(1, Math.ceil(lw / band));
-    for (let i = 0; i < N; i += step) {
-      const raw = labels[i] ?? '';
-      if (horizontal) {
-        const t = truncate(raw, left - 12, fs);
-        s += `<text class="lc-tick" x="${n2(px - 6)}" y="${n2(cc(i) + fs * 0.35)}" text-anchor="end">${esc(t)}</text>`;
-      } else {
-        const t = truncate(raw, Math.max(24, (fitAll ? band : step * band) - 4), fs);
-        const w = tw(t, fs);
-        s += `<text class="lc-tick" x="${n2(clamp(cc(i) - w / 2, o.x, o.x + o.w - w))}" y="${n2(py + ph + fs + 6)}">${esc(t)}</text>`;
-      }
-    }
-    s += horizontal
-      ? `<line class="lc-axis" x1="${n2(zero)}" y1="${n2(py)}" x2="${n2(zero)}" y2="${n2(py + ph)}"/>`
-      : `<line class="lc-axis" x1="${n2(px)}" y1="${n2(zero)}" x2="${n2(px + pw)}" y2="${n2(zero)}"/>`;
-    if (o.xLabel) {
-      s += `<text class="lc-axis-title" x="${n2(px + pw / 2)}" y="${n2(o.y + o.h - 3)}" text-anchor="middle">${esc(truncate(o.xLabel, pw, fs))}</text>`;
-    }
-  }
-
-  const sid = (j: number): number => o.sidx[j] ?? j;
-  const cum: number[][] = [];
-  if (stacked) {
-    let acc: number[] = new Array<number>(N).fill(0);
-    series.forEach((se) => {
-      acc = acc.map((a, i) => a + (se.values[i] ?? 0));
-      cum.push(acc);
-    });
-  }
-  const pointLabel = (se: Series, i: number, v: number): string =>
-    `${labels[i] ?? ''}, ${se.name}${o.panelName ? ` (${o.panelName})` : ''}: ${fmt(v)}${se.quality ? ` · ${se.quality}` : ''}`;
-  const group = (cls: string, aria: string, inner: string, t: string): string =>
-    `<g class="lc-pt ${cls}" tabindex="0" aria-label="${esc(aria)}">${inner}${t}</g>`;
-
-  if (kind === 'bar') {
-    const nS = stacked ? 1 : series.length;
-    const gw = band * 0.76;
-    const bw = gw / nS;
-    series.forEach((se, j) => {
-      se.values.forEach((v, i) => {
-        if (v === null) return;
-        let a: number; let b: number;
-        if (stacked) { b = vv(cum[j]?.[i] ?? 0); a = vv((cum[j]?.[i] ?? 0) - v); } else { a = zero; b = vv(v); }
-        const off = cc(i) - gw / 2 + (stacked ? 0 : j * bw);
-        const wid = Math.max(1, bw - (nS > 1 ? 1.5 : 0));
-        let rect: string;
-        if (horizontal) {
-          const x0 = Math.min(a, b); const w0 = Math.max(Math.abs(b - a), 1);
-          rect = `<rect class="lc-mark lc-bar ${colorAttrs(sid(j), se.color)} data-s="${j}" data-i="${i}" data-v="${v}" x="${n2(x0)}" y="${n2(off)}" width="${n2(w0)}" height="${n2(wid)}"/>`;
-        } else {
-          const y0 = Math.min(a, b); const h0 = Math.max(Math.abs(b - a), 1);
-          rect = `<rect class="lc-mark lc-bar ${colorAttrs(sid(j), se.color)} data-s="${j}" data-i="${i}" data-v="${v}" x="${n2(off)}" y="${n2(y0)}" width="${n2(wid)}" height="${n2(h0)}"/>`;
-        }
-        if (o.focus) {
-          const ax = horizontal ? Math.max(a, b) : off + wid / 2;
-          const ay = horizontal ? off + wid / 2 : Math.min(a, b);
-          pts += group('lc-pt-bar', pointLabel(se, i, v), rect, tip(ctx, pointLabel(se, i, v), ax, ay));
-        } else s += rect;
-      });
-    });
-  } else {
-    series.forEach((se, j) => {
-      const c = colorAttrs(sid(j), se.color);
-      const top = (i: number): number => vv(stacked ? (cum[j]?.[i] ?? 0) : (se.values[i] ?? 0));
-      const bot = (i: number): number => (stacked ? vv(j > 0 ? (cum[j - 1]?.[i] ?? 0) : 0) : zero);
-      const xs = (i: number): number => cc(i);
-      for (const r of runs(se.values)) {
-        if (r.length < 2) continue;
-        if (kind === 'area') {
-          const up = r.map((i) => `${n2(xs(i))} ${n2(top(i))}`).join(' L');
-          const dn = [...r].reverse().map((i) => `${n2(xs(i))} ${n2(bot(i))}`).join(' L');
-          s += `<path class="lc-area ${c} data-s="${j}" d="M${up} L${dn} Z"/>`;
-        }
-      }
-      const d = runs(se.values).filter((r) => r.length > 1).map((r) => 'M' + r.map((i) => `${n2(xs(i))} ${n2(top(i))}`).join(' L')).join(' ');
-      if (d) s += `<path class="lc-line ${c} data-s="${j}" pathLength="1" d="${d}"/>`;
-      const total = present(se.values).length;
-      const visible = total <= 24;
-      const solo = new Set(runs(se.values).filter((r) => r.length === 1).map((r) => r[0]));
-      se.values.forEach((v, i) => {
-        if (v === null) return;
-        const cx = xs(i); const cy = top(i);
-        const dot = `<circle class="lc-mark lc-dot${visible || solo.has(i) ? ' lc-dot-vis' : ''} ${c} data-s="${j}" data-i="${i}" data-v="${v}" cx="${n2(cx)}" cy="${n2(cy)}" r="${compact ? 3 : 3.5}"/>`;
-        if (o.focus) {
-          pts += group('lc-pt-dot', pointLabel(se, i, v), `<circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="9"/>${dot}`, tip(ctx, pointLabel(se, i, v), cx, cy));
-        } else if (solo.has(i) || visible) s += dot;
-      });
-    });
-  }
-  return { shapes: s, points: pts };
-}
-
-function legend(items: { name: string; idx: number; color?: string; quality?: string; extra?: string }[]): string {
-  return `<ul class="lc-legend">${items.map((it) => `<li><span class="lc-sw ${colorAttrs(it.idx, it.color)}></span><span class="lc-ln">${esc(it.name)}</span>${it.extra ? `<span class="lc-lv">${esc(it.extra)}</span>` : ''}${it.quality ? `<span class="lc-q">${esc(it.quality)}</span>` : ''}</li>`).join('')}</ul>`;
-}
-
-function seriesTable(t: Dict, caption: string, xHead: string, labels: string[], list: Series[], fmt: Fmt): string {
-  const head = `<tr><th scope="col">${esc(xHead)}</th>${list.map((s) => `<th scope="col">${esc(s.name)}${s.quality ? ` (${esc(s.quality)})` : ''}</th>`).join('')}</tr>`;
-  const rows = labels.map((l, i) => `<tr><th scope="row">${esc(l)}</th>${list.map((s) => { const v = s.values[i]; return v === null || v === undefined ? `<td class="lc-na">${t.na}</td>` : `<td>${esc(fmt(v))}</td>`; }).join('')}</tr>`).join('');
-  return `<table><caption>${esc(caption)}</caption><thead>${head}</thead><tbody>${rows}</tbody></table>`;
-}
-
-function wrapTable(mode: 'details' | 'hidden' | 'none', t: Dict, tables: string): string {
-  if (mode === 'none') return '';
-  if (mode === 'hidden') return `<div class="lc-sr">${tables}</div>`;
-  return `<details class="lc-data"><summary>${t.table}</summary><div class="lc-scroll">${tables}</div></details>`;
-}
-
-function summarize(t: Dict, labels: string[], list: Series[], fmt: Fmt): string {
-  return list.map((s) => {
-    const vs = present(s.values);
-    const miss = s.values.length - vs.length;
-    if (!vs.length) return `${s.name}: ${t.na}.`;
-    const lastIdx = s.values.reduce<number>((a, v, i) => (v === null ? a : i), -1);
-    return `${s.name}: ${t.min} ${fmt(Math.min(...vs))}, ${t.max} ${fmt(Math.max(...vs))}, ${t.last} ${fmt(s.values[lastIdx] as number)} (${labels[lastIdx] ?? ''})${miss ? `, ${t.missing} ${miss}` : ''}.${s.quality ? ` ${t.quality}: ${s.quality}.` : ''}`;
-  }).join(' ');
-}
-
-function unitLabel(u: Unit | undefined): string | undefined {
-  return u?.label ?? (u?.suffix && u.suffix.trim() ? u.suffix.trim() : undefined);
-}
-
-function frame(ctx: Ctx, spec: ChartSpec, svgInner: string, descText: string, legendHtml: string, tableHtml: string, width: number, extraCls = ''): string {
-  const t = ctx.t;
-  const ul = unitLabel(spec.unit);
-  const desc = [spec.description, `${t[spec.type]}.`, ul ? `${t.unit}: ${ul}.` : '', descText].filter(Boolean).join(' ');
-  const cap = `<figcaption class="lc-cap"><span class="lc-title">${esc(spec.title)}</span>${ul ? `<span class="lc-unit">${t.unit}: ${esc(ul)}</span>` : ''}${spec.description ? `<span class="lc-note">${esc(spec.description)}</span>` : ''}</figcaption>`;
-  const svg = `<svg class="lc-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n2(ctx.W)} ${n2(ctx.H)}" width="${n2(ctx.W)}" height="${n2(ctx.H)}" role="img" aria-labelledby="${ctx.pid}-t ${ctx.pid}-d" focusable="false"><title id="${ctx.pid}-t">${esc(spec.title)}</title><desc id="${ctx.pid}-d">${esc(desc)}</desc>${svgInner}</svg>`;
-  void width;
-  return `<figure class="lc lc-t-${spec.type}${extraCls}" id="${ctx.pid}" lang="${spec.lang ?? 'ko'}" data-lc-type="${spec.type}">${spec.type === 'sparkline' ? '' : cap}${svg}${legendHtml}${tableHtml}</figure>`;
-}
-
-const empty = (ctx: Ctx): string => `<text class="lc-empty" x="${n2(ctx.W / 2)}" y="${n2(ctx.H / 2)}" text-anchor="middle">${esc(ctx.t.empty)}</text>`;
-
-function renderCartesian(spec: Exclude<ChartSpec, DonutSpec | MultiplesSpec>, ctx: Ctx): string {
+function renderCartesian(spec: Exclude<CoreSpec, DonutSpec | MultiplesSpec>, ctx: Ctx): string {
   const kind = spec.type === 'sparkline' ? 'line' : spec.type;
   const stacked = (spec.type === 'bar' || spec.type === 'area') && spec.stacked === true;
   const horizontal = spec.type === 'bar' && spec.horizontal === true;
+  const percent = spec.type === 'bar' && spec.percent === true && stacked;
   const all = spec.series.flatMap((s) => s.values);
   const fmt = makeFmt(spec.unit, all);
   const spark = spec.type === 'sparkline';
-  const dom = spark ? sparkDomain(all) : domainFor(spec.series, kind, stacked, spec.yMin, spec.yMax, 5);
+  // percent bars: every category is scaled to 100% of its absolute total; raw values stay in the table and value box
+  const totals = spec.labels.map((_, i) => spec.series.reduce((a, s) => a + Math.abs(s.values[i] ?? 0), 0));
+  const drawn: Series[] = percent
+    ? spec.series.map((s) => ({ ...s, values: s.values.map((v, i): Value => (v === null ? null : (totals[i] ?? 0) > 0 ? (v / (totals[i] as number)) * 100 : 0)) }))
+    : spec.series;
+  const dom = spark ? sparkDomain(all) : percent ? percentDomain(drawn) : domainFor(drawn, kind, stacked, spec.yMin, spec.yMax, 5);
   const total = present(all).length;
   let inner: string;
   if (!dom) inner = empty(ctx);
   else if (spark) inner = renderSpark(spec, ctx, dom, fmt);
   else {
-    const r = plot({ ctx, x: 0, y: 0, w: ctx.W, h: ctx.H, kind, horizontal, stacked, series: spec.series, sidx: spec.series.map((_, i) => i), labels: spec.labels, fmt, dom, compact: false, bare: false, ...(spec.xLabel ? { xLabel: spec.xLabel } : {}), focus: total <= MAX_FOCUS });
+    const extra = percent ? {
+      tickFmt: (v: number): string => `${Math.round(v)}%`,
+      labelFor: (se: Series, i: number, v: number): string => {
+        const raw = spec.series.find((s) => s.id === se.id)?.values[i];
+        return `${spec.labels[i] ?? ''}, ${se.name}: ${pct(v / 100)}${raw === null || raw === undefined ? '' : ` (${fmt(raw)})`}${se.quality ? ` · ${se.quality}` : ''}`;
+      },
+    } : {};
+    const r = plot({ ctx, x: 0, y: 0, w: ctx.W, h: ctx.H, kind, horizontal, stacked, series: drawn, sidx: spec.series.map((_, i) => i), labels: spec.labels, fmt, dom, compact: false, bare: false, ...(spec.xLabel ? { xLabel: spec.xLabel } : {}), focus: total <= MAX_FOCUS, ...extra });
     inner = r.shapes + r.points;
   }
   const first = spec.labels[0] ?? ''; const last = spec.labels[spec.labels.length - 1] ?? '';
@@ -270,7 +49,13 @@ function renderCartesian(spec: Exclude<ChartSpec, DonutSpec | MultiplesSpec>, ct
   const showLegend = !spark && (spec.legend ?? spec.series.length > 1);
   const lg = showLegend ? legend(spec.series.map((s, i) => ({ name: s.name, idx: i, ...(s.color ? { color: s.color } : {}), ...(s.quality ? { quality: s.quality } : {}) }))) : '';
   const tbl = wrapTable(spec.table ?? (spark ? 'hidden' : 'details'), ctx.t, seriesTable(ctx.t, spec.title, spec.xLabel ?? ctx.t.cat, spec.labels, spec.series, fmt));
-  return frame(ctx, spec, inner, desc, lg, tbl, ctx.W);
+  return frame(ctx, spec, inner, desc, lg, tbl, { caption: !spark });
+}
+
+function percentDomain(list: Series[]): Domain | null {
+  if (!list.some((s) => present(s.values).length)) return null;
+  const neg = list.some((s) => s.values.some((v) => v !== null && v < 0));
+  return neg ? { min: -100, max: 100, ticks: [-100, -50, 0, 50, 100] } : { min: 0, max: 100, ticks: [0, 25, 50, 75, 100] };
 }
 
 function sparkDomain(all: Value[]): Domain | null {
@@ -341,9 +126,9 @@ function renderDonut(spec: DonutSpec, ctx: Ctx): string {
   const missing = spec.slices.filter((s) => s.value === null).length;
   const desc = `${t.total} ${fmt(total)}. ` + spec.slices.map((s) => (s.value === null ? `${s.label}: ${t.na}` : `${s.label}: ${fmt(s.value)}${total > 0 ? ` (${n2((s.value / total) * 100)}%)` : ''}`)).join(', ') + (missing ? `. ${t.missing} ${missing}.` : '.');
   const lg = spec.legend === false ? '' : legend(spec.slices.map((s, i) => ({ name: s.label, idx: i, ...(s.color ? { color: s.color } : {}), ...(s.quality ? { quality: s.quality } : {}), extra: s.value === null ? t.na : `${fmt(s.value)}${total > 0 ? ` · ${n2((s.value / total) * 100)}%` : ''}` })));
-  const rows = spec.slices.map((s) => `<tr><th scope="row">${esc(s.label)}${s.quality ? ` (${esc(s.quality)})` : ''}</th>${s.value === null ? `<td class="lc-na">${t.na}</td><td class="lc-na">${t.na}</td>` : `<td>${esc(fmt(s.value))}</td><td>${total > 0 ? n2((s.value / total) * 100) + '%' : t.na}</td>`}</tr>`).join('');
-  const tbl = wrapTable(spec.table ?? 'details', t, `<table><caption>${esc(spec.title)}</caption><thead><tr><th scope="col">${t.cat}</th><th scope="col">${t.value}</th><th scope="col">${t.share}</th></tr></thead><tbody>${rows}</tbody></table>`);
-  return frame(ctx, spec, inner + pts, desc, lg, tbl, ctx.W);
+  const tbl = wrapTable(spec.table ?? 'details', t, table(t, spec.title, [t.cat, t.value, t.share],
+    spec.slices.map((s) => ({ th: `${s.label}${s.quality ? ` (${s.quality})` : ''}`, cells: s.value === null ? [null, null] : [fmt(s.value), total > 0 ? n2((s.value / total) * 100) + '%' : null] }))));
+  return frame(ctx, spec, inner + pts, desc, lg, tbl);
 }
 
 function renderMultiples(spec: MultiplesSpec, ctx: Ctx): string {
@@ -382,26 +167,34 @@ function renderMultiples(spec: MultiplesSpec, ctx: Ctx): string {
   const desc = `${spec.panels.length} ${t.panel}. ${spec.panels.map((p) => `${p.title}${p.quality ? ` (${t.quality}: ${p.quality})` : ''} — ${summarize(t, spec.labels, p.series, fmt)}`).join(' ')}`;
   const lg = (spec.legend ?? defs.length > 1) ? legend(defs) : '';
   const tables = spec.panels.map((p) => seriesTable(t, `${spec.title} · ${p.title}${p.quality ? ` (${p.quality})` : ''}`, spec.xLabel ?? t.cat, spec.labels, p.series, fmt)).join('');
-  return frame(ctx, spec, shapes + pts, desc, lg, wrapTable(spec.table ?? 'details', t, tables), ctx.W);
+  return frame(ctx, spec, shapes + pts, desc, lg, wrapTable(spec.table ?? 'details', t, tables));
 }
 
 /** Validate a spec (throws ChartSpecError) and render it to a deterministic SVG-in-<figure> HTML string. */
 export function renderChart(input: unknown, options: RenderOptions = {}): string {
   const spec = validateSpec(input);
   const pid = spec.id ?? `lc-${hash(JSON.stringify(spec))}`;
-  const W = options.width ?? spec.width ?? (spec.type === 'sparkline' ? 160 : spec.type === 'donut' ? 280 : 640);
+  const lang = spec.lang ?? 'ko';
+  const plugin = Object.hasOwn(plugins, spec.type) ? plugins[spec.type] : undefined;
+  if (plugin) {
+    const Wc = clamp(options.width ?? spec.width ?? plugin.defaultWidth ?? 640, 80, 2400);
+    const H = spec.height ?? plugin.height(spec, Wc);
+    return plugin.render(spec, { W: Wc, H, pid, t: STR[lang], typeName: plugin.names[lang], lang });
+  }
+  const core = spec as CoreSpec;
+  const W = options.width ?? core.width ?? (core.type === 'sparkline' ? 160 : core.type === 'donut' ? 280 : 640);
   const Wc = clamp(W, 80, 2400);
   let H: number;
-  if (spec.height !== undefined) H = spec.height;
-  else if (spec.type === 'sparkline') H = 36;
-  else if (spec.type === 'donut') H = Math.min(260, Math.max(180, Wc * 0.8));
-  else if (spec.type === 'multiples') {
-    const cols = clamp(spec.columns ?? Math.floor((Wc + 14) / 230), 1, spec.panels.length);
-    H = Math.ceil(spec.panels.length / cols) * 180;
-  } else if (spec.type === 'bar' && spec.horizontal) H = Math.max(160, spec.labels.length * (spec.series.length > 1 && !spec.stacked ? 14 * spec.series.length + 10 : 30) + 50);
+  if (core.height !== undefined) H = core.height;
+  else if (core.type === 'sparkline') H = 36;
+  else if (core.type === 'donut') H = Math.min(260, Math.max(180, Wc * 0.8));
+  else if (core.type === 'multiples') {
+    const cols = clamp(core.columns ?? Math.floor((Wc + 14) / 230), 1, core.panels.length);
+    H = Math.ceil(core.panels.length / cols) * 180;
+  } else if (core.type === 'bar' && core.horizontal) H = Math.max(160, core.labels.length * (core.series.length > 1 && !core.stacked ? 14 * core.series.length + 10 : 30) + 50);
   else H = Wc < 420 ? 240 : 300;
-  const ctx: Ctx = { W: Wc, H, pid, t: STR[spec.lang ?? 'ko'] };
-  if (spec.type === 'donut') return renderDonut(spec, ctx);
-  if (spec.type === 'multiples') return renderMultiples(spec, ctx);
-  return renderCartesian(spec, ctx);
+  const ctx: Ctx = { W: Wc, H, pid, t: STR[lang], typeName: CORE_NAMES[lang][core.type], lang };
+  if (core.type === 'donut') return renderDonut(core, ctx);
+  if (core.type === 'multiples') return renderMultiples(core, ctx);
+  return renderCartesian(core, ctx);
 }

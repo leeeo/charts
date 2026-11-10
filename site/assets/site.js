@@ -46,6 +46,7 @@ const KO = [
   [/^duplicate id$/, '같은 id가 이미 있어요'],
   [/^sparkline takes exactly one series$/, '스파크라인은 시리즈를 하나만 받아요'],
   [/^must match .+$/, '영문자로 시작하는 영문·숫자·_·- 64자 이내여야 해요'],
+  [/^requires (\w+): true$/, '$1: true가 함께 있어야 해요'],
 ];
 function specMessage(err) {
   const raw = err.message.startsWith(err.path + ': ') ? err.message.slice(err.path.length + 2) : err.message;

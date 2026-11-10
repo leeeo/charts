@@ -1,11 +1,12 @@
 // Builds the intro + gallery site into site/dist with the library itself.
 // usage: node site/build.mjs   (runs the package build first when dist/ is missing)
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderChart } from '../src/index.ts';
 import { examples } from '../examples/specs.ts';
+import { pluginList } from '../src/charts/index.ts';
 
 const site = dirname(fileURLToPath(import.meta.url));
 const root = join(site, '..');
@@ -22,7 +23,8 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 export const specJson = (spec) => JSON.stringify(spec, null, 2)
   .replace(/\[\s+([^[\]{}]*?)\s+\]/g, (_, inner) => '[' + inner.split(/,\s+/).join(', ') + ']');
 
-const typeName = { line: '선', area: '영역', bar: '막대', donut: '도넛', sparkline: '스파크라인', multiples: '작은 다중' };
+const typeName = { line: '선', area: '영역', bar: '막대', donut: '도넛', sparkline: '스파크라인', multiples: '작은 다중',
+  ...Object.fromEntries(pluginList.map((p) => [p.type, p.names.ko.replace(/ ?(차트|그래프)$/, '')])) };
 const types = [...new Set(examples.map((e) => e.spec.type))];
 
 const pane = (e, theme) => `<div class="pane" data-pane="${theme}">
@@ -30,7 +32,7 @@ const pane = (e, theme) => `<div class="pane" data-pane="${theme}">
         <div class="host" data-example="${e.id}" data-theme-pane="${theme}">${renderChart({ ...e.spec, id: `${e.id}-${theme}` }, { width: 420 })}</div>
       </div>`;
 
-const card = (e) => `<article class="card${e.spec.type === 'multiples' ? ' wide' : ''}" id="g-${e.id}" aria-labelledby="g-${e.id}-h">
+const card = (e) => `<article class="card${e.wide || e.spec.type === 'multiples' ? ' wide' : ''}" id="g-${e.id}" aria-labelledby="g-${e.id}-h">
       <div class="card-head"><h3 id="g-${e.id}-h">${esc(e.heading)}</h3>${e.note ? `<p>${esc(e.note)}</p>` : ''}</div>
       <div class="panes">
       ${pane(e, 'light')}
@@ -164,9 +166,8 @@ const wide = renderChart(spec, { width: 720 });`)}</code></pre></div>
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(join(out, 'lib'), { recursive: true });
-for (const f of ['index.js', 'dom.js', 'render.js', 'validate.js', 'format.js', 'types.js', 'chart.css']) {
-  if (existsSync(join(root, 'dist', f))) copyFileSync(join(root, 'dist', f), join(out, 'lib', f));
-}
+// the browser build of the library: every .js module and the stylesheet (no type declarations, no React adapter)
+cpSync(join(root, 'dist'), join(out, 'lib'), { recursive: true, filter: (src) => !src.endsWith('.d.ts') && !src.endsWith('react.js') });
 cpSync(join(site, 'assets'), join(out, 'assets'), { recursive: true });
 cpSync(join(site, 'vendor'), join(out, 'vendor'), { recursive: true });
 if (existsSync(join(root, 'docs', 'images'))) cpSync(join(root, 'docs', 'images'), join(out, 'images'), { recursive: true });
