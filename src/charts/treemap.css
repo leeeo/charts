@@ -1,0 +1,6 @@
+.lc-tm { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1; }
+.lc-pt:hover .lc-tm, .lc-pt:focus .lc-tm { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-tm-group { fill: none; stroke: var(--lc-surface); stroke-width: 3; pointer-events: none; }
+.lc-tm-lbl, .lc-tm-val { fill: var(--lc-surface); font-size: 11px; pointer-events: none; }
+.lc-tm-lbl { font-weight: 600; }
+.lc-tm-val { font-variant-numeric: tabular-nums; }

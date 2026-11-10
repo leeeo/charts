@@ -1,0 +1,6 @@
+.lc-t-bubble .lc-point { fill-opacity: 0.55; stroke: var(--c); stroke-width: 1; }
+.lc-t-bubble .lc-pt:hover .lc-point, .lc-t-bubble .lc-pt:focus .lc-point { fill-opacity: 0.8; stroke: var(--lc-ink); stroke-width: 2; }
+.lc-size-legend { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 12px; margin: 8px 0 0; font-size: 0.75rem; }
+.lc-size-item { display: inline-flex; align-items: center; gap: 4px; }
+.lc-size-svg { display: block; flex: none; }
+.lc-size-sw { fill: none; stroke: var(--lc-muted); stroke-width: 1; }

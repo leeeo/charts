@@ -1,0 +1,9 @@
+.lc-gauge-track { fill: var(--lc-grid); }
+.lc-gauge-band { fill: var(--lc-muted); }
+.lc-gb-0 { fill-opacity: 0.32; } .lc-gb-1 { fill-opacity: 0.22; } .lc-gb-2 { fill-opacity: 0.14; } .lc-gb-3 { fill-opacity: 0.08; }
+.lc-gb-col { fill: var(--c); fill-opacity: 0.35; }
+.lc-gauge { fill: var(--c); }
+.lc-pt:hover .lc-gauge, .lc-pt:focus .lc-gauge { stroke: var(--lc-ink); stroke-width: 1.5; }
+.lc-gauge-target { stroke: var(--lc-ink); stroke-width: 3; stroke-linecap: round; }
+.lc-gauge-val { font-variant-numeric: tabular-nums; }
+.lc-gauge-lbl { font-size: 12px; }

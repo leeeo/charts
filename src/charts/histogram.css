@@ -1,0 +1,2 @@
+.lc-bin { fill: var(--c); }
+.lc-pt:hover .lc-bin, .lc-pt:focus .lc-bin { stroke: var(--lc-ink); stroke-width: 2; }

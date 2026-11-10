@@ -22,16 +22,23 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 
 ## 차트 종류
 
-| 종류 | 미리보기 |
-|---|---|
-| `line` 선 차트. `null`은 0이 아니라 끊김으로 그립니다. | ![선 차트](https://charts.leeeo.app/images/line.png) |
-| `area` 영역 차트. `stacked: true`면 누적합니다. | ![영역 차트](https://charts.leeeo.app/images/area.png) |
-| `bar` 막대 차트, 묶음. 값이 없는 칸은 막대가 없습니다. | ![묶음 막대 차트](https://charts.leeeo.app/images/bar-grouped.png) |
-| `bar` 막대 차트, 누적 (`stacked: true`) | ![누적 막대 차트](https://charts.leeeo.app/images/bar-stacked.png) |
-| `bar` 가로 막대 (`horizontal: true`). 긴 한글 라벨도 영역을 계산해 맞춥니다. | ![가로 막대 차트](https://charts.leeeo.app/images/bar-horizontal.png) |
-| `donut` 도넛 차트. 빠진 조각은 고리에서 빼고 범례에 적습니다. | ![도넛 차트](https://charts.leeeo.app/images/donut.png) |
-| `sparkline` 스파크라인. 축 없이 작게, 처음·마지막·최소·최대 점에 초점이 갑니다. | ![스파크라인](https://charts.leeeo.app/images/sparkline.png) |
-| `multiples` 작은 다중 차트. 같은 축을 공유해 여러 대상을 비교합니다. | ![작은 다중 차트](https://charts.leeeo.app/images/multiples.png) |
+<!-- types:start -->
+차트 종류 7가지, 예제 11개입니다. 모든 예제는 소개 사이트 갤러리에서 밝은·어두운 화면과 스펙 JSON으로 볼 수 있습니다.
+
+| type | 설명 | 미리보기 |
+|---|---|---|
+| `line` | 선 차트 (결측은 끊김). 11/06 값이 없으면 0이 아니라 선이 끊깁니다. | ![선 차트 (결측은 끊김)](https://charts.leeeo.app/images/line.png) |
+| `area` | 영역 차트 (누적). 누적 영역, 단위는 원. | ![영역 차트 (누적)](https://charts.leeeo.app/images/area.png) |
+| `bar` | 막대 차트 (묶음). 데이터가 없는 칸은 막대가 없습니다. | ![막대 차트 (묶음)](https://charts.leeeo.app/images/bar-grouped.png) |
+| `bar` | 막대 차트 (누적).  | ![막대 차트 (누적)](https://charts.leeeo.app/images/bar-stacked.png) |
+| `bar` | 가로 막대 (긴 한글 라벨). 긴 라벨은 영역을 계산해 잘리지 않습니다. | ![가로 막대 (긴 한글 라벨)](https://charts.leeeo.app/images/bar-horizontal.png) |
+| `bar` | 막대 차트 (100% 누적). 칸마다 합을 100%로 맞추고, 값 상자에는 원래 값도 함께 나옵니다. | ![막대 차트 (100% 누적)](https://charts.leeeo.app/images/bar-percent.png) |
+| `bar` | 막대 차트 (양방향). 음수는 0에서 아래로 쌓입니다. 만족도·증감 비교에 씁니다. | ![막대 차트 (양방향)](https://charts.leeeo.app/images/bar-diverging.png) |
+| `donut` | 도넛 차트. 결측 슬라이스는 고리에서 빠지고 범례에 표시됩니다. | ![도넛 차트](https://charts.leeeo.app/images/donut.png) |
+| `sparkline` | 스파크라인. 표는 스크린 리더에서만 읽힙니다. | ![스파크라인](https://charts.leeeo.app/images/sparkline.png) |
+| `multiples` | 작은 다중 차트 (앱별, 데이터 품질 표시). 같은 축을 공유해 앱 규모를 비교할 수 있습니다. | ![작은 다중 차트 (앱별, 데이터 품질 표시)](https://charts.leeeo.app/images/multiples.png) |
+| `pie` | 파이 차트. 비율이 한눈에 보여야 할 때. 미집계 항목은 원에서 빠지고 범례에 남습니다. | ![파이 차트](https://charts.leeeo.app/images/pie.png) |
+<!-- types:end -->
 
 어두운 화면에서도 같은 스펙으로 그려집니다.
 

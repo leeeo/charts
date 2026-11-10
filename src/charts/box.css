@@ -1,0 +1,7 @@
+.lc-box { fill: var(--c); fill-opacity: 0.28; stroke: var(--c); stroke-width: 1.5; }
+.lc-box-whisker { stroke: var(--c); stroke-width: 1.5; }
+.lc-box-median { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-outlier { fill: var(--lc-surface); stroke: var(--c); stroke-width: 1.5; }
+.lc-box-na { fill: var(--lc-muted); font-size: 11px; font-style: italic; }
+.lc-pt:hover .lc-box, .lc-pt:focus .lc-box { fill-opacity: 0.45; stroke: var(--lc-ink); }
+.lc-pt:hover .lc-outlier, .lc-pt:focus .lc-outlier { stroke: var(--lc-ink); stroke-width: 2; }

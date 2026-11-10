@@ -15,6 +15,24 @@ import { examples as heatmap } from './charts/heatmap.ts';
 import { examples as calendar } from './charts/calendar.ts';
 import { examples as treemap } from './charts/treemap.ts';
 import { examples as sankey } from './charts/sankey.ts';
+import { examples as pie } from './charts/pie.ts';
+import { examples as lollipop } from './charts/lollipop.ts';
+import { examples as dumbbell } from './charts/dumbbell.ts';
+import { examples as waterfall } from './charts/waterfall.ts';
+import { examples as pareto } from './charts/pareto.ts';
+import { examples as marimekko } from './charts/marimekko.ts';
+import { examples as radar } from './charts/radar.ts';
+import { examples as parallel } from './charts/parallel.ts';
+import { examples as ridgeline } from './charts/ridgeline.ts';
+import { examples as beeswarm } from './charts/beeswarm.ts';
+import { examples as candlestick } from './charts/candlestick.ts';
+import { examples as timeline } from './charts/timeline.ts';
+import { examples as skyline } from './charts/skyline.ts';
+import { examples as sunburst } from './charts/sunburst.ts';
+import { examples as tree } from './charts/tree.ts';
+import { examples as network } from './charts/network.ts';
+import { examples as chord } from './charts/chord.ts';
+import { examples as map } from './charts/map.ts';
 
 
 const days = ['11/03', '11/04', '11/05', '11/06', '11/07', '11/08', '11/09'];
@@ -79,5 +97,5 @@ const core: Example[] = [
 
 export const examples: Example[] = [
   ...core,
-  ...waffle, ...segmented, ...funnel, ...gauge, ...bullet, ...slope, ...bump, ...stream, ...scatter, ...bubble, ...box, ...histogram, ...heatmap, ...calendar, ...treemap, ...sankey,
+  ...waffle, ...segmented, ...funnel, ...gauge, ...bullet, ...slope, ...bump, ...stream, ...scatter, ...bubble, ...box, ...histogram, ...heatmap, ...calendar, ...treemap, ...sankey, ...pie, ...lollipop, ...dumbbell, ...waterfall, ...pareto, ...marimekko, ...radar, ...parallel, ...ridgeline, ...beeswarm, ...candlestick, ...timeline, ...skyline, ...sunburst, ...tree, ...network, ...chord, ...map,
 ];

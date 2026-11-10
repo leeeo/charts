@@ -1,0 +1,2 @@
+.lc-cell { fill: var(--c); }
+.lc-pt:hover .lc-cell, .lc-pt:focus .lc-cell { stroke: var(--lc-ink); stroke-width: 1.5; }

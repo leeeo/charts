@@ -1,0 +1,12 @@
+.lc-hcell { fill: var(--c); }
+.lc-heat-0 { fill-opacity: 0.12; } .lc-heat-1 { fill-opacity: 0.25; } .lc-heat-2 { fill-opacity: 0.39; } .lc-heat-3 { fill-opacity: 0.53; }
+.lc-heat-4 { fill-opacity: 0.67; } .lc-heat-5 { fill-opacity: 0.83; } .lc-heat-6 { fill-opacity: 1; }
+.lc-sw.lc-heat-0 { opacity: 0.12; } .lc-sw.lc-heat-1 { opacity: 0.25; } .lc-sw.lc-heat-2 { opacity: 0.39; } .lc-sw.lc-heat-3 { opacity: 0.53; }
+.lc-sw.lc-heat-4 { opacity: 0.67; } .lc-sw.lc-heat-5 { opacity: 0.83; } .lc-sw.lc-heat-6 { opacity: 1; }
+.lc-hcell-na { fill: var(--lc-surface); stroke: var(--lc-muted); stroke-width: 1; stroke-dasharray: 3 2; }
+.lc-hcell-x { stroke: var(--lc-muted); stroke-width: 1; opacity: 0.6; }
+.lc-sw.lc-sw-na { background: var(--lc-surface); border: 1px dashed var(--lc-muted); box-sizing: border-box; }
+.lc-scale { gap: 4px 8px; }
+.lc-hval { fill: var(--lc-ink); font-size: 11px; pointer-events: none; }
+.lc-hval-on { fill: var(--lc-surface); }
+.lc-pt:hover .lc-hcell, .lc-pt:focus .lc-hcell, .lc-pt:hover .lc-hcell-na, .lc-pt:focus .lc-hcell-na { stroke: var(--lc-ink); stroke-width: 2; stroke-dasharray: none; }

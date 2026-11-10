@@ -1,6 +1,6 @@
 // Shared rendering helpers used by every chart type (core and src/charts/*). No chart-specific logic here.
 import type { BaseSpec, Series, Unit, Value } from './types.ts';
-import { type Fmt, clamp, esc, n2, tw } from './format.ts';
+import { type Fmt, clamp, esc, n2, truncate, tw } from './format.ts';
 
 export const STR = {
   ko: { na: '데이터 없음', missing: '결측', unit: '단위', table: '데이터 표', empty: '표시할 데이터가 없습니다', cat: '구분', value: '값', share: '비율', total: '합계', min: '최소', max: '최대', last: '마지막', items: '개 항목', series: '시리즈', quality: '품질', panel: '패널', count: '개수', from: '출발', to: '도착', median: '중앙값', q1: '1사분위', q3: '3사분위', mean: '평균', target: '목표', range: '구간', date: '날짜', start: '시작', end: '끝', rank: '순위', change: '변화', other: '기타' },
@@ -33,15 +33,51 @@ export function runs(vals: Value[]): number[][] {
 
 export const present = (vs: Value[]): number[] => vs.filter((v): v is number => v !== null);
 
-/** Value box (tooltip) anchored at (ax, ay), kept inside the viewBox. Shown on hover/focus of the parent .lc-pt. */
+/** Greedy word wrap to `max` px (characters split when one word is too long), at most `lines` lines; the last is truncated. */
+export function wrapText(text: string, max: number, size: number, lines: number): string[] {
+  const out: string[] = [];
+  let cur = '';
+  const push = (s: string): void => { out.push(s); };
+  for (const word of text.split(/(\s+)/)) {
+    if (word === '') continue;
+    if (tw(cur + word, size) <= max) { cur += word; continue; }
+    if (cur.trim()) { push(cur.trimEnd()); cur = ''; }
+    if (/^\s+$/.test(word)) continue;
+    let w = word;
+    while (tw(w, size) > max) {
+      let part = '';
+      for (const ch of w) { if (tw(part + ch, size) > max) break; part += ch; }
+      if (!part) part = [...w][0] ?? '';
+      push(part); w = w.slice(part.length);
+    }
+    cur = w;
+  }
+  if (cur.trim()) push(cur.trimEnd());
+  if (out.length <= lines) return out.length ? out : [''];
+  const kept = out.slice(0, lines);
+  kept[lines - 1] = truncate(out.slice(lines - 1).join(' '), max, size);
+  return kept;
+}
+
+/**
+ * Value box (tooltip) anchored at (ax, ay). Never wider than the viewBox: long text wraps (up to 3 lines, then …).
+ * Sits above the anchor, flips below it near the top, and is clamped inside the viewBox on every side.
+ */
 export function tip(ctx: Ctx, text: string, ax: number, ay: number): string {
-  const w = tw(text, FS) + 14;
-  const h = FS + 12;
+  const maxW = Math.max(24, ctx.W - 4);
+  const lines = wrapText(text, maxW - 14, FS, 3);
+  const w = Math.min(maxW, Math.max(...lines.map((l) => tw(l, FS))) + 14);
+  const lh = FS + 4;
+  const h = FS + 12 + (lines.length - 1) * lh;
   const x = clamp(ax - w / 2, 2, ctx.W - w - 2);
   let y = ay - h - 8;
   if (y < 2) y = ay + 10;
   y = clamp(y, 2, ctx.H - h - 2);
-  return `<g class="lc-tip" aria-hidden="true"><rect x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}" rx="4"/><text x="${n2(x + 7)}" y="${n2(y + h / 2 + FS * 0.36)}">${esc(text)}</text></g>`;
+  const base = y + 12 + FS * 0.36;
+  const body = lines.length === 1
+    ? `<text x="${n2(x + 7)}" y="${n2(y + h / 2 + FS * 0.36)}">${esc(lines[0] ?? '')}</text>`
+    : `<text x="${n2(x + 7)}" y="${n2(base)}">${lines.map((l, i) => `<tspan x="${n2(x + 7)}"${i ? ` dy="${lh}"` : ''}>${esc(l)}</tspan>`).join('')}</text>`;
+  return `<g class="lc-tip" aria-hidden="true"><rect x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}" rx="4"/>${body}</g>`;
 }
 
 /** A keyboard-focusable mark group: `inner` is the visible shape(s), the value box is added from `label` at (ax, ay). */

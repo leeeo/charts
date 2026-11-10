@@ -1,0 +1,4 @@
+.lc-bump-line { fill: none; stroke: var(--c); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; opacity: 0.85; }
+.lc-bump-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
+.lc-bump-label { fill: var(--lc-ink); font-size: 12px; }
+.lc-pt:hover .lc-bump-dot, .lc-pt:focus .lc-bump-dot { stroke: var(--lc-ink); stroke-width: 2; }

@@ -1,0 +1,9 @@
+.lc-bullet-bg, .lc-bullet-range { fill: var(--lc-muted); }
+.lc-bullet-bg { fill-opacity: 0.08; }
+.lc-br-0 { fill-opacity: 0.34; } .lc-br-1 { fill-opacity: 0.26; } .lc-br-2 { fill-opacity: 0.19; } .lc-br-3 { fill-opacity: 0.14; } .lc-br-4 { fill-opacity: 0.11; }
+.lc-bullet { fill: var(--c); }
+.lc-pt:hover .lc-bullet, .lc-pt:focus .lc-bullet { stroke: var(--lc-ink); stroke-width: 1.5; }
+.lc-bullet-target { stroke: var(--lc-ink); stroke-width: 3; }
+.lc-bullet-lbl { fill: var(--lc-ink); font-size: 12px; }
+.lc-bullet-na { fill: var(--lc-muted); font-size: 11px; font-style: italic; }
+.lc-pt-bullet:focus-visible .lc-bullet-lbl { text-decoration: underline; }

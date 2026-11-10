@@ -1,0 +1,2 @@
+.lc-point { fill: var(--c); fill-opacity: 0.8; stroke: var(--lc-surface); stroke-width: 1; }
+.lc-pt:hover .lc-point, .lc-pt:focus .lc-point { fill-opacity: 1; stroke: var(--lc-ink); stroke-width: 2; }

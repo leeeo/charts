@@ -1,0 +1,6 @@
+.lc-funnel { fill: var(--c); }
+.lc-pt:hover .lc-funnel, .lc-pt:focus .lc-funnel { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-funnel-lbl, .lc-funnel-val { fill: var(--lc-ink); font-size: 12px; }
+.lc-funnel-val { font-variant-numeric: tabular-nums; }
+.lc-funnel-conv { fill: var(--lc-muted); font-size: 11px; }
+.lc-funnel-na { fill: var(--lc-muted); font-size: 12px; font-style: italic; }
