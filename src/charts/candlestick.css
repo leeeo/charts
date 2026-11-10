@@ -1,5 +1,5 @@
-.lc-candle-up { --c: var(--lc-s7); }
-.lc-candle-down { --c: var(--lc-s3); }
+.lc-candle-up { --c: var(--lc-up); }
+.lc-candle-down { --c: var(--lc-down); }
 .lc-candle { fill: var(--c); stroke: var(--c); stroke-width: 1; }
 .lc-candle-wick { stroke: var(--c); stroke-width: 1.25; }
 .lc-cs-x { font-size: 11px; }

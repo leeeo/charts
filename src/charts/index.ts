@@ -34,10 +34,17 @@ import { plugin as tree } from './tree.ts';
 import { plugin as network } from './network.ts';
 import { plugin as chord } from './chord.ts';
 import { plugin as map } from './map.ts';
+import { plugin as price } from './price.ts';
+import { plugin as ohlc } from './ohlc.ts';
+import { plugin as combo } from './combo.ts';
+import { plugin as surprise } from './surprise.ts';
+import { plugin as range52 } from './range52.ts';
+import { plugin as valuation } from './valuation.ts';
+import { plugin as marketmap } from './marketmap.ts';
 
 /** Every registered plugin, in gallery order. Placeholders (null) are skipped. */
 export const pluginList: ChartPlugin[] = ([
-  waffle, segmented, funnel, gauge, bullet, slope, bump, stream, scatter, bubble, box, histogram, heatmap, calendar, treemap, sankey, pie, lollipop, dumbbell, waterfall, pareto, marimekko, radar, parallel, ridgeline, beeswarm, candlestick, timeline, skyline, sunburst, tree, network, chord, map,
+  waffle, segmented, funnel, gauge, bullet, slope, bump, stream, scatter, bubble, box, histogram, heatmap, calendar, treemap, sankey, pie, lollipop, dumbbell, waterfall, pareto, marimekko, radar, parallel, ridgeline, beeswarm, candlestick, price, ohlc, combo, surprise, range52, valuation, marketmap, timeline, skyline, sunburst, tree, network, chord, map,
 ] as (ChartPlugin | null)[]).filter((p): p is ChartPlugin => p !== null);
 
 export const plugins: Record<string, ChartPlugin> = Object.fromEntries(pluginList.map((p) => [p.type, p]));

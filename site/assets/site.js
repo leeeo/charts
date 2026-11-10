@@ -63,6 +63,13 @@ const KO = [
   [/^must be between start and end$/, 'start와 end 사이여야 해요'],
   [/^must not be before start$/, 'start보다 이르면 안 돼요'],
   [/^must span at most (\d+) days$/, '최대 $1일까지 넣을 수 있어요'],
+  [/^must have at most (\d+) entries together with ma$/, 'ma와 합쳐 최대 $1개까지 넣을 수 있어요'],
+  [/^is required when a line uses the right axis$/, '오른쪽 축을 쓰는 선이 있으면 두 축 제목이 모두 필요해요'],
+  [/^requires a line with axis: right$/, 'axis: "right"인 선이 있을 때만 쓸 수 있어요'],
+  [/^must be between low and high$/, 'low와 high 사이여야 해요'],
+  [/^must be greater than the previous entry$/, '앞 항목보다 커야 해요'],
+  [/^must be greater than (\S+)$/, '$1보다 커야 해요'],
+  [/^must have exactly (\d+) entries$/, '정확히 $1개가 필요해요'],
 ];
 function specMessage(err) {
   const raw = err.message.startsWith(err.path + ': ') ? err.message.slice(err.path.length + 2) : err.message;

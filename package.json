@@ -1,6 +1,6 @@
 {
   "name": "@leeeo/charts",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Framework-agnostic chart core for leeeo apps: typed JSON spec -> deterministic accessible SVG string. Zero runtime dependencies; optional React adapter.",
   "type": "module",
   "license": "MIT",

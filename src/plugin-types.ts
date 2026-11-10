@@ -33,6 +33,13 @@ import type { TreeSpec } from './charts/tree.ts';
 import type { NetworkSpec } from './charts/network.ts';
 import type { ChordSpec } from './charts/chord.ts';
 import type { MapSpec } from './charts/map.ts';
+import type { PriceSpec } from './charts/price.ts';
+import type { OhlcSpec } from './charts/ohlc.ts';
+import type { ComboSpec } from './charts/combo.ts';
+import type { SurpriseSpec } from './charts/surprise.ts';
+import type { Range52Spec } from './charts/range52.ts';
+import type { ValuationSpec } from './charts/valuation.ts';
+import type { MarketmapSpec } from './charts/marketmap.ts';
 
 export type PluginSpec =
   | WaffleSpec
@@ -68,8 +75,15 @@ export type PluginSpec =
   | TreeSpec
   | NetworkSpec
   | ChordSpec
-  | MapSpec;
+  | MapSpec
+  | PriceSpec
+  | OhlcSpec
+  | ComboSpec
+  | SurpriseSpec
+  | Range52Spec
+  | ValuationSpec
+  | MarketmapSpec;
 
 export type {
-  WaffleSpec, SegmentedSpec, FunnelSpec, GaugeSpec, BulletSpec, SlopeSpec, BumpSpec, StreamSpec, ScatterSpec, BubbleSpec, BoxSpec, HistogramSpec, HeatmapSpec, CalendarSpec, TreemapSpec, SankeySpec, PieSpec, LollipopSpec, DumbbellSpec, WaterfallSpec, ParetoSpec, MarimekkoSpec, RadarSpec, ParallelSpec, RidgelineSpec, BeeswarmSpec, CandlestickSpec, TimelineSpec, SkylineSpec, SunburstSpec, TreeSpec, NetworkSpec, ChordSpec, MapSpec,
+  WaffleSpec, SegmentedSpec, FunnelSpec, GaugeSpec, BulletSpec, SlopeSpec, BumpSpec, StreamSpec, ScatterSpec, BubbleSpec, BoxSpec, HistogramSpec, HeatmapSpec, CalendarSpec, TreemapSpec, SankeySpec, PieSpec, LollipopSpec, DumbbellSpec, WaterfallSpec, ParetoSpec, MarimekkoSpec, RadarSpec, ParallelSpec, RidgelineSpec, BeeswarmSpec, CandlestickSpec, TimelineSpec, SkylineSpec, SunburstSpec, TreeSpec, NetworkSpec, ChordSpec, MapSpec, PriceSpec, OhlcSpec, ComboSpec, SurpriseSpec, Range52Spec, ValuationSpec, MarketmapSpec,
 };

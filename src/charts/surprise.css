@@ -1,0 +1,11 @@
+.lc-sp-beat { --c: var(--lc-up); } .lc-sp-miss { --c: var(--lc-down); }
+.lc-sp-meet, .lc-sp-unknown { --c: var(--lc-flat); }
+.lc-sp-bar { fill: var(--c); }
+.lc-sp-unknown.lc-sp-bar { fill-opacity: 0.45; stroke: var(--c); stroke-width: 1; stroke-dasharray: 3 2; }
+.lc-sp-est { stroke: var(--lc-ink); stroke-width: 2.5; stroke-linecap: round; }
+.lc-sp-lbl { font-size: 10.5px; font-weight: 650; fill: var(--lc-ink); }
+.lc-sp-sm { font-size: 9px; }
+.lc-sp-t-unknown { fill: var(--lc-muted); font-weight: 400; }
+.lc-sp-sw.lc-sp-unknown { opacity: 0.6; }
+.lc-sp-sw-est { flex: none; width: 12px; height: 3px; border-radius: 1px; background: var(--lc-ink); }
+.lc-pt-sp:focus .lc-sp-bar, .lc-pt-sp:hover .lc-sp-bar { stroke: var(--lc-ink); stroke-width: 2; }

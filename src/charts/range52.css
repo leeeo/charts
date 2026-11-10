@@ -1,0 +1,8 @@
+.lc-r52-name { fill: var(--lc-ink); font-size: 12px; font-weight: 600; }
+.lc-r52-track { fill: var(--lc-grid); }
+.lc-r52-fill { fill: var(--lc-s1); fill-opacity: 0.35; }
+.lc-r52-cur { fill: var(--lc-ink); }
+.lc-r52-curlbl { fill: var(--lc-ink); font-size: 12px; font-variant-numeric: tabular-nums; }
+.lc-r52-na { fill: var(--lc-muted); font-style: italic; }
+.lc-r52-end { font-size: 11px; }
+.lc-pt-r52:focus-visible .lc-hit { stroke: var(--lc-ink); stroke-width: 1.5; stroke-dasharray: 3 2; }

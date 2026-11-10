@@ -1,0 +1,5 @@
+.lc-combo-line { pointer-events: none; }
+.lc-combo-line.lc-combo-r { stroke-dasharray: 6 3; }
+.lc-combo-dot { opacity: 1; }
+.lc-combo-dot.lc-combo-r { fill: var(--lc-surface); stroke: var(--c); stroke-width: 2; }
+.lc-combo-neg { fill-opacity: 0.6; stroke: var(--c); stroke-width: 1; }

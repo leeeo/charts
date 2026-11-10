@@ -1,0 +1,2 @@
+.lc-ohlc { fill: none; stroke: var(--c); stroke-width: 1.75; stroke-linecap: butt; }
+.lc-pt:hover .lc-ohlc, .lc-pt:focus .lc-ohlc { stroke-width: 2.75; }

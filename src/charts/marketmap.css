@@ -1,0 +1,13 @@
+.lc-mm { stroke: var(--lc-surface); stroke-width: 1; }
+.lc-mm-u2 { fill: var(--lc-up); } .lc-mm-u1 { fill: var(--lc-up); fill-opacity: 0.55; }
+.lc-mm-d2 { fill: var(--lc-down); } .lc-mm-d1 { fill: var(--lc-down); fill-opacity: 0.55; }
+.lc-mm-0 { fill: var(--lc-grid); } .lc-mm-na { fill: var(--lc-surface); stroke: var(--lc-grid); stroke-dasharray: 3 2; }
+.lc-mm-sw.lc-mm-u2 { background: var(--lc-up); } .lc-mm-sw.lc-mm-u1 { background: var(--lc-up); opacity: 0.55; }
+.lc-mm-sw.lc-mm-d2 { background: var(--lc-down); } .lc-mm-sw.lc-mm-d1 { background: var(--lc-down); opacity: 0.55; }
+.lc-mm-sw.lc-mm-0 { background: var(--lc-grid); } .lc-mm-sw.lc-mm-na { background: transparent; border: 1px dashed var(--lc-muted); }
+.lc-pt:hover .lc-mm, .lc-pt:focus .lc-mm { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-mm-lbl, .lc-mm-val, .lc-mm-glbl { font-size: 11px; pointer-events: none; }
+.lc-mm-lbl { font-weight: 600; } .lc-mm-val { font-variant-numeric: tabular-nums; }
+.lc-mm-tstrong { fill: var(--lc-surface); } .lc-mm-tsoft { fill: var(--lc-ink); } .lc-mm-tna { fill: var(--lc-muted); }
+.lc-mm-head { fill: var(--lc-surface); stroke: none; }
+.lc-mm-glbl { fill: var(--lc-ink); font-weight: 650; }

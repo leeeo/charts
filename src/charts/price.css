@@ -1,0 +1,3 @@
+.lc-price-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; pointer-events: none; }
+.lc-price-area { fill-opacity: 0.14; pointer-events: none; }
+.lc-pt-price:focus-visible .lc-hit, .lc-pt-vb:focus-visible .lc-hit { stroke: var(--lc-ink); stroke-width: 1.5; stroke-dasharray: 3 2; }

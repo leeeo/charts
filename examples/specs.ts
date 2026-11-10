@@ -33,6 +33,7 @@ import { examples as tree } from './charts/tree.ts';
 import { examples as network } from './charts/network.ts';
 import { examples as chord } from './charts/chord.ts';
 import { examples as map } from './charts/map.ts';
+import { examples as finance } from './charts/finance.ts';
 
 
 const days = ['11/03', '11/04', '11/05', '11/06', '11/07', '11/08', '11/09'];
@@ -97,5 +98,5 @@ const core: Example[] = [
 
 export const examples: Example[] = [
   ...core,
-  ...waffle, ...segmented, ...funnel, ...gauge, ...bullet, ...slope, ...bump, ...stream, ...scatter, ...bubble, ...box, ...histogram, ...heatmap, ...calendar, ...treemap, ...sankey, ...pie, ...lollipop, ...dumbbell, ...waterfall, ...pareto, ...marimekko, ...radar, ...parallel, ...ridgeline, ...beeswarm, ...candlestick, ...timeline, ...skyline, ...sunburst, ...tree, ...network, ...chord, ...map,
+  ...waffle, ...segmented, ...funnel, ...gauge, ...bullet, ...slope, ...bump, ...stream, ...scatter, ...bubble, ...box, ...histogram, ...heatmap, ...calendar, ...treemap, ...sankey, ...pie, ...lollipop, ...dumbbell, ...waterfall, ...pareto, ...marimekko, ...radar, ...parallel, ...ridgeline, ...beeswarm, ...candlestick, ...finance, ...timeline, ...skyline, ...sunburst, ...tree, ...network, ...chord, ...map,
 ];

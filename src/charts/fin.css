@@ -1,0 +1,9 @@
+/* shared by the stock charts (src/charts/fin.ts) */
+.lc-fin-up { --c: var(--lc-up); } .lc-fin-down { --c: var(--lc-down); } .lc-fin-flat { --c: var(--lc-flat); }
+.lc-fin-vol { fill: var(--c); fill-opacity: 0.5; }
+.lc-pt:hover .lc-fin-vol, .lc-pt:focus .lc-fin-vol { fill-opacity: 0.85; }
+.lc-fin-vt { font-size: 10.5px; }
+.lc-fin-ema { stroke-dasharray: 5 3; }
+.lc-fin-bollinger { stroke-width: 1.25; stroke-dasharray: 2 2; }
+.lc-fin-band { fill: var(--c); fill-opacity: 0.1; stroke: none; pointer-events: none; }
+.lc-fin-band-edge { fill: none; stroke: var(--c); stroke-width: 1; stroke-opacity: 0.7; pointer-events: none; }

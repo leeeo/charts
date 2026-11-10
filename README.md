@@ -23,7 +23,7 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 ## 차트 종류
 
 <!-- types:start -->
-차트 종류 23가지, 예제 29개입니다. 모든 예제는 소개 사이트 갤러리에서 밝은·어두운 화면과 스펙 JSON으로 볼 수 있습니다.
+차트 종류 47가지, 예제 56개입니다. 모든 예제는 소개 사이트 갤러리에서 밝은·어두운 화면과 스펙 JSON으로 볼 수 있습니다.
 
 | type | 설명 | 미리보기 |
 |---|---|---|
@@ -56,6 +56,33 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 | `treemap` | 앱별 · 채널별 월 매출. 사각형 넓이가 매출에 비례합니다. 상상플레이 광고 매출은 아직 정산 전이라 결측으로 표시됩니다. | ![앱별 · 채널별 월 매출](https://charts.leeeo.app/images/treemap.png) |
 | `sankey` | 방문에서 구독까지의 흐름. 띠의 두께가 사용자 수에 비례합니다. 검색 → 체험 경로는 집계 누락으로 결측입니다. | ![방문에서 구독까지의 흐름](https://charts.leeeo.app/images/sankey.png) |
 | `pie` | 파이 차트. 비율이 한눈에 보여야 할 때. 미집계 항목은 원에서 빠지고 범례에 남습니다. | ![파이 차트](https://charts.leeeo.app/images/pie.png) |
+| `lollipop` | 롤리팝 차트 (앱별 주간 방문자). 방문자가 많은 순으로 정렬했습니다. 집계가 없는 앱은 0이 아닌 결측으로 표시됩니다. | ![롤리팝 차트 (앱별 주간 방문자)](https://charts.leeeo.app/images/lollipop.png) |
+| `lollipop` | 롤리팝 차트 (월별 순설치 증감). 0선에서 위아래로 뻗는 막대로 증가와 감소를 함께 보여줍니다. | ![롤리팝 차트 (월별 순설치 증감)](https://charts.leeeo.app/images/lollipop-change.png) |
+| `dumbbell` | 덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기). 두 시점의 값을 선으로 이어 변화 폭을 비교합니다. 변화가 큰 순으로 정렬했습니다. | ![덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기)](https://charts.leeeo.app/images/dumbbell.png) |
+| `waterfall` | 폭포 차트 (10월 → 11월 매출 변화). 시작 매출에서 항목별 증감을 쌓아 최종 매출에 이릅니다. 집계되지 않은 항목은 결측으로 표시하고 합계에서 제외합니다. | ![폭포 차트 (10월 → 11월 매출 변화)](https://charts.leeeo.app/images/waterfall.png) |
+| `pareto` | 파레토 차트 (고객 문의 유형). 문의가 많은 유형부터 정렬하고 누적 비율을 오른쪽 축에 표시합니다. 80% 기준선으로 우선 대응할 유형을 찾습니다. | ![파레토 차트 (고객 문의 유형)](https://charts.leeeo.app/images/pareto.png) |
+| `marimekko` | 마리메코 차트 (앱별 · 유입 경로별 설치). 열 너비는 앱의 전체 설치 비중, 칸 높이는 앱 안에서 유입 경로 비중입니다. 집계가 없는 칸은 0이 아닌 결측입니다. | ![마리메코 차트 (앱별 · 유입 경로별 설치)](https://charts.leeeo.app/images/marimekko.png) |
+| `radar` | 앱별 품질 점수 비교. 6개 품질 축을 0~100점 공통 척도로 비교합니다. 트레이딩의 접근성 점수는 아직 측정 전이라 빈 칸입니다. | ![앱별 품질 점수 비교](https://charts.leeeo.app/images/radar.png) |
+| `parallel` | 앱별 핵심 지표 평행 좌표. 축마다 자체 범위를 가집니다. 웹의 설치 수는 해당 없음이라 선이 끊깁니다. | ![앱별 핵심 지표 평행 좌표](https://charts.leeeo.app/images/parallel.png) |
+| `ridgeline` | 요일별 세션 길이 분포. 표본 세션의 커널 밀도입니다. 주말로 갈수록 긴 세션이 늘어납니다. 일요일 일부는 수집 누락입니다. | ![요일별 세션 길이 분포](https://charts.leeeo.app/images/ridgeline.png) |
+| `beeswarm` | API 응답 시간과 SLO. 점 하나가 요청 표본 하나입니다. 점선은 SLO 300ms이며 넘은 표본은 진하게 표시됩니다. | ![API 응답 시간과 SLO](https://charts.leeeo.app/images/beeswarm.png) |
+| `candlestick` | 모의투자 종목 일봉. 상승은 빨강, 하락은 파랑입니다. 11-12는 휴장으로 빈 칸이며 이동평균은 그날을 건너뜁니다. | ![모의투자 종목 일봉](https://charts.leeeo.app/images/candlestick.png) |
+| `price` | 주가 차트 (거래량 · 볼린저 밴드). 가상의 예시 데이터입니다. 위는 종가, 아래는 같은 날짜 축의 거래량입니다. 추석 연휴 이틀은 빈 칸이고, 20일 이동평균과 볼린저 밴드는 스펙의 종가로 계산합니다. | ![주가 차트 (거래량 · 볼린저 밴드)](https://charts.leeeo.app/images/price.png) |
+| `candlestick` | 캔들 차트 (거래량 · 이동평균). 가상의 예시 데이터입니다. 상승은 빨강, 하락은 파랑이고 거래량 막대도 같은 색을 따릅니다. 5일·20일 이동평균은 빈 날을 건너뜁니다. | ![캔들 차트 (거래량 · 이동평균)](https://charts.leeeo.app/images/candlestick-volume.png) |
+| `ohlc` | OHLC 막대 (지수이동평균). 가상의 예시 데이터입니다. 왼쪽 눈금이 시가, 오른쪽 눈금이 종가라 색 없이도 오르고 내린 날을 구분할 수 있습니다. | ![OHLC 막대 (지수이동평균)](https://charts.leeeo.app/images/ohlc.png) |
+| `combo` | 분기 매출액 · 영업이익 · 영업이익률. 가상의 예시 데이터입니다. 막대는 왼쪽 축(억원), 점선은 오른쪽 축(%)이며 두 축 모두 제목이 있어야 그려집니다. 영업손실 분기는 0 아래로 그립니다. | ![분기 매출액 · 영업이익 · 영업이익률](https://charts.leeeo.app/images/combo.png) |
+| `surprise` | 실적 서프라이즈 (실적 vs 예상치). 가상의 예시 데이터입니다. 막대는 실적, 가로 눈금은 예상치입니다. 예상치가 없는 분기는 0으로 두지 않고 ‘미확인’으로 적고, 아직 발표하지 않은 분기는 막대가 없습니다. | ![실적 서프라이즈 (실적 vs 예상치)](https://charts.leeeo.app/images/surprise.png) |
+| `range52` | 52주 범위. 가상의 예시 데이터입니다. 종목마다 자기 52주 최저~최고를 한 줄로 놓고, 현재 값의 위치를 글자(범위의 몇 %)로도 적습니다. | ![52주 범위](https://charts.leeeo.app/images/range52.png) |
+| `valuation` | PER 밴드. 가상의 예시 데이터입니다. 각 밴드 선은 그 달의 EPS × 배수로 계산합니다. EPS가 0 이하인 달은 배수가 뜻이 없어 밴드를 그리지 않습니다. | ![PER 밴드](https://charts.leeeo.app/images/valuation.png) |
+| `marketmap` | 시가총액 맵 (등락률 색). 가상의 예시 데이터입니다. 넓이는 시가총액, 색은 등락률 구간입니다. 칸 안에 ▲/▼와 부호 있는 숫자를 함께 적고, 범례에 구간 범위를 글자로 적어 색만으로 읽지 않게 했습니다. | ![시가총액 맵 (등락률 색)](https://charts.leeeo.app/images/marketmap.png) |
+| `marketmap` | 시가총액 맵 (해외 표기: 상승 초록). 같은 데이터를 convention: "global"로 그렸습니다. 상승은 초록, 하락은 빨강이고 ▲/▼ 표시는 그대로입니다. 페이지 전체는 data-chart-convention="global"로 바꿀 수 있습니다. | ![시가총액 맵 (해외 표기: 상승 초록)](https://charts.leeeo.app/images/marketmap-global.png) |
+| `timeline` | 4분기 앱 출시 일정. 같은 레인에서 겹치는 작업은 아래 줄로 쌓입니다. 상상플레이 정식 출시일은 아직 미정이라 결측입니다. | ![4분기 앱 출시 일정](https://charts.leeeo.app/images/timeline.png) |
+| `skyline` | 1년 일별 방문자. 하루 한 칸씩 이어 붙인 실루엣입니다. 8월 로그 수집 장애 사흘은 0이 아니라 결측(음영)으로 표시됩니다. | ![1년 일별 방문자](https://charts.leeeo.app/images/skyline.png) |
+| `sunburst` | 설치 경로 구성. 안쪽 고리가 앱, 바깥으로 갈수록 플랫폼·유입 채널입니다. 상상플레이 iOS 검색 유입은 집계 전이라 결측입니다. | ![설치 경로 구성](https://charts.leeeo.app/images/sunburst.png) |
+| `tree` | 월간 활성 사용자 분해. 전체 활성 사용자를 앱과 플랫폼으로 나눈 계층입니다. 상상플레이 iOS는 아직 집계 전이라 결측입니다. | ![월간 활성 사용자 분해](https://charts.leeeo.app/images/tree.png) |
+| `network` | 앱 간 사용자 이동. 한 달 동안 두 앱을 함께 쓴 사용자 수입니다. 선 두께가 공유 사용자 수, 점 크기가 연결 합계입니다. 집계가 끝나지 않은 연결은 점선입니다. | ![앱 간 사용자 이동](https://charts.leeeo.app/images/network.png) |
+| `chord` | 유입 경로 사이의 이동. 첫 방문 채널에서 두 번째 방문 채널로 옮겨 간 방문자 수입니다. 리본은 출발 채널 색이고 도착 쪽 끝이 뾰족합니다. 추적이 빠진 구간은 데이터 없음입니다. | ![유입 경로 사이의 이동](https://charts.leeeo.app/images/chord.png) |
+| `map` | 시도별 신규 설치. 10월 시도별 신규 설치 수입니다. 위치 권한을 거부해 집계하지 못한 시도는 빗금(데이터 없음)으로 표시합니다. | ![시도별 신규 설치](https://charts.leeeo.app/images/map.png) |
 <!-- types:end -->
 
 어두운 화면에서도 같은 스펙으로 그려집니다.
@@ -142,6 +169,21 @@ const wide = renderChart(spec, { width: 720 });  // viewBox 너비 지정
 | `donut` | `slices: { id, label, value (0 이상 또는 null), color?, quality? }[]`, `centerLabel?` |
 | `multiples` | `panelType`(`line`/`area`/`bar`), `labels`, `panels: { id, title, subtitle?, quality?, series }[]`, `columns?`, `sharedY?`(기본 true), `yMin?`, `yMax?` |
 
+주식 차트(0.4.0). 지표는 모두 스펙에 넣은 값으로만 계산하고, 빈 날(`null`)은 건너뛰며 선을 끊습니다.
+
+| type | 추가 필드 |
+|---|---|
+| `candlestick` · `ohlc` | `dates`, `ohlc: ({ open, high, low, close } \| null)[]`, `ma?: number[]`, `overlays?`, `volume?: (number\|null)[]`(가격 아래 거래량 판, 같은 x축), `convention?`, `yLabel?` |
+| `price` | `dates`, `close: (number\|null)[]`, `volume?`, `style?`(`line`/`area`), `overlays?`, `convention?`, `yLabel?` |
+| `combo` | `labels`, `bars: series[]`(1~4), `lines?: (series & { axis?: 'left'\|'right' })[]`(최대 3), `unit2?`(오른쪽 축 형식), `yLabel?`, `y2Label?`, `xLabel?`. 오른쪽 축 선이 있으면 `yLabel`·`y2Label` 둘 다 필수 |
+| `surprise` | `labels`, `actual`, `estimate`(각각 `(number\|null)[]`), `actualName?`, `estimateName?`, `convention?`, `yLabel?`. 예상치가 `null`이면 ‘미확인’ |
+| `range52` | `items: { id, label, low, high, current (low~high 또는 null), quality? }[]`, `period?`(기본 ‘52주’) |
+| `valuation` | `dates`, `price`, `base`(EPS 또는 BPS, 0 이하·null이면 그날 밴드 없음), `multiples`(오름차순 2~6개), `metric?`(`PER`/`PBR`), `yLabel?` |
+| `marketmap` | `items`: `{ id, label, value(시가총액), change(%, null 가능), quality? }` 또는 `{ id, label, children }`, `steps?: [a, b]`(기본 [1, 3]), `convention?` |
+
+`overlays`: `{ kind: 'sma' | 'ema' | 'bollinger', window (2~250 정수), k? (볼린저 폭, 기본 2) }[]`, 최대 4개.
+`convention`: `kr`(기본, 상승 빨강·하락 파랑) 또는 `global`(상승 초록·하락 빨강). 등락은 ▲/▼·부호 있는 숫자·모양(OHLC 눈금)으로도 읽힙니다.
+
 알 수 없는 속성은 거부합니다. 글자는 이스케이프하고, 색은 `#hex`, `var(--토큰)`, 색 이름만 받습니다.
 
 ### 동작 약속
@@ -164,9 +206,14 @@ const wide = renderChart(spec, { width: 720 });  // viewBox 너비 지정
 그 값을 읽고(leeeo 공통 테마 이름), 없으면 내장 값을 씁니다. 어두운 화면은 `html[data-theme="dark"]`(`@leeeo/theme`가
 설정)를 따르고, `data-theme`이 없으면 `prefers-color-scheme: dark`를 따릅니다. 시리즈 색은 `--lc-s1` … `--lc-s8`로 바꿀 수 있습니다.
 
+주식 차트의 상승·하락 색은 `--lc-up`·`--lc-down`입니다. 기본은 한국식(상승 빨강, 하락 파랑)이고, 앱에서
+`--chart-up`·`--chart-down`을 정하면 그 값을 씁니다. 페이지 전체를 해외식(상승 초록, 하락 빨강)으로 바꾸려면 조상 요소에
+`data-chart-convention="global"`을, 차트 하나만 바꾸려면 스펙에 `convention: "global"`을 넣습니다. 스타일 속성(`style="…"`)은
+`color` 같은 색 지정 필드를 쓸 때만 나오므로, 주식 차트를 기본값으로 쓰면 CSP에 `style-src-attr 'unsafe-inline'`이 필요 없습니다.
+
 ## 버전과 변경 기록
 
-- 현재 버전: 0.1.0. 변경 내용은 [CHANGELOG.md](CHANGELOG.md)에 적습니다.
+- 현재 버전: 0.4.0. 변경 내용은 [CHANGELOG.md](CHANGELOG.md)에 적습니다.
 - 0.x 동안에는 스펙에 필드를 더할 수 있고, 바뀌는 동작은 CHANGELOG에 먼저 적습니다.
 - 참고한 자료와 고지는 [NOTICE.md](NOTICE.md)에 있습니다.
 
