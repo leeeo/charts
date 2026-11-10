@@ -1,0 +1,81 @@
+/* @leeeo/charts - theme-aware via CSS custom properties.
+   Reads host tokens (--ink, --muted, --surface, --accent, --line) when defined (@leeeo/theme apps use
+   html[data-theme="light|dark"]); otherwise falls back to built-in light/dark values. */
+.lc {
+  --lc-ink: var(--ink, #1c2a24);
+  --lc-muted: var(--muted, #5b6862);
+  --lc-surface: var(--surface, #ffffff);
+  --lc-grid: var(--line, #dde3df);
+  --lc-s1: var(--accent, #24664d);
+  --lc-s2: #b5651d; --lc-s3: #2f6fa8; --lc-s4: #8a4f9e;
+  --lc-s5: #a8892a; --lc-s6: #3d8f8f; --lc-s7: #b04a5a; --lc-s8: #6b7280;
+  margin: 0; color: var(--lc-ink); font-family: var(--font, system-ui, "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif);
+  max-width: 100%; min-width: 0;
+}
+[data-theme="dark"] .lc, .lc[data-theme="dark"] {
+  --lc-ink: var(--ink, #e8efe9); --lc-muted: var(--muted, #a8b7ae); --lc-surface: var(--surface, #1d2924);
+  --lc-grid: var(--line, #34433b); --lc-s1: var(--accent, #acd2b3);
+  --lc-s2: #e0a060; --lc-s3: #7db3e6; --lc-s4: #c79ad8; --lc-s5: #d9c06a; --lc-s6: #72c7c7; --lc-s7: #e68a98; --lc-s8: #a0a8b4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .lc {
+    --lc-ink: var(--ink, #e8efe9); --lc-muted: var(--muted, #a8b7ae); --lc-surface: var(--surface, #1d2924);
+    --lc-grid: var(--line, #34433b); --lc-s1: var(--accent, #acd2b3);
+    --lc-s2: #e0a060; --lc-s3: #7db3e6; --lc-s4: #c79ad8; --lc-s5: #d9c06a; --lc-s6: #72c7c7; --lc-s7: #e68a98; --lc-s8: #a0a8b4;
+  }
+}
+.lc-c1{--c:var(--lc-s1)} .lc-c2{--c:var(--lc-s2)} .lc-c3{--c:var(--lc-s3)} .lc-c4{--c:var(--lc-s4)}
+.lc-c5{--c:var(--lc-s5)} .lc-c6{--c:var(--lc-s6)} .lc-c7{--c:var(--lc-s7)} .lc-c8{--c:var(--lc-s8)}
+.lc-cap { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; margin-bottom: 6px; }
+.lc-title { font-weight: 650; font-size: 0.9375rem; overflow-wrap: anywhere; }
+.lc-unit { color: var(--lc-muted); font-size: 0.75rem; }
+.lc-note { flex-basis: 100%; color: var(--lc-muted); font-size: 0.75rem; overflow-wrap: anywhere; }
+.lc-svg { display: block; width: 100%; height: auto; max-width: 100%; overflow: visible; }
+.lc-t-sparkline { display: inline-block; vertical-align: middle; }
+.lc-t-sparkline .lc-svg { width: auto; }
+.lc-grid { stroke: var(--lc-grid); stroke-width: 1; }
+.lc-axis { stroke: var(--lc-muted); stroke-width: 1; }
+.lc-tick, .lc-axis-title, .lc-psub { fill: var(--lc-muted); font-size: 12px; }
+.lc-t-multiples .lc-tick { font-size: 10.5px; }
+.lc-psub { font-size: 10.5px; } .lc-psub-q { fill: var(--lc-s2); }
+.lc-ptitle { fill: var(--lc-ink); font-size: 13px; font-weight: 650; }
+.lc-empty { fill: var(--lc-muted); font-size: 13px; }
+.lc-center { fill: var(--lc-ink); font-weight: 700; } .lc-center-sub { fill: var(--lc-muted); font-size: 11px; }
+.lc-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.lc-area { fill: var(--c); fill-opacity: 0.18; stroke: none; }
+.lc-t-sparkline .lc-area { fill-opacity: 0.12; }
+.lc-bar, .lc-slice { fill: var(--c); }
+.lc-slice { stroke: var(--lc-surface); stroke-width: 2; }
+.lc-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; opacity: 0; }
+.lc-dot-vis { opacity: 1; }
+.lc-hit { fill: transparent; }
+.lc-pt { outline: none; cursor: default; }
+.lc-pt:hover .lc-dot, .lc-pt:focus .lc-dot { opacity: 1; }
+.lc-pt:focus .lc-bar, .lc-pt:focus .lc-slice, .lc-pt:hover .lc-bar, .lc-pt:hover .lc-slice { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-pt:focus .lc-dot { stroke: var(--lc-ink); stroke-width: 2; }
+.lc-pt:focus-visible .lc-hit { stroke: var(--lc-ink); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.lc-tip { display: none; pointer-events: none; }
+.lc-pt:hover .lc-tip, .lc-pt:focus .lc-tip { display: block; }
+.lc-tip rect { fill: var(--lc-ink); } .lc-tip text { fill: var(--lc-surface); font-size: 12px; }
+.lc-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 0; padding: 0; font-size: 0.75rem; }
+.lc-legend li { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
+.lc-ln { overflow-wrap: anywhere; } .lc-lv { color: var(--lc-muted); }
+.lc-q { color: var(--lc-muted); border: 1px solid var(--lc-grid); border-radius: 4px; padding: 0 5px; font-size: 0.6875rem; }
+.lc-sw { flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--c); }
+.lc-data { margin-top: 8px; font-size: 0.75rem; }
+.lc-data summary { cursor: pointer; color: var(--lc-muted); padding: 4px 0; min-height: 24px; }
+.lc-data summary:focus-visible { outline: 2px solid var(--lc-s1); outline-offset: 2px; }
+.lc-scroll { overflow-x: auto; max-width: 100%; }
+.lc table { border-collapse: collapse; margin-top: 6px; }
+.lc caption { text-align: left; color: var(--lc-muted); padding-bottom: 4px; }
+.lc th, .lc td { border-bottom: 1px solid var(--lc-grid); padding: 3px 10px 3px 0; text-align: left; font-weight: 400; white-space: nowrap; }
+.lc thead th { font-weight: 650; }
+.lc td { font-variant-numeric: tabular-nums; } .lc-na { color: var(--lc-muted); font-style: italic; }
+.lc-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .lc-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: lc-draw 0.8s ease-out forwards; }
+  .lc-bar, .lc-slice, .lc-area { animation: lc-fade 0.5s ease-out both; }
+}
+@keyframes lc-draw { to { stroke-dashoffset: 0; } }
+@keyframes lc-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .lc * { animation: none !important; transition: none !important; } }
