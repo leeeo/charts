@@ -1,6 +1,6 @@
 {
   "name": "@leeeo/charts",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Framework-agnostic chart core for leeeo apps: typed JSON spec -> deterministic accessible SVG string. Zero runtime dependencies; optional React adapter.",
   "type": "module",
   "license": "MIT",
@@ -8,6 +8,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "default": "./dist/core.js"
+    },
+    "./charts/*": {
+      "types": "./dist/charts/*.d.ts",
+      "default": "./dist/charts/*.js"
     },
     "./dom": {
       "types": "./dist/dom.d.ts",

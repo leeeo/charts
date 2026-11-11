@@ -23,7 +23,7 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 ## 차트 종류
 
 <!-- types:start -->
-차트 종류 47가지, 예제 56개입니다. 모든 예제는 소개 사이트 갤러리에서 밝은·어두운 화면과 스펙 JSON으로 볼 수 있습니다.
+차트 종류 47가지, 예제 57개입니다. 모든 예제는 소개 사이트 갤러리에서 밝은·어두운 화면과 스펙 JSON으로 볼 수 있습니다.
 
 | type | 설명 | 미리보기 |
 |---|---|---|
@@ -55,6 +55,7 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 | `calendar` | 일별 방문자 캘린더. 6월부터 10월까지 상상플레이 일별 방문자입니다. 로그 장애일과 추석 연휴(집계 없음)는 결측으로 표시합니다. | ![일별 방문자 캘린더](https://charts.leeeo.app/images/calendar.png) |
 | `treemap` | 앱별 · 채널별 월 매출. 사각형 넓이가 매출에 비례합니다. 상상플레이 광고 매출은 아직 정산 전이라 결측으로 표시됩니다. | ![앱별 · 채널별 월 매출](https://charts.leeeo.app/images/treemap.png) |
 | `sankey` | 방문에서 구독까지의 흐름. 띠의 두께가 사용자 수에 비례합니다. 검색 → 체험 경로는 집계 누락으로 결측입니다. | ![방문에서 구독까지의 흐름](https://charts.leeeo.app/images/sankey.png) |
+| `sankey` | 매출에서 순이익까지 (의미 색). 예시 데이터입니다. tone으로 매출·이익·비용을 칠하고(비용은 빗금), computed 노드에 *를 붙입니다. align: justify와 relax로 띠가 교차하지 않게 놓습니다. | ![매출에서 순이익까지 (의미 색)](https://charts.leeeo.app/images/sankey-income.png) |
 | `pie` | 파이 차트. 비율이 한눈에 보여야 할 때. 미집계 항목은 원에서 빠지고 범례에 남습니다. | ![파이 차트](https://charts.leeeo.app/images/pie.png) |
 | `lollipop` | 롤리팝 차트 (앱별 주간 방문자). 방문자가 많은 순으로 정렬했습니다. 집계가 없는 앱은 0이 아닌 결측으로 표시됩니다. | ![롤리팝 차트 (앱별 주간 방문자)](https://charts.leeeo.app/images/lollipop.png) |
 | `lollipop` | 롤리팝 차트 (월별 순설치 증감). 0선에서 위아래로 뻗는 막대로 증가와 감소를 함께 보여줍니다. | ![롤리팝 차트 (월별 순설치 증감)](https://charts.leeeo.app/images/lollipop-change.png) |
@@ -116,6 +117,20 @@ chart.destroy();          // 정리
 ```
 
 요소 너비에 맞춰 그리고, 너비가 바뀌면 다시 그립니다. 빌드 도구가 없는 앱은 `dist/` 파일을 앱 안에 복사해 씁니다.
+
+### 필요한 종류만 묶기 (`./core` + `./charts/<type>`, 0.5.0)
+
+```js
+import { createCharts } from '@leeeo/charts/core';
+import { plugin as sankey } from '@leeeo/charts/charts/sankey';
+import { plugin as combo } from '@leeeo/charts/charts/combo';
+
+const { mountChart, renderChart } = createCharts([sankey, combo]);
+```
+
+`core`에는 기본 6종(line·area·bar·sparkline·donut·multiples)만 들어 있고, 나머지는 넘겨 준 종류만 묶입니다.
+같은 스펙이면 기본 진입점과 같은 문자열을 내고, 등록하지 않은 종류는 없는 종류처럼 `ChartSpecError`(`type`)로 막힙니다.
+예: sankey+combo만 묶으면 esbuild minify 기준 gzip 약 16 KB(전체 약 85 KB)입니다. 기존 `.`·`./dom`·`./react`는 그대로 전체 종류를 씁니다.
 
 ### React · Next.js (`./react`)
 

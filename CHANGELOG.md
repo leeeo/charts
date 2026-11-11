@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0
+- Slim entry points: `@leeeo/charts/core` (`createCharts([...plugins])` -> `renderChart` / `validateSpec` / `mountChart`)
+  with the core six types, plus one module per chart type at `@leeeo/charts/charts/<type>` (exports `plugin`). Output
+  is byte-identical to the full entry for the same spec; unregistered types fail validation at `type`. Example:
+  sankey + combo bundle 15.9 KB gzip vs 85.4 KB for the full set (esbuild 0.25 minify). `.`, `./dom`, `./react`
+  and `./styles.css` are unchanged.
+- sankey: optional `tone` on nodes and links (`revenue`, `profit`, `cost`, `neutral`) drawn with the semantic tokens
+  `--lc-tone-revenue` / `-profit` / `-cost` / `-neutral` (for now aliases of series colours 3 / 6 / 7 / 8; hosts may set
+  `--chart-revenue` / `--chart-profit` / `--chart-cost` / `--chart-neutral`). Cost marks are hatched and the legend
+  names each tone, so the meaning does not rely on colour alone. `computed: true` adds `*` to the node label and a
+  legend note (`computedNote`). `align: "justify"` puts end nodes in the last column; `relax: true` moves nodes
+  towards their bands to reduce crossings while keeping the input order inside each column. No style attributes are
+  added (tones are classes, the hatch is an SVG pattern). Specs without these fields render as before, except that
+  node labels now have a surface-coloured outline for legibility over bands.
+- Gallery: income-flow sankey example (made-up data). `site/shots.mjs` scrolls lazily drawn cards into view before
+  the focus capture.
+
 ## 0.4.0
 - Stock chart set: `price` (close line/area with a volume pane on the same x axis), `ohlc` (OHLC bars), `combo` (grouped bars + lines, optional right axis that requires both axis titles), `surprise` (actual vs estimate, missing estimate written "미확인"), `range52` (52-week range bar), `valuation` (PER/PBR band from EPS/BPS × multiples) and `marketmap` (market-cap treemap coloured by change in steps, ▲/▼ text and a ranged legend). 47 chart types in total.
 - candlestick: `volume` pane, `overlays` (SMA / EMA / Bollinger computed from the closes), `convention`. Existing specs render the same marks; `ma` lines keep their first two colours (a third/fourth `ma` now uses gold/teal instead of blue/purple so no indicator uses the up/down hues).

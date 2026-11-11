@@ -65,6 +65,8 @@ for (const width of [390, 1440]) for (const theme of ['light', 'dark']) {
   console.log(file, JSON.stringify(info), errors.length ? 'errors=' + errors.join('|') : 'no-errors');
   if (width === 1440) {
     // Keyboard: Tab from the gallery heading into the first focusable chart point; the tooltip and ring must show.
+    // Gallery charts are drawn lazily near the viewport: bring the card in first.
+    await page.locator('#g-bar-grouped').scrollIntoViewIfNeeded();
     await page.locator('#g-bar-grouped .pane[data-pane="' + theme + '"] .lc-pt').first().focus();
     await page.keyboard.press('Tab');
     await page.locator('#g-bar-grouped').screenshot({ path: join(out, `site-${width}-${theme}-focus.png`) });

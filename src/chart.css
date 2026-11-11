@@ -29,6 +29,13 @@
    ancestor or the spec option convention: "global". */
 .lc { --lc-up: var(--chart-up, var(--lc-s7)); --lc-down: var(--chart-down, var(--lc-s3)); --lc-flat: var(--lc-s8); }
 .lc.lc-conv-global, [data-chart-convention="global"] .lc { --lc-up: var(--chart-up, var(--lc-s6)); --lc-down: var(--chart-down, var(--lc-s7)); }
+/* Semantic tones (sankey `tone`). Placeholder aliases of the series palette (revenue blue, profit green-teal, cost
+   red, neutral grey) so light/dark follow the series tokens; the palette owner sets the real values. Hosts may set
+   --chart-revenue / --chart-profit / --chart-cost / --chart-neutral. */
+.lc { --lc-tone-revenue: var(--chart-revenue, var(--lc-s3)); --lc-tone-profit: var(--chart-profit, var(--lc-s6));
+  --lc-tone-cost: var(--chart-cost, var(--lc-s7)); --lc-tone-neutral: var(--chart-neutral, var(--lc-s8)); }
+.lc-tone-revenue{--c:var(--lc-tone-revenue)} .lc-tone-profit{--c:var(--lc-tone-profit)}
+.lc-tone-cost{--c:var(--lc-tone-cost)} .lc-tone-neutral{--c:var(--lc-tone-neutral)}
 .lc-c1{--c:var(--lc-s1)} .lc-c2{--c:var(--lc-s2)} .lc-c3{--c:var(--lc-s3)} .lc-c4{--c:var(--lc-s4)}
 .lc-c5{--c:var(--lc-s5)} .lc-c6{--c:var(--lc-s6)} .lc-c7{--c:var(--lc-s7)} .lc-c8{--c:var(--lc-s8)}
 .lc-cap { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; margin-bottom: 6px; }

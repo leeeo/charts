@@ -31,4 +31,33 @@ export const examples: Example[] = [
       ],
     },
   },
+  {
+    id: 'sankey-income',
+    heading: '매출에서 순이익까지 (의미 색)',
+    note: '예시 데이터입니다. tone으로 매출·이익·비용을 칠하고(비용은 빗금), computed 노드에 *를 붙입니다. align: justify와 relax로 띠가 교차하지 않게 놓습니다.',
+    wide: true,
+    spec: {
+      type: 'sankey',
+      title: '가상 회사 분기 손익 흐름 (예시)',
+      unit: { label: '억원', decimals: 2 },
+      align: 'justify',
+      relax: true,
+      computedNote: '두 수치의 차액',
+      nodes: [
+        { id: 'revenue', label: '매출', tone: 'revenue' },
+        { id: 'gain', label: '세후 순증가', tone: 'profit', computed: true },
+        { id: 'loss', label: '순손실', tone: 'cost' },
+        { id: 'op', label: '영업이익', tone: 'profit' },
+        { id: 'costs', label: '영업비용', tone: 'cost', computed: true },
+        { id: 'nonop', label: '영업외 순감소', tone: 'cost', computed: true },
+      ],
+      links: [
+        { source: 'revenue', target: 'costs', value: 900, tone: 'cost' },
+        { source: 'revenue', target: 'op', value: 100, tone: 'profit' },
+        { source: 'op', target: 'nonop', value: 100 },
+        { source: 'gain', target: 'nonop', value: 40 },
+        { source: 'loss', target: 'nonop', value: 110 },
+      ],
+    },
+  },
 ];
