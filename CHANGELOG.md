@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.8.0
+- Every chart type follows the 0.7.0 sankey readability rules: labels beside the marks where they collide (name +
+  bold value tinted by its colour, mixed with ink for contrast), wrapping instead of truncating to one or two letters,
+  collision handling with leader lines, and a CSS-only hover/focus highlight (the pointed mark, series, group, branch
+  or links stay while the rest fade; labels step back while a value box is open). Keyboard focus behaves the same.
+- Core types and pie: series name + bold last value at the end of line/area/sparkline/multiples; bar values at the bar
+  end, inside stacked segments and the stack total; donut/pie name + value · share beside the slices with leader lines
+  (share inside when narrow); hovering a donut slice swaps the centre to that slice. New option
+  `valueLabels: 'auto' | 'none'` (default auto, shown only where they fit). Category labels wrap to two lines;
+  horizontal bar rows grow to 36px when a label wraps. Donut/pie shares use one decimal (63.4%, was 63.37%).
+- Comparison, distribution and time types: gauge writes target and attainment under the caption; funnel, bullet, box,
+  histogram, pareto, waterfall, lollipop and dumbbell carry values beside the marks; stream, parallel, bubble and
+  timeline name their layers, lines, bubbles and bars in-chart; heatmap row + column crosshair; radar dots above every
+  outline. New option `pointLabels` for scatter/bubble (default on for bubble). Gauge with a target is 16px taller,
+  segmented 73px (was 70), funnel value column 30% with a 3px minimum bar.
+- Hierarchy, network, finance and map: treemap group header strips and name + value · share in cells; sunburst names
+  along the arc with outside labels for short arcs; tree and marketmap names wrap; network/chord labels carry the bold
+  total; map `showValues` draws a bold value line, nudges colliding labels and places the largest values first;
+  candlestick, ohlc, price and valuation get a per-day crosshair and a last-value tag (rise/fall colour, kept off the
+  marks); surprise labels fall back to two lines; skyline draws a seamless silhouette with a peak marker.
+- Sankey: a trailing `*` no longer counts as a letter when a middle-column name splits.
+- Value boxes bold the value; the donut centre no longer uses an inline style; stylesheets are LF on every checkout
+  (`.gitattributes`), so the published `dist/chart.css` no longer mixes line endings.
+
 ## 0.7.0
 - Sankey readability. **Behaviour change:** nodes inside a column are reordered when that strictly reduces how much
   bands cover each other (`order: "auto"`, the new default). A layout that is already crossing-free renders in spec
