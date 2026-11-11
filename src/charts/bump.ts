@@ -1,10 +1,12 @@
 // Bump chart: rank of each series over time (rank 1 at the top). Ranks are computed from values or given directly.
+// Hovering or focusing a point keeps that series (line, dots, end label) lit and fades the others (bump.css).
 import type { BaseSpec, Series } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, base, dict, fail, labels, oneOf, optBool, optStr, put, seriesList } from '../check.ts';
 import { clamp, esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
-import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, runs, table, wrapTable } from '../kit.ts';
+import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, frame, legend, runs, table, wrapTable } from '../kit.ts';
 import { spread } from './slope.ts';
+import { seriesPt } from './cmp.ts';
 
 export interface BumpSpec extends BaseSpec {
   type: 'bump';
@@ -85,7 +87,7 @@ function render(spec: BumpSpec, ctx: Ctx): string {
         if (r === null) return;
         const cx = sx(i); const cy = sy(r);
         const dot = `<circle class="lc-mark lc-bump-dot ${c} data-s="${j}" data-i="${i}" data-r="${r}" data-v="${se.values[i]}" cx="${n2(cx)}" cy="${n2(cy)}" r="4.5"/>`;
-        marks += focus ? focusable(ctx, 'lc-pt-bump', pointText(se, j, i), `<circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="9"/>${dot}`, cx, cy - 4) : dot;
+        marks += focus ? seriesPt(ctx, 'lc-pt-bump', j, pointText(se, j, i), `<circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="9"/>${dot}`, cx, cy - 4) : dot;
       });
       const last = rs.reduce<number>((a, r, i) => (r === null ? a : i), -1);
       if (last >= 0) ends.push({ j, y: sy(rs[last] as number) });
@@ -93,7 +95,7 @@ function render(spec: BumpSpec, ctx: Ctx): string {
     const ys = spread(ends.map((e) => e.y), FS + 1, py, py + ph);
     const endLabels = ends.map((e, k) => {
       const se = spec.series[e.j] as Series;
-      return `<text class="lc-bump-label" x="${n2(px + pw + 10)}" y="${n2((ys[k] ?? e.y) + FS * 0.35)}">${esc(truncate(se.name, right - 14, FS))}</text>`;
+      return `<text class="lc-cm-lbl lc-bump-label" data-s="${e.j}" x="${n2(px + pw + 10)}" y="${n2((ys[k] ?? e.y) + FS * 0.35)}">${esc(truncate(se.name, right - 14, FS))}</text>`;
     }).join('');
     inner = s + lines + endLabels + marks;
   }

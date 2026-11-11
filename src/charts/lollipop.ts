@@ -1,4 +1,6 @@
 // Lollipop chart: one stem from the zero line to a dot per category, optionally sorted and/or horizontal.
+// Value labels are bold and tinted by the mark colour and sit on the outer side of the dot (below or left of it for
+// negative values, so they never cross the zero line). Hovering a stem keeps it and fades the rest (cmp.css).
 // Also exports catAxes(), the category/value axis frame shared by the dumbbell, waterfall and pareto plugins.
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
@@ -162,16 +164,19 @@ function render(spec: LollipopSpec, ctx: Ctx): string {
       let g = `<line class="lc-lollipop-stem ${c} data-i="${i}" x1="${n2(x1)}" y1="${n2(y1)}" x2="${n2(x2)}" y2="${n2(y2)}"/>`;
       g += `<circle class="lc-mark lc-lollipop ${c} data-i="${i}" data-v="${v}" cx="${n2(x2)}" cy="${n2(y2)}" r="${n2(r)}"/>`;
       const label = fmt(v);
-      const w = tw(label, FS);
+      const w = tw(label, FS) * 1.06;
+      const val = (x: number, y: number): string => `<text class="lc-cm-lbl lc-cm-val lc-lollipop-val ${c} x="${n2(x)}" y="${n2(y)}">${esc(label)}</text>`;
       if (horizontal) {
-        // value label right of the dot (positives) or right of the zero line (negatives); needs a band tall enough
+        // value label on the outer side of the dot: right of it for positives, left of it for negatives (right of
+        // the dot when the left side has no room); needs a band tall enough
         if (ax.band >= FS + 1) {
-          const lx = v >= 0 ? p + r + 4 : ax.zero + 4;
-          g += `<text class="lc-lollipop-val" x="${n2(Math.min(lx, ctx.W - w - 2))}" y="${n2(q + FS * 0.35)}">${esc(label)}</text>`;
+          const lx = v >= 0 ? p + r + 4 : p - r - 4 - w >= 2 ? p - r - 4 - w : p + r + 4;
+          g += val(Math.min(lx, ctx.W - w - 2), q + FS * 0.35);
         }
       } else if (w <= ax.band - 2) {
-        const ly = v >= 0 ? p - r - 4 : ax.zero - 4;
-        g += `<text class="lc-lollipop-val" x="${n2(clamp(q - w / 2, 2, ctx.W - w - 2))}" y="${n2(Math.max(ly, FS))}">${esc(label)}</text>`;
+        // above the dot for positives, below it for negatives (above again when the dot sits on the bottom edge)
+        const ly = v >= 0 || p + r + 4 + FS > ax.py + ax.ph - 2 ? Math.max(p - r - 4, FS) : p + r + 4 + FS;
+        g += val(clamp(q - w / 2, 2, ctx.W - w - 2), ly);
       }
       marks += focus ? focusable(ctx, 'lc-pt-lollipop', aria(it), `<circle class="lc-hit" cx="${n2(x2)}" cy="${n2(y2)}" r="9"/>${g}`, x2, y2) : g;
     });

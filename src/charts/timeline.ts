@@ -2,10 +2,12 @@
 // into sub-rows (greedy, by start then input order), so bars never cover each other. The axis is numeric, minutes of a
 // day (HH:MM) or dates (YYYY-MM-DD, end inclusive). Milestones are single points drawn as a diamond and a dashed line.
 // An item whose start or end is null is missing: it is not drawn and shows as missing in the table and description.
+// A label that does not fit inside its bar is written beside the bar (right, else left) in ink when that gap is free,
+// so names are not truncated to a few letters. Hovering a bar keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, idList, num, oneOf, optStr, str, value } from '../check.ts';
-import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, table, wrapTable } from '../kit.ts';
+import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, table, wrapTable, wrapText } from '../kit.ts';
 import { esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
 
 export type TimelinePos = number | string;
@@ -231,11 +233,23 @@ export const plugin = definePlugin<TimelineSpec>({
         const y = laneTop[li] as number;
         const h = (lay.rows[li] as number) * ROW;
         if (li > 0) lanesSvg += `<line class="lc-tl-sep" x1="0" y1="${n2(y - LANE_GAP / 2)}" x2="${n2(ctx.W)}" y2="${n2(y - LANE_GAP / 2)}"/>`;
-        lanesSvg += `<text class="lc-tl-lane" x="4" y="${n2(y + h / 2 + FS * 0.36)}">${esc(truncate(l, labW - 12, FS))}</text>`;
+        // Lane name: one line when it fits; a lane two rows tall may wrap it onto two lines instead of truncating.
+        const lines = tw(l, FS) <= labW - 12 || h < 2 * FS + 6 ? [truncate(l, labW - 12, FS)] : wrapText(l, labW - 12, FS, 2);
+        const ly = y + h / 2 + FS * 0.36 - ((lines.length - 1) * (FS + 2)) / 2;
+        lanesSvg += `<text class="lc-tl-lane" x="4" y="${n2(ly)}">${lines.map((ln, k) => `<tspan x="4"${k ? ` dy="${FS + 2}"` : ''}>${esc(ln)}</tspan>`).join('')}</text>`;
       });
       const canFocus = live.length + ms.length <= MAX_FOCUS;
       let marks = '';
       let labelsSvg = '';
+      // Bars of each lane row in x order, to find the free gap beside a bar for an outside label.
+      const rowKey = (i: number): string => `${lay.laneOf.get(i)}:${lay.row.get(i)}`;
+      const rowsX = new Map<string, { x0: number; x1: number }[]>();
+      for (const i of live) {
+        const k = rowKey(i);
+        const x = X(S(i));
+        (rowsX.get(k) ?? rowsX.set(k, []).get(k) as { x0: number; x1: number }[]).push({ x0: x, x1: x + Math.max(X(E(i)) - x, 2) });
+      }
+      for (const list of rowsX.values()) list.sort((a, b) => a.x0 - b.x0);
       for (const i of live) {
         const it = items[i] as TimelineItem;
         const li = lay.laneOf.get(i) as number;
@@ -244,7 +258,18 @@ export const plugin = definePlugin<TimelineSpec>({
         const y = (laneTop[li] as number) + (lay.row.get(i) as number) * ROW + (ROW - BAR) / 2;
         const rect = `<rect class="lc-mark lc-tl${it.quality ? ' lc-tl-q' : ''} ${colorAttrs(li, it.color)} data-i="${i}" data-v="${n2(dur(i))}" x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${BAR}" rx="3"/>`;
         marks += canFocus ? focusable(ctx, 'lc-pt-tl', itemText(i), rect, x + w / 2, y) : rect;
-        if (w - 8 >= tw('가…', LFS)) labelsSvg += `<text class="lc-tl-lbl" x="${n2(x + 4)}" y="${n2(y + BAR / 2 + LFS * 0.36)}">${esc(truncate(it.label, w - 8, LFS))}</text>`;
+        const ty = y + BAR / 2 + LFS * 0.36;
+        const lw = tw(it.label, LFS);
+        const inCls = it.quality ? 'lc-tl-lbl lc-tl-lbl-q' : 'lc-tl-lbl';
+        if (lw <= w - 8) { labelsSvg += `<text class="${inCls}" x="${n2(x + 4)}" y="${n2(ty)}">${esc(it.label)}</text>`; continue; }
+        // Outside: right of the bar up to the next bar in the row (or the plot edge), else left of it down to the
+        // previous bar; otherwise the truncated name stays inside.
+        const row = rowsX.get(rowKey(i)) ?? [];
+        const next = row.find((b) => b.x0 > x + 1)?.x0 ?? x1;
+        const prev = [...row].reverse().find((b) => b.x1 < x + w - 1)?.x1 ?? x0;
+        if (lw <= next - (x + w) - 10) labelsSvg += `<text class="lc-cm-lbl lc-tl-out" x="${n2(x + w + 5)}" y="${n2(ty)}">${esc(it.label)}</text>`;
+        else if (lw <= x - prev - 10) labelsSvg += `<text class="lc-cm-lbl lc-tl-out" x="${n2(x - 5)}" y="${n2(ty)}" text-anchor="end">${esc(it.label)}</text>`;
+        else if (w - 8 >= tw('가…', LFS)) labelsSvg += `<text class="${inCls}" x="${n2(x + 4)}" y="${n2(ty)}">${esc(truncate(it.label, w - 8, LFS))}</text>`;
       }
       let msSvg = '';
       let msLabels = '';

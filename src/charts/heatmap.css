@@ -10,3 +10,47 @@
 .lc-hval { fill: var(--lc-ink); font-size: 11px; pointer-events: none; }
 .lc-hval-on { fill: var(--lc-surface); }
 .lc-pt:hover .lc-hcell, .lc-pt:focus .lc-hcell, .lc-pt:hover .lc-hcell-na, .lc-pt:focus .lc-hcell-na { stroke: var(--lc-ink); stroke-width: 2; stroke-dasharray: none; }
+/* Hover / focus: the pointed cell's row and column stay, the other cells fade (crosshair). Rules exist for the first
+   20 rows and 20 columns; beyond that only the cell outline marks the spot. */
+.lc-t-heatmap .lc-pt-hcell { transition: opacity 0.15s ease; }
+.lc-t-heatmap .lc-svg:has(.lc-pt-hcell:hover, .lc-pt-hcell:focus) .lc-pt-hcell { opacity: 0.35; }
+.lc-t-heatmap .lc-svg:has([data-r="0"]:hover, .lc-pt-hcell:focus > [data-r="0"]) .lc-pt-hcell:has([data-r="0"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="0"]:hover, .lc-pt-hcell:focus > [data-c="0"]) .lc-pt-hcell:has([data-c="0"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="1"]:hover, .lc-pt-hcell:focus > [data-r="1"]) .lc-pt-hcell:has([data-r="1"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="1"]:hover, .lc-pt-hcell:focus > [data-c="1"]) .lc-pt-hcell:has([data-c="1"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="2"]:hover, .lc-pt-hcell:focus > [data-r="2"]) .lc-pt-hcell:has([data-r="2"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="2"]:hover, .lc-pt-hcell:focus > [data-c="2"]) .lc-pt-hcell:has([data-c="2"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="3"]:hover, .lc-pt-hcell:focus > [data-r="3"]) .lc-pt-hcell:has([data-r="3"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="3"]:hover, .lc-pt-hcell:focus > [data-c="3"]) .lc-pt-hcell:has([data-c="3"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="4"]:hover, .lc-pt-hcell:focus > [data-r="4"]) .lc-pt-hcell:has([data-r="4"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="4"]:hover, .lc-pt-hcell:focus > [data-c="4"]) .lc-pt-hcell:has([data-c="4"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="5"]:hover, .lc-pt-hcell:focus > [data-r="5"]) .lc-pt-hcell:has([data-r="5"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="5"]:hover, .lc-pt-hcell:focus > [data-c="5"]) .lc-pt-hcell:has([data-c="5"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="6"]:hover, .lc-pt-hcell:focus > [data-r="6"]) .lc-pt-hcell:has([data-r="6"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="6"]:hover, .lc-pt-hcell:focus > [data-c="6"]) .lc-pt-hcell:has([data-c="6"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="7"]:hover, .lc-pt-hcell:focus > [data-r="7"]) .lc-pt-hcell:has([data-r="7"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="7"]:hover, .lc-pt-hcell:focus > [data-c="7"]) .lc-pt-hcell:has([data-c="7"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="8"]:hover, .lc-pt-hcell:focus > [data-r="8"]) .lc-pt-hcell:has([data-r="8"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="8"]:hover, .lc-pt-hcell:focus > [data-c="8"]) .lc-pt-hcell:has([data-c="8"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="9"]:hover, .lc-pt-hcell:focus > [data-r="9"]) .lc-pt-hcell:has([data-r="9"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="9"]:hover, .lc-pt-hcell:focus > [data-c="9"]) .lc-pt-hcell:has([data-c="9"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="10"]:hover, .lc-pt-hcell:focus > [data-r="10"]) .lc-pt-hcell:has([data-r="10"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="10"]:hover, .lc-pt-hcell:focus > [data-c="10"]) .lc-pt-hcell:has([data-c="10"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="11"]:hover, .lc-pt-hcell:focus > [data-r="11"]) .lc-pt-hcell:has([data-r="11"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="11"]:hover, .lc-pt-hcell:focus > [data-c="11"]) .lc-pt-hcell:has([data-c="11"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="12"]:hover, .lc-pt-hcell:focus > [data-r="12"]) .lc-pt-hcell:has([data-r="12"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="12"]:hover, .lc-pt-hcell:focus > [data-c="12"]) .lc-pt-hcell:has([data-c="12"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="13"]:hover, .lc-pt-hcell:focus > [data-r="13"]) .lc-pt-hcell:has([data-r="13"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="13"]:hover, .lc-pt-hcell:focus > [data-c="13"]) .lc-pt-hcell:has([data-c="13"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="14"]:hover, .lc-pt-hcell:focus > [data-r="14"]) .lc-pt-hcell:has([data-r="14"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="14"]:hover, .lc-pt-hcell:focus > [data-c="14"]) .lc-pt-hcell:has([data-c="14"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="15"]:hover, .lc-pt-hcell:focus > [data-r="15"]) .lc-pt-hcell:has([data-r="15"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="15"]:hover, .lc-pt-hcell:focus > [data-c="15"]) .lc-pt-hcell:has([data-c="15"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="16"]:hover, .lc-pt-hcell:focus > [data-r="16"]) .lc-pt-hcell:has([data-r="16"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="16"]:hover, .lc-pt-hcell:focus > [data-c="16"]) .lc-pt-hcell:has([data-c="16"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="17"]:hover, .lc-pt-hcell:focus > [data-r="17"]) .lc-pt-hcell:has([data-r="17"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="17"]:hover, .lc-pt-hcell:focus > [data-c="17"]) .lc-pt-hcell:has([data-c="17"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="18"]:hover, .lc-pt-hcell:focus > [data-r="18"]) .lc-pt-hcell:has([data-r="18"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="18"]:hover, .lc-pt-hcell:focus > [data-c="18"]) .lc-pt-hcell:has([data-c="18"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-r="19"]:hover, .lc-pt-hcell:focus > [data-r="19"]) .lc-pt-hcell:has([data-r="19"]) { opacity: 1; }
+.lc-t-heatmap .lc-svg:has([data-c="19"]:hover, .lc-pt-hcell:focus > [data-c="19"]) .lc-pt-hcell:has([data-c="19"]) { opacity: 1; }

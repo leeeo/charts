@@ -1,2 +1,18 @@
 .lc-point { fill: var(--c); fill-opacity: 0.8; stroke: var(--lc-surface); stroke-width: 1; }
 .lc-pt:hover .lc-point, .lc-pt:focus .lc-point { fill-opacity: 1; stroke: var(--lc-ink); stroke-width: 2; }
+/* Hover / focus (scatter and bubble): the pointed series (data-s = series index) stays, the rest fade. Rules exist
+   for the first 12 series (MAX_SERIES). */
+:is(.lc-t-scatter, .lc-t-bubble) .lc-pt-point { transition: opacity 0.15s ease; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt:hover, .lc-pt:focus) :is(.lc-pt-point) { opacity: 0.25; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="0"]:hover, .lc-pt[data-s="0"]:focus) .lc-pt-point[data-s="0"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="1"]:hover, .lc-pt[data-s="1"]:focus) .lc-pt-point[data-s="1"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="2"]:hover, .lc-pt[data-s="2"]:focus) .lc-pt-point[data-s="2"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="3"]:hover, .lc-pt[data-s="3"]:focus) .lc-pt-point[data-s="3"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="4"]:hover, .lc-pt[data-s="4"]:focus) .lc-pt-point[data-s="4"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="5"]:hover, .lc-pt[data-s="5"]:focus) .lc-pt-point[data-s="5"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="6"]:hover, .lc-pt[data-s="6"]:focus) .lc-pt-point[data-s="6"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="7"]:hover, .lc-pt[data-s="7"]:focus) .lc-pt-point[data-s="7"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="8"]:hover, .lc-pt[data-s="8"]:focus) .lc-pt-point[data-s="8"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="9"]:hover, .lc-pt[data-s="9"]:focus) .lc-pt-point[data-s="9"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="10"]:hover, .lc-pt[data-s="10"]:focus) .lc-pt-point[data-s="10"] { opacity: 1; }
+:is(.lc-t-scatter, .lc-t-bubble) .lc-svg:has(.lc-pt[data-s="11"]:hover, .lc-pt[data-s="11"]:focus) .lc-pt-point[data-s="11"] { opacity: 1; }

@@ -1,9 +1,12 @@
 // Gauge: one value on a semicircular min..max arc, with optional threshold bands (the track) and a target marker.
+// The big value is tinted by the arc colour; with a target, a line under the caption spells out the target value and
+// the attainment so the marker on the arc is never a bare tick.
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, num, optNum, optStr, value } from '../check.ts';
 import { type Ctx, colorAttrs, empty, focusable, frame, table, wrapTable } from '../kit.ts';
 import { clamp, esc, makeFmt, n2, truncate, tw } from '../format.ts';
+
 
 export interface GaugeBand { to: number; label?: string; color?: string }
 export interface GaugeSpec extends BaseSpec {
@@ -77,7 +80,7 @@ export const plugin = definePlugin<GaugeSpec>({
     return out;
   },
   height(spec, W) {
-    return Math.round(clamp(W * 0.6, 140, 300) + (spec.label ? 16 : 0));
+    return Math.round(clamp(W * 0.6, 140, 300) + (spec.label ? 16 : 0) + (spec.target !== undefined ? 16 : 0));
   },
   render(spec, ctx: Ctx) {
     const t = ctx.t;
@@ -97,7 +100,7 @@ export const plugin = definePlugin<GaugeSpec>({
     let svg = '';
     if (v === null) svg = empty(ctx);
     else {
-      const bottom = spec.label ? 38 : 22;
+      const bottom = (spec.label ? 38 : 22) + (spec.target !== undefined ? 16 : 0);
       const cx = ctx.W / 2;
       const cy = ctx.H - bottom;
       const R = Math.max(16, Math.min(ctx.W / 2 - 8, cy - 8));
@@ -118,14 +121,19 @@ export const plugin = definePlugin<GaugeSpec>({
       const big = fmt(v);
       const room = 2 * (R - th) * 0.85;
       const fs = clamp(Math.min(R * 0.34, room / Math.max(1, tw(big, 1))), 10, 40);
-      inner += `<text class="lc-center lc-gauge-val" x="${n2(cx)}" y="${n2(cy - 4)}" text-anchor="middle" font-size="${n2(fs)}">${esc(truncate(big, room, fs))}</text>`;
+      inner += `<text class="lc-center lc-gauge-val ${colorAttrs(0, spec.color)} x="${n2(cx)}" y="${n2(cy - 4)}" text-anchor="middle" font-size="${n2(fs)}">${esc(truncate(big, room, fs))}</text>`;
       const [ax, ay] = pt(cx, cy, R, f);
       svg += focusable(ctx, 'lc-pt-gauge', valText, inner, ax, ay);
+
       const minT = fmt(min); const maxT = fmt(max);
       const half = ctx.W / 2 - 4;
       svg += `<text class="lc-tick" x="${n2(cx - R)}" y="${n2(cy + 15)}">${esc(truncate(minT, half, 12))}</text>`;
       svg += `<text class="lc-tick" x="${n2(cx + R)}" y="${n2(cy + 15)}" text-anchor="end">${esc(truncate(maxT, half, 12))}</text>`;
       if (spec.label) svg += `<text class="lc-center-sub lc-gauge-lbl" x="${n2(cx)}" y="${n2(cy + 31)}" text-anchor="middle">${esc(truncate(spec.label, ctx.W - 8, 12))}</text>`;
+      if (spec.target !== undefined) {
+        const tgt = `${t.target} ${fmt(spec.target)}${achText ? ` · ${L2.achieved} ${achText}` : ''}`;
+        svg += `<text class="lc-center-sub lc-gauge-lbl lc-gauge-tgt" x="${n2(cx)}" y="${n2(cy + (spec.label ? 47 : 31))}" text-anchor="middle">${esc(truncate(tgt, ctx.W - 8, 12))}</text>`;
+      }
     }
 
     const bandText = bands.map((b) => `${b.label ? `${b.label} ` : ''}${fmt(b.from)}–${fmt(b.to)}`).join(', ');

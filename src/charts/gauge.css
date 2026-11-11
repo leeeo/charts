@@ -5,5 +5,7 @@
 .lc-gauge { fill: var(--c); }
 .lc-pt:hover .lc-gauge, .lc-pt:focus .lc-gauge { stroke: var(--lc-ink); stroke-width: 1.5; }
 .lc-gauge-target { stroke: var(--lc-ink); stroke-width: 3; stroke-linecap: round; }
-.lc-gauge-val { font-variant-numeric: tabular-nums; }
+/* Big value tinted by the arc colour (mixed with ink so it keeps contrast on both themes). */
+.lc-gauge-val { font-variant-numeric: tabular-nums; fill: var(--lc-ink); fill: color-mix(in oklab, var(--c, var(--lc-ink)) 68%, var(--lc-ink)); }
 .lc-gauge-lbl { font-size: 12px; }
+.lc-gauge-tgt { font-variant-numeric: tabular-nums; }

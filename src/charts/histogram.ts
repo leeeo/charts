@@ -1,10 +1,12 @@
 // Histogram: frequency of a numeric measure per bin. Bins come from raw values (equal-width, by `binCount` or `binWidth`;
 // default Sturges' rule) or are given directly as {from, to, count}. Bins are [from, to) except the last, which includes `to`.
+// Each bar carries its count above it when the bar is wide enough; hovering a bar keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, base, color, dict, fail, num, optNum, optStr, value } from '../check.ts';
 import { esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
 import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, pct, table, wrapTable } from '../kit.ts';
+import { inkText, labelLayer } from './cmp.ts';
 
 export interface HistogramBin { from: number; to: number; count: Value }
 
@@ -142,6 +144,7 @@ export const plugin = definePlugin<HistogramSpec>({
       if (spec.yLabel) svg += `<text class="lc-axis-title" transform="translate(${n2(FS)} ${n2(top + ph / 2)}) rotate(-90)" text-anchor="middle">${esc(truncate(spec.yLabel, ph, FS))}</text>`;
       const canFocus = drawn.length <= MAX_FOCUS;
       const ca = colorAttrs(0, spec.color);
+      let lbl = '';
       bins.forEach((b, i) => {
         if (b.count === null) return;
         const xa = sx(b.from);
@@ -150,7 +153,10 @@ export const plugin = definePlugin<HistogramSpec>({
         const gap = Math.min(1, (xb - xa) * 0.2);
         const rect = `<rect class="lc-mark lc-bin ${ca} data-i="${i}" data-v="${b.count}" data-from="${b.from}" data-to="${b.to}" x="${n2(xa + gap / 2)}" y="${n2(y)}" width="${n2(Math.max(0.5, xb - xa - gap))}" height="${n2(top + ph - y)}"/>`;
         svg += canFocus ? focusable(ctx, 'lc-pt-bin', binText(b), rect, (xa + xb) / 2, y) : rect;
+        const cnt = fmtC(b.count);
+        if (b.count > 0 && tw(cnt, 11) + 4 <= xb - xa) lbl += inkText((xa + xb) / 2, Math.max(11, y - 4), cnt, 'middle', Infinity, 'lc-cm-muted');
       });
+      svg += labelLayer(lbl);
       svg += `<line class="lc-axis" x1="${n2(lft)}" x2="${n2(lft + pw)}" y1="${n2(top + ph)}" y2="${n2(top + ph)}"/>`;
       // x labels at bin edges, thinned so they never overlap
       const ex = [...new Set(edges)].sort((a, b) => a - b);

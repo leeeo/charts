@@ -1,10 +1,13 @@
 // Funnel: ordered stages as centred bars whose width is proportional to the value, with the step conversion
 // (value / previous value) between stages. A null stage is shown as missing and breaks the chain on both sides.
+// The value sits right after its bar in bold (tinted by the bar colour); a bar is never thinner than 3 px so small
+// final stages stay visible.
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, idList, optStr, str, value } from '../check.ts';
 import { type Ctx, colorAttrs, empty, focusable, frame, pct, present, table, wrapTable } from '../kit.ts';
 import { esc, makeFmt, n2, truncate, tw } from '../format.ts';
+import { VAL, labelLayer, valueText } from './cmp.ts';
 
 export interface FunnelStage { id: string; label: string; value: Value; quality?: string }
 export interface FunnelSpec extends BaseSpec {
@@ -16,6 +19,8 @@ export interface FunnelSpec extends BaseSpec {
 
 const ROW = 30;
 const GAP = 20;
+/** Narrowest drawn bar, so a tiny last stage is still a visible mark. */
+const MIN_W = 3;
 const L = {
   ko: { step: '이전 단계 대비', ofFirst: '첫 단계 대비', overall: '전체 전환율', stages: '단계' },
   en: { step: 'From previous', ofFirst: 'Of first stage', overall: 'Overall conversion', stages: ' stages' },
@@ -68,9 +73,11 @@ export const plugin = definePlugin<FunnelSpec>({
     else {
       const maxV = Math.max(...vals);
       const labelW = Math.min(ctx.W * 0.32, 160, Math.max(48, ...st.map((s) => tw(s.label, 12) + 10)));
-      const valW = Math.min(ctx.W * 0.22, Math.max(36, ...vals.map((v) => tw(fmt(v), 12) + 8)));
+      // The value column is sized to the widest bold value (up to 30% of the width), so values are never cut.
+      const valW = Math.min(ctx.W * 0.3, Math.max(36, ...vals.map((v) => tw(fmt(v), VAL) * 1.06 + 10)));
       const ax0 = labelW; const aw = Math.max(10, ctx.W - labelW - valW);
       const cx = ax0 + aw / 2;
+      let lbl = '';
       st.forEach((s, i) => {
         const y = 4 + i * (ROW + GAP);
         const ty = n2(y + ROW / 2 + 4);
@@ -83,12 +90,14 @@ export const plugin = definePlugin<FunnelSpec>({
           svg += `<text class="lc-funnel-na" x="${n2(cx)}" y="${ty}" text-anchor="middle">${esc(truncate(t.na, aw, 12))}</text>`;
           return;
         }
-        const w = maxV > 0 ? Math.max(s.value > 0 ? 1 : 0, (aw * s.value) / maxV) : 0;
-        const inner = `<rect class="lc-mark lc-funnel ${colorAttrs(0, spec.color)} data-i="${i}" data-v="${s.value}" x="${n2(cx - w / 2)}" y="${n2(y)}" width="${n2(w)}" height="${ROW}" rx="2"/>` +
-          `<text class="lc-funnel-val" x="${n2(ctx.W - 2)}" y="${ty}" text-anchor="end">${esc(truncate(fmt(s.value), valW - 4, 12))}</text>`;
+        const w = maxV > 0 ? Math.max(s.value > 0 ? MIN_W : 0, (aw * s.value) / maxV) : 0;
+        const inner = `<rect class="lc-mark lc-funnel ${colorAttrs(0, spec.color)} data-i="${i}" data-v="${s.value}" x="${n2(cx - w / 2)}" y="${n2(y)}" width="${n2(w)}" height="${ROW}" rx="2"/>`;
+        // Bold value right after the bar (the widest bar's value still ends inside the reserved value column).
+        lbl += valueText(cx + w / 2 + 6, y + ROW / 2 + VAL * 0.36, fmt(s.value), colorAttrs(0, spec.color), 'start');
         // At most 30 stages (< MAX_FOCUS): every present stage is a tab stop.
         svg += focusable(ctx, 'lc-pt-funnel', stageText(s, i), inner, cx, y);
       });
+      svg += labelLayer(lbl);
     }
 
     const missing = st.filter((s) => s.value === null).length;

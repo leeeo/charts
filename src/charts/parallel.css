@@ -1,5 +1,9 @@
 .lc-par-head { fill: var(--lc-ink); font-size: 12px; font-weight: 650; }
+/* Item name after the last axis the line reaches, tinted like the line (ink-mixed). */
+.lc-par-name { font-weight: 650; fill: var(--lc-ink); fill: color-mix(in oklab, var(--c, var(--lc-ink)) 68%, var(--lc-ink)); }
 .lc-par-tick { font-size: 11px; }
+/* Narrow slots (phone widths): smaller min / max values so they fit the axis slot. */
+.lc-par-tick-sm { font-size: 10px; }
 .lc-par-na { fill: var(--lc-muted); font-size: 11px; font-style: italic; }
 .lc-par-line { fill: none; stroke: var(--c); stroke-width: 1.75; stroke-opacity: 0.8; stroke-linejoin: round; stroke-linecap: round; }
 .lc-par-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1; }

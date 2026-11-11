@@ -1,10 +1,13 @@
 // Box plot: one box-and-whisker per group, from raw samples (quartiles by linear interpolation, Tukey 1.5 IQR whiskers,
 // outliers drawn as dots) or from a given five-number summary (whiskers = min/max, no outliers).
+// The median is written in bold (tinted by the box colour) beside the box when the slot has room; hovering a box
+// keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, MAX_SERIES, base, color, dict, fail, idList, num, optNum, optStr, str, value } from '../check.ts';
 import { clamp, esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
 import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, table, wrapTable } from '../kit.ts';
+import { VAL, labelLayer, valueText } from './cmp.ts';
 
 export interface BoxSummary { min: number; q1: number; median: number; q3: number; max: number }
 
@@ -157,6 +160,7 @@ export const plugin = definePlugin<BoxSpec>({
       const bw = clamp(slot * 0.5, 4, 56);
       const marks = spec.groups.length + live.reduce((a, s) => a + s.outliers.length, 0);
       const canFocus = marks <= MAX_FOCUS;
+      let lbl = '';
       spec.groups.forEach((g, i) => {
         const cx = left + slot * (i + 0.5);
         svg += `<text class="lc-tick" x="${n2(cx)}" y="${n2(top + ph + FS + 4)}" text-anchor="middle">${esc(truncate(g.label, Math.max(slot - 4, 1), FS))}</text>`;
@@ -179,11 +183,17 @@ export const plugin = definePlugin<BoxSpec>({
           `<rect class="lc-mark lc-box ${ca} data-i="${i}" data-v="${s.median}" data-q1="${s.q1}" data-q3="${s.q3}" data-lo="${s.lo}" data-hi="${s.hi}" x="${n2(cx - bw / 2)}" y="${n2(yq3)}" width="${n2(bw)}" height="${n2(Math.max(1, yq1 - yq3))}" rx="2"/>` +
           `<line class="lc-box-median" x1="${n2(cx - bw / 2)}" x2="${n2(cx + bw / 2)}" y1="${n2(sy(s.median))}" y2="${n2(sy(s.median))}"/></g>`;
         svg += canFocus ? focusable(ctx, 'lc-pt-box', boxText(g, s), inner, cx, yhi) : inner;
+        // Median: right of the box when the slot has room, else above the upper whisker (unless an outlier sits there).
+        const med = fmtQ(s.median);
+        const mw = tw(med, VAL) * 1.06;
+        if (mw <= slot / 2 - bw / 2 - 8) lbl += valueText(cx + bw / 2 + 5, sy(s.median) + VAL * 0.36, med, ca, 'start');
+        else if (mw <= slot - 4 && yhi - 6 - VAL >= top && !s.outliers.some((v) => sy(v) > yhi - VAL - 10 && sy(v) < yhi)) lbl += valueText(cx, yhi - 6, med, ca, 'middle');
         s.outliers.forEach((v) => {
           const dot = `<circle class="lc-mark lc-outlier ${ca} data-i="${i}" data-v="${v}" cx="${n2(cx)}" cy="${n2(sy(v))}" r="3"/>`;
           svg += canFocus ? focusable(ctx, 'lc-pt-outlier', `${g.label}, ${L2.outlier}: ${fmt(v)}${g.quality ? ` · ${g.quality}` : ''}`, dot, cx, sy(v)) : dot;
         });
       });
+      svg += labelLayer(lbl);
     }
 
     const missing = spec.groups.reduce((a, g) => a + missingOf(g), 0);

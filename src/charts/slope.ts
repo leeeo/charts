@@ -1,9 +1,13 @@
-// Slope chart: one line per item between a start and an end value, labelled on both sides.
+// Slope chart: one line per item between a start and an end value, labelled on both sides (name in ink, value bold
+// and tinted by the line colour). When the side margins are too narrow for "name value" on one line, each label
+// becomes two lines (name over value) instead of truncating the name. Hovering or focusing an item keeps that line
+// and fades the rest (cmp.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, idList, optStr, put, str, value } from '../check.ts';
 import { type Fmt, clamp, esc, makeFmt, n2, truncate, tw } from '../format.ts';
 import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, pct, table, wrapTable } from '../kit.ts';
+import { LINE, VAL, labelLayer } from './cmp.ts';
 
 export interface SlopeItem {
   id: string;
@@ -56,40 +60,60 @@ function render(spec: SlopeSpec, ctx: Ctx): string {
     const note = missing.length ? FS + 10 : 0;
     const py = head + 12; const ph = Math.max(10, ctx.H - py - 10 - note);
     const sy = (v: number): number => py + ph - ((v - lo) / (hi - lo)) * ph;
-    const sideText = (it: SlopeItem, v: number): number => tw(`${it.label} ${fmt(v)}`, FS);
+    const valueW = (v: number): number => tw(fmt(v), VAL) * 1.06;
+    const sideText = (it: SlopeItem, v: number): number => tw(`${it.label} `, FS) + valueW(v);
     const need = Math.max(0, ...items.flatMap((it) => [it.start === null ? 0 : sideText(it, it.start), it.end === null ? 0 : sideText(it, it.end)]));
     const gapMin = Math.max(48, ctx.W * 0.22);
     const margin = clamp(need + 16, 50, (ctx.W - gapMin) / 2);
     const x0 = margin; const x1 = ctx.W - margin;
     const room = margin - 14;
-    // label text = "label value" (left) / "value label" (right); the label part is truncated, the value never is
-    const text = (it: SlopeItem, v: number, leftSide: boolean): string => {
+    // One line ("name value" left, "value name" right) when the widest label fits the margin; otherwise two lines,
+    // name over value, so the name keeps its letters. The value is never truncated.
+    const twoLine = need > room;
+    const nameRoom = twoLine ? room : Infinity;
+    const label = (it: SlopeItem, i: number, v: number, leftSide: boolean, y: number): string => {
       const vs = fmt(v);
-      const avail = room - tw(vs, FS) - tw(' ', FS);
-      if (avail < 14) return vs;
-      const l = truncate(it.label, avail, FS);
-      return leftSide ? `${l} ${vs}` : `${vs} ${l}`;
+      const x = n2(leftSide ? x0 - 8 : x1 + 8);
+      const anchor = leftSide ? ' text-anchor="end"' : '';
+      const cls = `lc-cm-lbl lc-slope-label ${colorAttrs(i, it.color)}`;
+      const val = `<tspan class="lc-cm-val">${esc(vs)}</tspan>`;
+      if (twoLine) {
+        const nm = esc(truncate(it.label, Math.max(nameRoom, tw('가…', FS)), FS));
+        return `<text class="${cls} x="${x}" y="${n2(y)}"${anchor}><tspan x="${x}">${nm}</tspan><tspan class="lc-cm-val" x="${x}" dy="${LINE + 1}">${esc(vs)}</tspan></text>`;
+      }
+      const avail = room - valueW(v) - tw(' ', FS);
+      const nm = avail < 14 ? '' : esc(truncate(it.label, avail, FS));
+      const body = !nm ? val : leftSide ? `${nm} ${val}` : `${val} ${nm}`;
+      return `<text class="${cls} x="${x}" y="${n2(y)}"${anchor}>${body}</text>`;
     };
     let s = '';
-    for (const [x, l] of [[x0, spec.startLabel], [x1, spec.endLabel]] as const) {
+    // Column headings: centred on their axis; when the two would meet (narrow widths) they are pushed outwards so
+    // each stays whole.
+    const heads = ([[x0, spec.startLabel], [x1, spec.endLabel]] as const).map(([x, l]) => {
       const tl = truncate(l, Math.max(24, Math.min(ctx.W / 2 - 8, margin * 2 - 8)), FS);
-      const w = tw(tl, FS);
-      s += `<text class="lc-axis-title lc-slope-head" x="${n2(clamp(x - w / 2, 2, ctx.W - w - 2))}" y="${n2(FS + 4)}">${esc(tl)}</text>`;
-      s += `<line class="lc-axis" x1="${n2(x)}" y1="${n2(py - 6)}" x2="${n2(x)}" y2="${n2(py + ph + 6)}"/>`;
-    }
+      return { x, tl, w: tw(tl, FS) };
+    });
+    const h0 = heads[0] as (typeof heads)[number]; const h1 = heads[1] as (typeof heads)[number];
+    const meet = x1 - x0 < (h0.w + h1.w) / 2 + 8;
+    heads.forEach((h, k) => {
+      const hx = meet ? (k === 0 ? clamp(x0 + 6 - h.w, 2, ctx.W - h.w - 2) : clamp(x1 - 6, 2, ctx.W - h.w - 2)) : clamp(h.x - h.w / 2, 2, ctx.W - h.w - 2);
+      s += `<text class="lc-axis-title lc-slope-head" x="${n2(hx)}" y="${n2(FS + 4)}">${esc(h.tl)}</text>`;
+      s += `<line class="lc-axis" x1="${n2(h.x)}" y1="${n2(py - 6)}" x2="${n2(h.x)}" y2="${n2(py + ph + 6)}"/>`;
+    });
+    const block = twoLine ? FS + LINE + 6 : FS + 2;
     const sides = [0, 1].map((side) => {
       const list = items.map((it, i) => ({ i, v: side ? it.end : it.start })).filter((e): e is { i: number; v: number } => e.v !== null);
-      const ys = spread(list.map((e) => sy(e.v)), FS + 2, py, py + ph);
+      const ys = spread(list.map((e) => sy(e.v)), block, py, py + ph);
       return { list, ys };
     });
     let labelsSvg = '';
     sides.forEach(({ list, ys }, side) => list.forEach((e, k) => {
       const it = items[e.i] as SlopeItem;
-      const y = (ys[k] ?? sy(e.v)) + FS * 0.35;
-      labelsSvg += side === 0
-        ? `<text class="lc-slope-label" x="${n2(x0 - 8)}" y="${n2(y)}" text-anchor="end">${esc(text(it, e.v, true))}</text>`
-        : `<text class="lc-slope-label" x="${n2(x1 + 8)}" y="${n2(y)}">${esc(text(it, e.v, false))}</text>`;
+      const yc = ys[k] ?? sy(e.v);
+      const y = twoLine ? yc - (LINE + 1) / 2 + FS * 0.35 : yc + FS * 0.35;
+      labelsSvg += label(it, e.i, e.v, side === 0, y);
     }));
+    labelsSvg = labelLayer(labelsSvg);
     const focus = items.length <= MAX_FOCUS;
     let marks = '';
     items.forEach((it, i) => {
@@ -107,7 +131,7 @@ function render(spec: SlopeSpec, ctx: Ctx): string {
       const ay = sy((it.end ?? it.start) as number);
       marks += focus ? focusable(ctx, 'lc-pt-slope', ariaText(spec, it, fmt, t.na, t.change), g, ax, ay) : g;
     });
-    s += labelsSvg + marks;
+    s += marks + labelsSvg;
     if (missing.length) {
       const msg = truncate(`${t.missing}: ${missing.map((it) => it.label).join(', ')}`, ctx.W - 8, FS);
       s += `<text class="lc-tick lc-slope-missing" x="4" y="${n2(ctx.H - 6)}">${esc(msg)}</text>`;

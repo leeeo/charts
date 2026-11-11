@@ -2,9 +2,16 @@
 .lc-tl-q { fill-opacity: 0.55; stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 3 2; }
 .lc-pt:hover .lc-tl, .lc-pt:focus .lc-tl { stroke: var(--lc-ink); stroke-width: 2; }
 .lc-tl-lbl { fill: var(--lc-surface); font-size: 11px; font-weight: 600; pointer-events: none; }
+/* Label on a tentative (translucent) bar: ink with the surface halo, so it reads on both themes. */
+.lc-tl-lbl-q { fill: var(--lc-ink); paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; }
+/* Label written beside a bar that is too short for it. */
+.lc-tl-out { font-size: 11px; font-weight: 600; }
 .lc-tl-lane { fill: var(--lc-ink); font-size: 12px; }
 .lc-tl-sep { stroke: var(--lc-grid); stroke-width: 1; }
 .lc-tl-msline { stroke: var(--lc-ink); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.7; }
 .lc-ms { fill: var(--lc-ink); stroke: var(--lc-surface); stroke-width: 1; }
 .lc-pt:hover .lc-ms, .lc-pt:focus .lc-ms { stroke: var(--lc-ink); stroke-width: 2; }
 .lc-tl-mslbl { fill: var(--lc-ink); font-size: 11px; }
+/* Bar labels fade with the rest while a value box is open (the hovered bar's own name is in the box). */
+.lc-t-timeline .lc-tl-labels { transition: opacity 0.15s ease; }
+.lc-t-timeline .lc-svg:has(.lc-pt:hover, .lc-pt:focus) .lc-tl-labels { opacity: 0.3; }
