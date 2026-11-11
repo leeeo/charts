@@ -7,7 +7,13 @@
 .lc-mm-sw.lc-mm-0 { background: var(--lc-grid); } .lc-mm-sw.lc-mm-na { background: transparent; border: 1px dashed var(--lc-muted); }
 .lc-pt:hover .lc-mm, .lc-pt:focus .lc-mm { stroke: var(--lc-ink); stroke-width: 2; }
 .lc-mm-lbl, .lc-mm-val, .lc-mm-glbl { font-size: 11px; pointer-events: none; }
-.lc-mm-lbl { font-weight: 600; } .lc-mm-val { font-variant-numeric: tabular-nums; }
+.lc-mm-lbl { font-weight: 600; } .lc-mm-val { font-weight: 700; font-variant-numeric: tabular-nums; }
 .lc-mm-tstrong { fill: var(--lc-surface); } .lc-mm-tsoft { fill: var(--lc-ink); } .lc-mm-tna { fill: var(--lc-muted); }
 .lc-mm-head { fill: var(--lc-surface); stroke: none; }
 .lc-mm-glbl { fill: var(--lc-ink); font-weight: 650; }
+/* Hover / focus: the hovered cell's sector stays (its siblings slightly dimmed), other sectors fade; cell labels fade
+   while the value box is open. */
+.lc-t-marketmap .lc-mm, .lc-t-marketmap .lc-mm-labels { transition: opacity 0.15s ease; }
+.lc-t-marketmap .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-mm-g:not(:has(.lc-pt:is(:hover, :focus))) .lc-mm { opacity: 0.35; }
+.lc-t-marketmap .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-mm-g:has(.lc-pt:is(:hover, :focus)) .lc-pt:not(:hover, :focus) .lc-mm { opacity: 0.7; }
+.lc-t-marketmap .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-mm-labels { opacity: 0.35; }

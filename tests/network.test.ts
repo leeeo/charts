@@ -80,3 +80,11 @@ test('network: user text is escaped, nodes and links are focusable with labels, 
   assert.match(html, /<g class="lc-pt lc-pt-nnode" tabindex="0" aria-label="&quot;B&quot;, 금융: 연결 1개 · 가중 합계 1,200명 · 추정">/);
   assert.match(html, /<ul class="lc-legend"><li><span class="lc-sw lc-c1"><\/span><span class="lc-ln">게임/);
 });
+
+test('network 0.8: labels carry the weighted total on a bold second line; arrowheads carry the link ends', () => {
+  const html = renderChart({ ...spec([{ source: 'a', target: 'b', value: 1200 }, { source: 'b', target: 'c', value: 300 }], { directed: true }), unit: { suffix: '명' } });
+  assert.match(html, /<text class="lc-nlabel lc-c1" x="[\d.]+" y="[\d.]+" text-anchor="[a-z]+">B<tspan class="lc-nlabel-val" x="[\d.]+" dy="15">1,500명<\/tspan><\/text>/);
+  assert.match(html, /<path class="lc-narrow lc-c1" data-s="0" data-t="1" d="M/);
+  const many = renderChart({ type: 'network', title: 't', nodes: Array.from({ length: 30 }, (_, i) => ({ id: 'n' + i, label: 'N' + i })), links: Array.from({ length: 29 }, (_, i) => ({ source: 'n' + i, target: 'n' + (i + 1), value: 1 })) });
+  assert.ok(!many.includes('lc-nlabel-val'), 'no value line above 24 nodes');
+});

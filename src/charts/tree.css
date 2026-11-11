@@ -5,3 +5,11 @@
 .lc-pt:hover .lc-node, .lc-pt:focus .lc-node { stroke: var(--lc-ink); stroke-width: 2.5; }
 .lc-tree-lbl { fill: var(--lc-ink); font-size: 11px; paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
 .lc-tree-in { font-weight: 600; }
+/* Value after (or under) the name: bold, tinted by the branch colour mixed with ink so small text keeps contrast. */
+.lc-tree-val { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; fill: var(--lc-ink); fill: color-mix(in oklab, var(--c, var(--lc-ink)) 68%, var(--lc-ink)); }
+/* Hover / focus: subtrees are nested groups, so the hovered node's ancestors (groups that contain it) and its
+   descendants stay while every other branch fades; labels fade while the value box is open. */
+.lc-t-tree :is(.lc-tree-link, .lc-node, .lc-tree-labels) { transition: opacity 0.15s ease; }
+.lc-t-tree .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-tree-sub:not(:has(.lc-pt:is(:hover, :focus))) > :is(.lc-tree-link, .lc-pt > .lc-node) { opacity: 0.25; }
+.lc-t-tree .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-tree-sub:has(> .lc-pt:is(:hover, :focus)) .lc-tree-sub > :is(.lc-tree-link, .lc-pt > .lc-node) { opacity: 1; }
+.lc-t-tree .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-tree-labels { opacity: 0.35; }

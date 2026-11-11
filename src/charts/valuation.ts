@@ -2,12 +2,14 @@
 // computed from the given data, with the price line drawn over them. Bands are not drawn where the base is missing
 // or not positive (a multiple of a loss is meaningless); those dates are counted in the summary. The implied
 // multiple (price / base) is written in the value box and table.
+// Readability (0.8.0): each day's value box comes with a crosshair, and the last price is written in bold at the
+// right edge with its implied multiple (fin.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base as baseOf, dict, fail, labels, num, oneOf, optStr, values } from '../check.ts';
 import { esc, makeFmt, n2, tw } from '../format.ts';
-import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, runs, table, wrapTable } from '../kit.ts';
-import { linePath, timePanes } from './fin.ts';
+import { type Ctx, FS, MAX_FOCUS, cIdx, colorAttrs, empty, focusable, frame, legend, runs, table, wrapTable } from '../kit.ts';
+import { crosshair, lastTag, linePath, timePanes } from './fin.ts';
 
 export interface ValuationSpec extends BaseSpec {
   type: 'valuation';
@@ -87,9 +89,15 @@ function render(spec: ValuationSpec, ctx: Ctx): string {
       if (!canFocus) { if (i === lastI || solo) marks += dot; return; }
       if (v === null && (spec.base[i] ?? null) === null) return;
       const hit = `<rect class="lc-hit" x="${n2(p.cx(i) - p.slot / 2)}" y="${n2(p.top)}" width="${n2(p.slot)}" height="${n2(p.ph)}"/>`;
-      marks += focusable(ctx, 'lc-pt-vb', dayText(i), hit + dot, p.cx(i), v === null ? p.top + p.ph / 2 : p.sy(v));
+      marks += focusable(ctx, 'lc-pt-vb', dayText(i), crosshair(p, i) + hit + dot, p.cx(i), v === null ? p.top + p.ph / 2 : p.sy(v));
     });
     svg += marks;
+    if (lastI >= 0) {
+      const lv = spec.price[lastI] as number;
+      const im = impliedMultiple(lv, spec.base[lastI] ?? null);
+      const spans = spec.price.flatMap((v, i) => (v === null ? [] : [{ x: p.cx(i), y0: p.sy(v) - 2, y1: p.sy(v) + 2 }]));
+      svg += lastTag(p, ctx, lastI, lv, `${fmt(lv)}${im !== null ? ` · ${metric} ${xfmt(im)}` : ''}`, `lc-c${cIdx(0)}`, spans);
+    }
   }
   const lastBoth = spec.dates.reduce<number>((a, _, i) => (impliedMultiple(spec.price[i] ?? null, spec.base[i] ?? null) !== null ? i : a), -1);
   let desc = `${metric} ${ms.map(S.x).join(', ')}. ${n}${t.items} (${spec.dates[0]}–${spec.dates[n - 1]}).`;

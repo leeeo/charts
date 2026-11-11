@@ -2,6 +2,9 @@
 // with the surprise (actual - estimate) / |estimate| written above in text and a ▲/▼ mark, so the result never
 // depends on colour alone. A missing estimate is written "미확인" (never treated as zero); a missing actual (not yet
 // reported) has no bar.
+// Readability (0.8.0): the surprise label is tinted by its state (beat = rise colour, miss = fall colour); when the
+// column is narrow it drops to a smaller size, then to two lines (mark, then percent), and only then to the mark
+// alone. Hovering a period keeps it and fades the others (surprise.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, dict, labels, oneOf, optStr, values } from '../check.ts';
@@ -104,13 +107,19 @@ function render(spec: SurpriseSpec, ctx: Ctx): string {
         const ey = sy(x.e);
         g += `<line class="lc-mark lc-sp-est" data-i="${i}" data-v="${x.e}" x1="${n2(c - bw / 2 - 4)}" x2="${n2(c + bw / 2 + 4)}" y1="${n2(ey)}" y2="${n2(ey)}"/>`;
       }
-      // label above the column: full text, then without the word, then the mark only; skipped if nothing fits
-      const full = x.state === 'pending' ? '' : x.state === 'unknown' ? S.unknown : `${mark(x)}${x.r !== null ? pct(Math.abs(x.r)) : S[x.state]}`;
-      const short = x.state === 'unknown' ? '?' : mark(x);
-      const small = tw(full, XS) > band - 2 && tw(full, SM) <= band - 2;
-      const lab = tw(full, XS) <= band - 2 || small ? full : tw(short, XS) <= band - 2 ? short : '';
+      // Label above the column. Candidates in order: one line, one line smaller, two lines (mark, then the number),
+      // two lines smaller, the mark alone; the first whose lines all fit the column wins, otherwise no label.
+      const body = x.r !== null ? pct(Math.abs(x.r)) : S[x.state as 'beat' | 'miss' | 'meet'];
+      const cands: { lines: string[]; small: boolean }[] = x.state === 'pending' ? []
+        : x.state === 'unknown' ? [{ lines: [S.unknown], small: false }, { lines: [S.unknown], small: true }, { lines: ['?'], small: false }]
+        : [{ lines: [`${mark(x)}${body}`], small: false }, { lines: [`${mark(x)}${body}`], small: true }, { lines: [mark(x), body], small: false }, { lines: [mark(x), body], small: true }, { lines: [mark(x)], small: false }];
+      const pick = cands.find((k) => k.lines.every((l) => tw(l, k.small ? SM : XS) <= band - 2));
       const topV = Math.max(0, ...[x.a, x.e].filter((v): v is number => v !== null));
-      if (lab) g += `<text class="lc-sp-lbl lc-sp-t-${x.state}${small ? ' lc-sp-sm' : ''}" x="${n2(c)}" y="${n2(Math.max(XS + 2, sy(topV) - 5))}" text-anchor="middle" aria-hidden="true">${esc(lab)}</text>`;
+      if (pick) {
+        const lh = pick.small ? SM + 1 : XS + 1;
+        const yb = Math.max(XS + 2 + (pick.lines.length - 1) * lh, sy(topV) - 5);
+        g += `<text class="lc-sp-lbl lc-sp-t-${x.state}${pick.small ? ' lc-sp-sm' : ''}" x="${n2(c)}" y="${n2(yb - (pick.lines.length - 1) * lh)}" text-anchor="middle" aria-hidden="true">${pick.lines.map((l, k) => (k ? `<tspan x="${n2(c)}" dy="${lh}">${esc(l)}</tspan>` : esc(l))).join('')}</text>`;
+      }
       if (!canFocus) { marks += g; return; }
       const hit = `<rect class="lc-hit" x="${n2(c - band / 2)}" y="${n2(top)}" width="${n2(band)}" height="${n2(ph)}"/>`;
       marks += focusable(ctx, 'lc-pt-sp', aria(i), hit + g, c, sy(topV));

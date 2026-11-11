@@ -1,12 +1,14 @@
 // Price chart: closing prices as a line (or area) with an optional volume pane under it on the same x axis.
 // Indicator overlays (SMA / EMA / Bollinger) are computed from the given closes. A null close is a gap: the line
 // breaks, indicator windows skip it, and the day's volume (if any) is still drawn.
+// Readability (0.8.0): each day's value box comes with a crosshair, and the last close is written in bold at the
+// right edge, tinted by its rise or fall against the previous close (fin.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, dict, labels, oneOf, optStr, values } from '../check.ts';
 import { makeFmt, n2 } from '../format.ts';
 import { type Ctx, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, pct, runs, table, wrapTable } from '../kit.ts';
-import { CONVENTIONS, type Convention, FIN_L, type Overlay, convCls, dirOf, drawOverlays, linePath, overlayLines, overlayValues, overlaysOf, timePanes, volBar, volumeOf } from './fin.ts';
+import { CONVENTIONS, type Convention, FIN_L, type Overlay, convCls, crosshair, dirCls, dirOf, drawOverlays, lastTag, linePath, overlayLines, overlayValues, overlaysOf, timePanes, volBar, volumeOf } from './fin.ts';
 
 export interface PriceSpec extends BaseSpec {
   type: 'price';
@@ -69,9 +71,13 @@ function render(spec: PriceSpec, ctx: Ctx): string {
       if (!canFocus) { if (i === lastI || solo) marks += dot; return; }
       if (v === null && (spec.volume?.[i] ?? null) === null) return;
       const hit = `<rect class="lc-hit" x="${n2(p.cx(i) - p.slot / 2)}" y="${n2(p.top)}" width="${n2(p.slot)}" height="${n2(p.bottom - p.top)}"/>`;
-      marks += focusable(ctx, 'lc-pt-price', dayText(i), hit + dot, p.cx(i), v === null ? p.top + p.ph / 2 : p.sy(v));
+      marks += focusable(ctx, 'lc-pt-price', dayText(i), crosshair(p, i) + hit + dot, p.cx(i), v === null ? p.top + p.ph / 2 : p.sy(v));
     });
-    svg += marks;
+    const lv = c[lastI] as number;
+    const pc = prev(lastI);
+    const chg = pc !== null && pc !== 0 ? ` (${lv >= pc ? '+' : ''}${pct((lv - pc) / pc)})` : '';
+    const spans = live.map((i) => ({ x: p.cx(i), y0: p.sy(c[i] as number) - 2, y1: p.sy(c[i] as number) + 2 }));
+    svg += marks + lastTag(p, ctx, lastI, lv, fmt(lv) + chg, dirCls(dirOf(lv, pc)), spans);
   }
   let desc: string;
   if (live.length) {

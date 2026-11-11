@@ -3,4 +3,14 @@
 .lc-tm-group { fill: none; stroke: var(--lc-surface); stroke-width: 3; pointer-events: none; }
 .lc-tm-lbl, .lc-tm-val { fill: var(--lc-surface); font-size: 11px; pointer-events: none; }
 .lc-tm-lbl { font-weight: 600; }
-.lc-tm-val { font-variant-numeric: tabular-nums; }
+.lc-tm-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+/* Group header strip: name in ink, total in muted, on the surface colour so it reads as a caption, not a cell. */
+.lc-tm-head { fill: var(--lc-surface); stroke: none; pointer-events: none; }
+.lc-tm-glbl { fill: var(--lc-ink); font-size: 11px; font-weight: 650; pointer-events: none; }
+.lc-tm-gval { fill: var(--lc-muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+/* Hover / focus: the hovered cell's group stays (its siblings slightly dimmed), other groups fade; cell labels fade
+   while the value box is open so it reads cleanly. */
+.lc-t-treemap .lc-tm, .lc-t-treemap .lc-tm-labels { transition: opacity 0.15s ease; }
+.lc-t-treemap .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-tm-g:not(:has(.lc-pt:is(:hover, :focus))) .lc-tm { opacity: 0.35; }
+.lc-t-treemap .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-tm-g:has(.lc-pt:is(:hover, :focus)) .lc-pt:not(:hover, :focus) .lc-tm { opacity: 0.7; }
+.lc-t-treemap .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-tm-labels { opacity: 0.35; }

@@ -4,11 +4,13 @@
 // alone. Colours follow the up/down convention (kr: up red, down blue; global: up green, down red).
 // Up to two levels: sector groups ({children}) or plain items. A missing cap leaves the item off the map (listed as
 // missing); a missing change is drawn neutral and written 데이터 없음.
+// Readability (0.8.0): a name wider than its cell wraps onto two lines when the cell is tall enough (instead of being
+// cut to a letter or two); hovering a cell keeps its sector while the other sectors fade (marketmap.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, base, dict, fail, idList, num, oneOf, optStr, str, value } from '../check.ts';
 import { esc, makeFmt, n2, truncate, tw } from '../format.ts';
-import { type Ctx, MAX_FOCUS, empty, focusable, frame, pct, table, wrapTable } from '../kit.ts';
+import { type Ctx, MAX_FOCUS, empty, focusable, frame, pct, table, wrapTable, wrapText } from '../kit.ts';
 import { squarify } from './treemap.ts';
 import { CONVENTIONS, type Convention, convCls } from './fin.ts';
 
@@ -26,6 +28,7 @@ export interface MarketmapSpec extends BaseSpec {
 }
 
 const LFS = 11;
+const LINE = LFS + 3;
 const L = {
   ko: { cap: '시가총액', change: '등락률', flat: '보합', up: '상승', down: '하락', strong: '큰 ', na: '데이터 없음', group: '그룹', ups: '상승', downs: '하락', flats: '보합' },
   en: { cap: 'Market cap', change: 'Change', flat: 'flat', up: 'up', down: 'down', strong: 'strong ', na: 'no data', group: 'Group', ups: 'up', downs: 'down', flats: 'flat' },
@@ -79,20 +82,26 @@ function render(spec: MarketmapSpec, ctx: Ctx): string {
         outl += `<rect class="lc-mm-head" x="${n2(tr.x)}" y="${n2(tr.y)}" width="${n2(tr.w)}" height="${n2(head)}"/>`;
         labs += `<text class="lc-mm-glbl" x="${n2(tr.x + 4)}" y="${n2(tr.y + LFS + 1)}">${esc(truncate(it.label, tr.w - 8, LFS))}</text>`;
       }
+      let cells = '';
       ki.forEach((ci, j) => {
         const lf = kids[ci]!; const r = rs[j]!;
         const st = stepOf(lf.change, steps);
         const li = leaves.findIndex((x) => x.lf === lf);
         const rect = `<rect class="lc-mark lc-mm ${stepCls(st)}" data-i="${li}" data-v="${lf.value}" data-c="${lf.change ?? ''}" x="${n2(r.x)}" y="${n2(r.y)}" width="${n2(r.w)}" height="${n2(r.h)}"/>`;
-        marks += canFocus ? focusable(ctx, 'lc-pt-mm', leafText(leaves[li]!), rect, r.x + r.w / 2, r.y + Math.min(r.h / 2, 18)) : rect;
+        cells += canFocus ? focusable(ctx, 'lc-pt-mm', leafText(leaves[li]!), rect, r.x + r.w / 2, r.y + Math.min(r.h / 2, 44)) : rect;
         const room = r.w - 8;
         const tc = st === null ? 'lc-mm-tna' : Math.abs(st) === 2 ? 'lc-mm-tstrong' : 'lc-mm-tsoft';
         if (r.h >= LFS + 8 && room >= tw('가…', LFS)) {
-          labs += `<text class="lc-mm-lbl ${tc}" x="${n2(r.x + 4)}" y="${n2(r.y + 4 + LFS)}">${esc(truncate(lf.label, room, LFS))}</text>`;
+          // A long name wraps onto two lines when the cell is tall enough; the change line follows when it fits.
+          const lines = tw(lf.label, LFS) <= room ? [lf.label] : r.h >= 3 * LINE + 10 ? wrapText(lf.label, room, LFS, 2) : [truncate(lf.label, room, LFS)];
+          const x = n2(r.x + 4);
+          labs += `<text class="lc-mm-lbl ${tc}" x="${x}" y="${n2(r.y + 4 + LFS)}">${lines.map((l, q) => `<tspan x="${x}"${q ? ` dy="${LINE}"` : ''}>${esc(l)}</tspan>`).join('')}</text>`;
           const ct = lf.change === null ? S.na : signedPct(lf.change);
-          if (r.h >= 2 * LFS + 12 && tw(ct, LFS) <= room) labs += `<text class="lc-mm-val ${tc}" x="${n2(r.x + 4)}" y="${n2(r.y + 8 + 2 * LFS)}">${esc(ct)}</text>`;
+          const vy = r.y + 4 + LFS + lines.length * LINE + 1;
+          if (vy + 4 <= r.y + r.h && tw(ct, LFS) <= room) labs += `<text class="lc-mm-val ${tc}" x="${x}" y="${n2(vy)}">${esc(ct)}</text>`;
         }
       });
+      marks += `<g class="lc-mm-g">${cells}</g>`;
       if (isGroup(it)) outl += `<rect class="lc-tm-group" x="${n2(tr.x)}" y="${n2(tr.y)}" width="${n2(tr.w)}" height="${n2(tr.h)}"/>`;
     });
     svg = `<g class="lc-mm-marks">${marks}</g><g aria-hidden="true">${outl}</g><g class="lc-mm-labels" aria-hidden="true">${labs}</g>`;

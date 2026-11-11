@@ -3,12 +3,15 @@
 // computed from the closes, and a volume pane under the price pane on the same x axis. A null day is a gap: no
 // candle, indicator windows skip it (they use the last N available closes) and their lines break there.
 // The `ohlc` type (src/charts/ohlc.ts) draws the same data as OHLC bars through renderOhlc().
+// Readability (0.8.0): every day carries a crosshair that shows with its value box, the last close is written in bold
+// at the right edge (tinted by its rise or fall against the previous close, with the change), and hovering a day
+// fades the other candles (candlestick.css / ohlc.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, dict, fail, labels, num, oneOf, optStr } from '../check.ts';
 import { clamp, makeFmt, n2 } from '../format.ts';
 import { type Ctx, MAX_FOCUS, empty, focusable, frame, legend, pct, table, wrapTable } from '../kit.ts';
-import { CONVENTIONS, type Convention, FIN_L, type Overlay, convCls, dirOf, drawOverlays, overlayLines, overlayValues, overlaysOf, sma, timePanes, volBar, volumeOf } from './fin.ts';
+import { CONVENTIONS, type Convention, FIN_L, type Overlay, convCls, crosshair, dirCls, dirOf, drawOverlays, lastTag, overlayLines, overlayValues, overlaysOf, sma, timePanes, volBar, volumeOf } from './fin.ts';
 
 export interface Ohlc { open: number; high: number; low: number; close: number }
 
@@ -129,11 +132,17 @@ export function renderOhlc(spec: OhlcLike, ctx: Ctx, bars: boolean): string {
           `<line class="lc-candle-wick" x1="${n2(x)}" x2="${n2(x)}" y1="${n2(p.sy(d.high))}" y2="${n2(p.sy(d.low))}"/>` +
           `<rect class="lc-mark lc-candle ${ud}" data-i="${i}" data-v="${d.close}" data-o="${d.open}" data-h="${d.high}" data-l="${d.low}" x="${n2(x - bw / 2)}" y="${n2(yT)}" width="${n2(bw)}" height="${n2(Math.max(1, yB - yT))}"/></g>`;
       }
-      const inner = shape + vb;
+      const inner = (canFocus ? crosshair(p, i) : '') + shape + vb;
       marks += canFocus ? focusable(ctx, 'lc-pt-candle', dayText(i, d), inner, x, p.sy(d.high)) : inner;
     });
+    // Last close tag at the right edge: value and change against the previous close, tinted by direction.
+    const li = days.reduce<number>((a, d, i) => (d ? i : a), -1);
+    const last = days[li] as Ohlc;
+    const pc = prevClose(li);
+    const chg = pc !== null && pc !== 0 ? ` (${last.close >= pc ? '+' : ''}${pct((last.close - pc) / pc)})` : '';
     // indicator lines under the focusable marks so value boxes stay on top
-    svg += drawOverlays(lines, p, true) + marks;
+    const spans = days.flatMap((d, i) => (d ? [{ x: p.cx(i), y0: p.sy(d.high), y1: p.sy(d.low) }] : []));
+    svg += drawOverlays(lines, p, true) + marks + lastTag(p, ctx, li, last.close, fmt(last.close) + chg, dirCls(dirOf(last.close, pc)), spans);
   }
 
   const missing = n - live.length;

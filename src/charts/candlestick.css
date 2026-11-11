@@ -5,3 +5,6 @@
 .lc-cs-x { font-size: 11px; }
 .lc-cs-ma { fill: none; stroke: var(--c); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; pointer-events: none; }
 .lc-pt:hover .lc-candle, .lc-pt:focus .lc-candle { stroke: var(--lc-ink); stroke-width: 2; }
+/* Hover / focus: the hovered day's candle and volume bar stay, the other days fade; indicator lines are untouched. */
+.lc-t-candlestick :is(.lc-candle, .lc-candle-wick, .lc-fin-vol) { transition: opacity 0.15s ease; }
+.lc-t-candlestick .lc-svg:has(.lc-pt-candle:is(:hover, :focus)) .lc-pt-candle:not(:hover, :focus) :is(.lc-candle, .lc-candle-wick, .lc-fin-vol) { opacity: 0.4; }

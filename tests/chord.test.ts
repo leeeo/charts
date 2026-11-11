@@ -74,3 +74,8 @@ test('chord: user text is escaped and arcs and ribbons are focusable with labels
   assert.match(html, /<g class="lc-pt lc-pt-ribbon" tabindex="0" aria-label="&lt;검색&gt; → &quot;SNS&quot;: 1,200명 · 60%">/);
   assert.match(html, /<g class="lc-pt lc-pt-carc" tabindex="0" aria-label="&quot;SNS&quot;: 합계 2,000명 \(유출 800명, 유입 1,200명\) · 추정">/);
 });
+
+test('chord 0.8: arc labels carry the group total on a bold second line', () => {
+  const html = renderChart({ type: 'chord', title: 't', unit: { suffix: '명' }, groups, matrix: [[0, 10, 20], [10, 0, 30], [20, 30, 0]] });
+  assert.match(html, /<text class="lc-clabel lc-c1" x="[\d.]+" y="[\d.]+" text-anchor="[a-z]+">A<tspan class="lc-clabel-val" x="[\d.]+" dy="15">60명<\/tspan><\/text>/);
+});

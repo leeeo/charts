@@ -2,6 +2,9 @@
 // columns form a stepped silhouette, with month labels underneath. Missing days (null) get no column; they are shaded
 // as a muted band with a dashed baseline so they never read as 0. A real 0 is a zero-height column on a solid baseline.
 // Above MAX_FOCUS days the columns are not individually focusable; the data table carries every value.
+// Readability (0.8.0): each run is filled as one silhouette path (no seams between hundreds of thin columns; the
+// per-day columns stay transparent on top for hover and focus), the edge line thins out when a column is under 1.5px,
+// and the highest day is marked with its value and date.
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, optNum, optStr, value } from '../check.ts';
@@ -23,6 +26,7 @@ export interface SkylineSpec extends BaseSpec {
 }
 
 const MAX_DAYS = 1100;
+const VFS = 13;
 const MON_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const L = { ko: { days: '일', mean: '평균' }, en: { days: ' days', mean: 'mean' } };
 
@@ -95,6 +99,7 @@ export const plugin = definePlugin<SkylineSpec>({
       }
       const canFocus = present.length <= MAX_FOCUS;
       let marks = '';
+      let fill = '';
       let edge = '';
       let baseLine = '';
       for (const r of runs(vals)) {
@@ -102,6 +107,7 @@ export const plugin = definePlugin<SkylineSpec>({
         baseLine += `<line class="lc-axis" x1="${n2(X(a))}" y1="${n2(baseY)}" x2="${n2(X(b))}" y2="${n2(baseY)}"/>`;
         let d = `M${n2(X(a))} ${n2(baseY)}`;
         for (const i of r) d += `V${n2(Y(vals[i] as number))}H${n2(X(i + 1))}`;
+        fill += `<path class="lc-sky-fill ${colorAttrs(0, spec.color)} d="${d}V${n2(baseY)}Z"/>`;
         edge += `<path class="lc-sky-edge" d="${d}V${n2(baseY)}"/>`;
       }
       for (const { v, i } of present) {
@@ -109,6 +115,16 @@ export const plugin = definePlugin<SkylineSpec>({
         const rect = `<rect class="lc-mark lc-sky ${colorAttrs(0, spec.color)} data-i="${i}" data-v="${v}" x="${n2(X(i))}" y="${n2(y)}" width="${n2(cw)}" height="${n2(baseY - y)}"/>`;
         marks += canFocus ? focusable(ctx, 'lc-pt-sky', dayText(i), rect, X(i) + cw / 2, y) : rect;
       }
+      // Peak: a dot on the highest day with its value (bold, tinted) and date, kept inside the plot.
+      const peak = present.reduce((a, p) => (p.v > a.v ? p : a));
+      const px = X(peak.i) + cw / 2; const py = Y(peak.v);
+      const pv = fmt(peak.v); const pd = iso(s0 + peak.i);
+      const pw = Math.max(tw(pv, VFS), tw(pd, FS)) * 1.08;
+      const onLeft = px + 6 + pw > x1;
+      const lx = onLeft ? px - 6 : px + 6;
+      const ly = Math.max(top + VFS, py - 6);
+      const peakSvg = `<g class="lc-sky-peak ${colorAttrs(0, spec.color)}><circle class="lc-sky-peak-dot" cx="${n2(px)}" cy="${n2(py)}" r="3"/>` +
+        `<text class="lc-sky-peak-val" x="${n2(lx)}" y="${n2(ly)}"${onLeft ? ' text-anchor="end"' : ''}>${esc(pv)}<tspan class="lc-sky-peak-date" x="${n2(lx)}" dy="${FS + 2}">${esc(pd)}</tspan></text></g>`;
       // Month labels at the first day of each month (and the first day of the range), skipped when they would collide.
       let months = '';
       let lastR = -Infinity;
@@ -124,7 +140,8 @@ export const plugin = definePlugin<SkylineSpec>({
         lastR = tx + w;
         months += `<text class="lc-tick" x="${n2(tx)}" y="${n2(baseY + FS + 6)}">${esc(txt)}</text>`;
       }
-      svg = `<g aria-hidden="true">${grid}${na}</g><g class="lc-sky-marks">${marks}</g><g aria-hidden="true">${edge}${baseLine}${months}</g>`;
+      // Columns under 1.5px wide: the edge line is thinned so it does not cover the fill (see skyline.css).
+      svg = `<g aria-hidden="true">${grid}${na}${fill}</g><g class="lc-sky-marks${cw < 1.5 ? ' lc-sky-dense' : ''}">${marks}</g><g aria-hidden="true"${cw < 1.5 ? ' class="lc-sky-dense"' : ''}>${edge}${baseLine}${months}${peakSvg}</g>`;
     }
 
     const missing = n - present.length;

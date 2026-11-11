@@ -70,3 +70,16 @@ test('tree: user text is escaped and nodes are focusable with labels', () => {
   assert.match(html, /<g class="lc-pt lc-pt-tree" tabindex="0" aria-label="&lt;i&gt;웹, 앱 &quot;A&quot;: 800명 · 추정치">/);
   assert.match(html, /aria-label="앱 &quot;A&quot;: 1,200명 · 하위 1개"/);
 });
+
+test('tree 0.8: subtrees are nested groups, values are bold tinted tspans, narrow widths fall back to two lines', () => {
+  const wide = renderChart({ ...spec, unit: { suffix: '명' }, width: 720 });
+  assert.equal((wide.match(/<g class="lc-tree-sub">/g) ?? []).length, 5, 'one group per node');
+  assert.ok(wide.indexOf('<g class="lc-tree-sub">') < wide.indexOf('class="lc-tree-link"'), 'the link into a node sits in that node\'s group');
+  assert.match(wide, /<text class="lc-tree-lbl lc-c1"[^>]*>A1<tspan class="lc-tree-val" dx="5">4명<\/tspan><\/text>/);
+  const narrow = renderChart({ type: 'tree', title: 't', width: 300, unit: { suffix: '명' }, root: { id: 'r', label: '전체', value: 100, children: [
+    { id: 'a', label: '아주 긴 서비스 이름 하나', value: 60, children: [{ id: 'a1', label: '안드로이드 플랫폼', value: 60 }] },
+  ] } });
+  assert.match(narrow, /<text class="lc-tree-lbl lc-c1"[^>]*>안드로이드 플랫폼<tspan class="lc-tree-val" x="[\d.]+" dy="13">60명<\/tspan><\/text>/, 'leaf: value drops to a second line');
+  assert.match(narrow, /<text class="lc-tree-lbl lc-tree-in lc-c1"[^>]*><tspan x="[\d.]+">[^<]+<\/tspan><tspan x="[\d.]+" dy="13">[^<]+<\/tspan><\/text>/, 'inner node: name wraps');
+  assert.match(narrow, /<text class="lc-tree-lbl lc-tree-in lc-c1"[^>]*><tspan class="lc-tree-val">60명<\/tspan><\/text>/, 'inner node: value below the node');
+});

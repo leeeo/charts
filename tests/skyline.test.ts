@@ -60,3 +60,12 @@ test('skyline: user text is escaped and short ranges are focusable with labels',
   assert.ok(!html.includes('<b>') && !html.includes('<추정>'));
   assert.match(html, /<g class="lc-pt lc-pt-sky" tabindex="0" aria-label="2026-11-01, 방문 &quot;웹&quot;: 1,200명 · &lt;추정&gt;">/);
 });
+
+test('skyline 0.8: one silhouette fill per run, a dense class for sub-pixel columns, and a peak marker', () => {
+  const html = renderChart({ type: 'skyline', title: 't', unit: { suffix: '명' }, start: '2026-02-27', values: [5, 9, null, 7] });
+  assert.equal((html.match(/<path class="lc-sky-fill lc-c1" d="M[^"]*Z"\/>/g) ?? []).length, 2, 'two runs, two fills');
+  assert.ok(!html.includes('lc-sky-dense'));
+  assert.match(html, /<g class="lc-sky-peak lc-c1"><circle class="lc-sky-peak-dot"[^>]*\/><text class="lc-sky-peak-val"[^>]*>9명<tspan class="lc-sky-peak-date"[^>]*>2026-02-28<\/tspan><\/text><\/g>/);
+  const year = renderChart({ type: 'skyline', title: 't', width: 400, start: '2026-01-01', values: Array.from({ length: 365 }, (_, i) => 100 + (i % 30)) });
+  assert.match(year, /<g class="lc-sky-marks lc-sky-dense">/);
+});

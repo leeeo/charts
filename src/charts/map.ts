@@ -2,6 +2,9 @@
 // '서울특별시'); the validated copy is keyed by code. Equal-interval sequential classes (lc-map-0..6 over one hue).
 // A null or absent province is hatched and listed as 데이터 없음, never coloured as the lowest class.
 // Boundaries: src/geo/kr-sido.ts (CC BY 4.0); the attribution line is printed under the map.
+// Readability (0.8.0): with `showValues` the value is a second bold line tinted by the map hue; a label whose two-line
+// box would overlap a neighbour falls back to the name alone before being skipped. Hovering a province keeps it and
+// fades the rest; labels fade while the value box is open (map.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, optBool, optNum, optStr, put, value } from '../check.ts';
@@ -122,21 +125,33 @@ export const plugin = definePlugin<MapSpec>({
       let labels = '';
       if (spec.labels) {
         const boxes: [number, number, number, number][] = [];
-        KR_SIDO.forEach((r, i) => {
+        const VFS = LFS + 1;
+        // Largest values first, so when the map is narrow the provinces that matter most keep their label.
+        const order = KR_SIDO.map((_, i) => i).sort((a, b) => (vs[b] ?? -Infinity) - (vs[a] ?? -Infinity) || a - b);
+        for (const i of order) {
+          const r = KR_SIDO[i]!;
           const v = vs[i]!;
-          const lines = [r.short, ...(spec.showValues && v !== null ? [fmt(v)] : [])];
-          const w = Math.max(...lines.map((x) => tw(x, LFS))) + 2;
-          const h = lines.length * (LFS + 2);
           const [px, py] = at(i);
-          const x = clamp(px, w / 2 + 2, ctx.W - w / 2 - 2);
-          const y0 = clamp(py - h / 2, 2, ctx.H - h - 2);
-          const box: [number, number, number, number] = [x - w / 2, y0, x + w / 2, y0 + h];
-          if (boxes.some((b) => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) return;
-          boxes.push(box);
-          labels += `<text class="lc-maplabel" x="${n2(x)}" y="${n2(y0 + LFS)}" text-anchor="middle">${lines.map((txt, j) => (j ? `<tspan x="${n2(x)}" dy="${LFS + 2}">${esc(txt)}</tspan>` : esc(txt))).join('')}</text>`;
-        });
+          // Try the two-line label (name, bold value) first, then the name alone; each is tried at the label point,
+          // nudged one line down or up, then sideways, before the province goes without a label.
+          const variants = spec.showValues && v !== null ? [[r.short, fmt(v)], [r.short]] : [[r.short]];
+          placed: for (const lines of variants) {
+            const w = Math.max(...lines.map((x, j) => tw(x, j ? VFS : LFS))) + 2;
+            const h = LFS + 2 + (lines.length - 1) * (VFS + 2);
+            const nudges: [number, number][] = [[0, 0], [0, h], [0, -h], [-0.6 * w, 0], [0.6 * w, 0]];
+            for (const [dx, dy] of nudges) {
+              const x = clamp(px + dx, w / 2 + 2, ctx.W - w / 2 - 2);
+              const y0 = clamp(py - h / 2 + dy, 2, ctx.H - h - 2);
+              const box: [number, number, number, number] = [x - w / 2, y0, x + w / 2, y0 + h];
+              if (boxes.some((b) => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
+              boxes.push(box);
+              labels += `<text class="lc-maplabel" x="${n2(x)}" y="${n2(y0 + LFS)}" text-anchor="middle">${lines.map((txt, j) => (j ? `<tspan class="lc-maplabel-val" x="${n2(x)}" dy="${VFS + 2}">${esc(txt)}</tspan>` : esc(txt))).join('')}</text>`;
+              break placed;
+            }
+          }
+        }
       }
-      svg = `${defs}<g class="lc-map ${colorAttrs(0, spec.color)}>${regions}</g>${labels ? `<g class="lc-maplabels" aria-hidden="true">${labels}</g>` : ''}`;
+      svg = `${defs}<g class="lc-map ${colorAttrs(0, spec.color)}>${regions}</g>${labels ? `<g class="lc-maplabels ${colorAttrs(0, spec.color)} aria-hidden="true">${labels}</g>` : ''}`;
     }
 
     let desc = `${l.of} ${pres.length}${l.count}.`;

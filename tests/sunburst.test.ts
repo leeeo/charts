@@ -66,3 +66,17 @@ test('sunburst: user text is escaped and arcs are focusable with labels', () => 
   assert.match(html, /<g class="lc-pt lc-pt-sb" tabindex="0" aria-label="&lt;i&gt;구독, 앱 &quot;A&quot;: 1,200원 \(60%\) · 추정치">/);
   assert.match(html, /aria-label="광고: 800원 \(40%\)"/);
 });
+
+test('sunburst 0.8: names run along the arc, a leaf too short for its name gets an outside label with a leader', () => {
+  const html = renderChart({ type: 'sunburst', title: 't', width: 400, height: 400, unit: { suffix: '건' }, items: [
+    { id: 'a', label: 'A', children: [{ id: 'a1', label: '스토어 검색', value: 900 }, { id: 'a2', label: '웹 링크 유입', value: 20 }] },
+    { id: 'b', label: 'B', value: 80 },
+  ] });
+  assert.match(html, /<text class="lc-sb-lbl lc-c1"><textPath href="#[^"]+" startOffset="50%" text-anchor="middle">스토어 검색<\/textPath><\/text>/);
+  assert.match(html, /<text class="lc-sb-val lc-c1"><textPath [^>]*>900건<\/textPath><\/text>/, 'bold value on a second curved line');
+  assert.match(html, /<text class="lc-sb-out lc-c1" x="[\d.]+" y="[\d.]+"( text-anchor="end")?><tspan x="[\d.]+">웹 링크 유입<\/tspan><tspan class="lc-sb-val" x="[\d.]+" dy="15">20건<\/tspan><\/text>/);
+  assert.match(html, /<path class="lc-sb-lead" d="M/);
+  assert.ok(!/<textPath[^>]*>[^<]*…<\/textPath>/.test(html), 'curved labels are never truncated');
+  for (const a of arcs(html)) assert.match(a, /data-b="\d+"/, 'branch index for the hover rules');
+  assert.equal(renderChart({ type: 'sunburst', title: 't', items: [{ id: 'a', label: 'A', value: 1 }] }).match(/<path id=/g)?.length, 2, 'name and value paths for one curved label');
+});

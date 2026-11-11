@@ -261,13 +261,15 @@ export const plugin = definePlugin<SankeySpec>({
       const BLOCK = FS + LINE + 4;
       // Middle-column names may wrap onto up to three lines before the last line is truncated: words first (a word may
       // run 15% over the room), and a word that is still too wide splits once into two halves of two or more letters,
-      // so narrow columns keep readable names instead of single letters.
+      // so narrow columns keep readable names instead of single letters. A trailing '*' (computed) does not count as a
+      // letter, so "영업이익*" splits as "영업" + "이익*", never "영업이" + "익*".
       const wrapName = (s: string, room: number): string[] => {
         const soft = room * 1.15;
         const pieces = s.split(' ').flatMap((word) => {
           const ch = [...word];
-          if (tw(word, FS) <= soft || ch.length < 4) return [word];
-          const k = Math.ceil(ch.length / 2);
+          const letters = word.endsWith('*') ? ch.length - 1 : ch.length;
+          if (tw(word, FS) <= soft || letters < 4) return [word];
+          const k = Math.floor(letters / 2);
           return [ch.slice(0, k).join(''), ch.slice(k).join('')];
         });
         const lines: string[] = [];

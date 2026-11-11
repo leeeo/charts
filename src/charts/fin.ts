@@ -253,3 +253,35 @@ export function drawOverlays(lines: OvLine[], p: Panes, legacyMa = false): strin
 
 /** Up/down/flat direction of `cur` against `prev`. */
 export const dirOf = (cur: number, prev: number | null): 1 | 0 | -1 => (prev === null || cur === prev ? 0 : cur > prev ? 1 : -1);
+
+export const dirCls = (dir: 1 | 0 | -1): string => (dir > 0 ? 'lc-fin-up' : dir < 0 ? 'lc-fin-down' : 'lc-fin-flat');
+
+/**
+ * Vertical guide across the panes for day i, hidden until its focusable group is hovered or focused (fin.css), so the
+ * value box always has a line pointing at the day it describes.
+ */
+export const crosshair = (p: Panes, i: number): string => `<line class="lc-fin-cross" x1="${n2(p.cx(i))}" x2="${n2(p.cx(i))}" y1="${n2(p.top)}" y2="${n2(p.bottom)}"/>`;
+
+/** Vertical extent of a drawn mark (a candle's high..low, a line point) used to keep the last value tag off the marks. */
+export interface MarkSpan { x: number; y0: number; y1: number }
+
+/**
+ * Last value tag: a dotted guide from the last mark to the right edge of the pane and the value in bold at the edge,
+ * tinted by `cls` (lc-fin-up / lc-fin-down for a rise or fall, or a series colour class). The text sits above the
+ * guide; when marks occupy that band it moves below the guide, and when both bands are busy it goes above the highest
+ * mark under it.
+ */
+export function lastTag(p: Panes, ctx: Ctx, i: number, v: number, text: string, cls: string, marks: MarkSpan[] = []): string {
+  const y = p.sy(v);
+  const x1 = p.left + p.pw;
+  const w = tw(text, FS) * 1.08;
+  const tx = Math.max(x1 - 2, p.left + w);
+  const busy = (top: number, bottom: number): boolean => marks.some((m) => m.x >= tx - w - 2 && m.x <= tx && m.y0 < bottom && m.y1 > top);
+  const above = y - 5;
+  const below = y + FS + 3;
+  const under = marks.filter((m) => m.x >= tx - w - 2 && m.x <= tx);
+  const pick = !busy(above - FS, above + 2) ? above : !busy(below - FS, below + 2) ? below : Math.min(...under.map((m) => m.y0)) - 4;
+  const ty = clamp(pick, FS + 2, ctx.H);
+  return `<g class="lc-fin-last ${cls}" aria-hidden="true"><line class="lc-fin-last-line" x1="${n2(p.cx(i))}" x2="${n2(x1)}" y1="${n2(y)}" y2="${n2(y)}"/>` +
+    `<text class="lc-fin-last-val" x="${n2(tx)}" y="${n2(ty)}" text-anchor="end">${esc(text)}</text></g>`;
+}

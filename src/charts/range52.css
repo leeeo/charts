@@ -2,7 +2,12 @@
 .lc-r52-track { fill: var(--lc-grid); }
 .lc-r52-fill { fill: var(--lc-s1); fill-opacity: 0.35; }
 .lc-r52-cur { fill: var(--lc-ink); }
-.lc-r52-curlbl { fill: var(--lc-ink); font-size: 12px; font-variant-numeric: tabular-nums; }
-.lc-r52-na { fill: var(--lc-muted); font-style: italic; }
+/* Current value: bold, tinted by the fill colour mixed with ink. */
+.lc-r52-curlbl { fill: var(--lc-ink); fill: color-mix(in oklab, var(--lc-s1) 68%, var(--lc-ink)); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lc-r52-na { fill: var(--lc-muted); font-style: italic; font-weight: 400; }
 .lc-r52-end { font-size: 11px; }
 .lc-pt-r52:focus-visible .lc-hit { stroke: var(--lc-ink); stroke-width: 1.5; stroke-dasharray: 3 2; }
+/* Hover / focus: the hovered row stays, the other rows fade. */
+.lc-t-range52 .lc-pt-r52 { transition: opacity 0.15s ease; }
+.lc-t-range52 .lc-svg:has(.lc-pt-r52:is(:hover, :focus)) .lc-pt-r52:not(:hover, :focus) { opacity: 0.4; }
+.lc-t-range52 .lc-pt-r52:is(:hover, :focus) .lc-r52-fill { fill-opacity: 0.6; }

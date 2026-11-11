@@ -79,3 +79,17 @@ test('treemap: user text is escaped and marks are focusable with labels', () => 
   assert.match(html, /<g class="lc-pt lc-pt-tm" tabindex="0" aria-label="&lt;i&gt;방문, 앱 &quot;A&quot;: 1,200명 \(60%\) · 추정치">/);
   assert.match(html, /aria-label="설치: 800명 \(40%\)"/);
 });
+
+test('treemap 0.8: group header strip, cell value with share, cells grouped for hover', () => {
+  const html = renderChart({ type: 'treemap', title: 't', width: 600, height: 300, unit: { suffix: '원' }, items: [
+    { id: 'g', label: '앱', children: [{ id: 'g1', label: '구독', value: 600 }, { id: 'g2', label: '광고', value: 200 }] },
+    { id: 'h', label: '기타', value: 200 },
+  ] });
+  assert.match(html, /<rect class="lc-tm-head"/);
+  assert.match(html, /<text class="lc-tm-glbl"[^>]*>앱<tspan class="lc-tm-gval" dx="6">800원<\/tspan><\/text>/);
+  assert.match(html, /<text class="lc-tm-val"[^>]*>600원 · 60%<\/text>/);
+  assert.equal((html.match(/<g class="lc-tm-g">/g) ?? []).length, 2, 'one group per top-level item');
+  const head = /<rect class="lc-tm-head"[^>]*height="([\d.]+)"/.exec(html);
+  const cell = /<rect class="lc-mark lc-tm[^>]*data-v="600"[^>]*y="([\d.]+)"/.exec(html);
+  assert.ok(Number(cell?.[1]) >= Number(head?.[1]), 'cells start below the header strip');
+});

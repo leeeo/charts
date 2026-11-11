@@ -186,3 +186,21 @@ test('finance types never emit inline style attributes and are deterministic', (
     assert.equal(a, renderChart(s));
   }
 });
+
+test('finance 0.8: crosshair per day, last value tag tinted by direction, surprise labels drop to two lines', () => {
+  const cs = renderChart({ type: 'candlestick', title: 't', unit: { suffix: '원' }, dates: ['a', 'b', 'c'], ohlc: [d(100, 110, 90, 105), d(105, 108, 99, 100), d(100, 104, 97, 103)] });
+  assert.equal(all(cs, /<line class="lc-fin-cross"/g).length, 3);
+  assert.match(cs, /<g class="lc-fin-last lc-fin-up" aria-hidden="true"><line class="lc-fin-last-line"[^>]*\/><text class="lc-fin-last-val"[^>]*text-anchor="end">103원 \(\+3%\)<\/text><\/g>/);
+  const pr = renderChart({ type: 'price', title: 't', unit: { suffix: '원' }, dates: dates6, close: close6, volume: [1, 2, 3, 4, 5, 6] });
+  assert.equal(all(pr, /<line class="lc-fin-cross"/g).length, 6);
+  assert.match(pr, /lc-fin-last lc-fin-up[^]*?>14원 \(\+7\.7%\)</);
+  const down = renderChart({ type: 'price', title: 't', dates: ['a', 'b'], close: [10, 9] });
+  assert.match(down, /lc-fin-last lc-fin-down[^]*?>9 \(-10%\)</);
+  const vb = renderChart({ type: 'valuation', title: 't', unit: { suffix: '원' }, multiples: [10, 15], dates: ['m1', 'm2'], price: [1000, 1200], base: [100, 100] });
+  assert.match(vb, /lc-fin-last lc-c1[^]*?>1,200원 · PER 12배</);
+  const sp = renderChart({ type: 'surprise', title: 't', width: 300, labels: Array.from({ length: 12 }, (_, i) => 'Q' + (i + 1)), actual: [110, 80, 120, 90, 100, 100, 100, 100, 100, 100, 100, 100], estimate: Array(12).fill(100) });
+  assert.match(sp, /<text class="lc-sp-lbl lc-sp-t-beat( lc-sp-sm)?"[^>]*>▲<tspan x="[\d.]+" dy="\d+(\.\d+)?">10%<\/tspan><\/text>/, 'mark on one line, percent on the next');
+  assert.ok(!/<text class="lc-sp-lbl[^>]*>▲<\/text>/.test(sp), 'the number is not dropped while two lines fit');
+  const wide = renderChart({ type: 'surprise', title: 't', width: 640, labels: ['Q1'], actual: [110], estimate: [100] });
+  assert.match(wide, /<text class="lc-sp-lbl lc-sp-t-beat"[^>]*>▲10%<\/text>/);
+});
