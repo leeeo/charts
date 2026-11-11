@@ -2,10 +2,13 @@
 // consecutive rows in input (depth-first) order and every parent sits at the midpoint of its first and last child,
 // so the layout is deterministic and subtrees never overlap. Values are optional; once any node has a `value`, nodes
 // without one (or with null) are missing: drawn hollow and dashed, listed as missing in the table and description.
+// Readability (0.8.0): labels print the name and a bold value tinted by the branch colour, dropping to two lines
+// (name, then value) when one line does not fit; links and marks are nested per subtree so hovering a node keeps its
+// path to the root and its subtree while the other branches fade (see tree.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, idList, optStr, str, value } from '../check.ts';
-import { type Ctx, FS, MAX_FOCUS, colorAttrs, focusable, frame, table, wrapTable } from '../kit.ts';
+import { type Ctx, FS, MAX_FOCUS, colorAttrs, focusable, frame, table, wrapTable, wrapText } from '../kit.ts';
 import { esc, makeFmt, n2, truncate, tw } from '../format.ts';
 
 export interface TreeNode { id: string; label: string; value?: Value; children?: TreeNode[]; color?: string; quality?: string }
@@ -20,6 +23,8 @@ const ROW = 28;
 const TOP = 18;
 const NR = 5;
 const LFS = 11;
+const VFS = 12;
+const LINE = 13;
 const KEYS = ['label', 'value', 'children', 'color', 'quality'] as const;
 const L = {
   ko: { nodes: '개 노드', levels: '단계', leaves: '말단', level: '단계', kids: '하위', n: '개' },
@@ -95,44 +100,62 @@ export const plugin = definePlugin<TreeSpec>({
       const body = [hasValues ? (v === null ? t.na : fmt(v)) : '', kidsTxt(p)].filter(Boolean).join(' · ');
       return `${head}${body ? `: ${body}` : ''}${p.node.quality ? ` · ${p.node.quality}` : ''}`;
     };
-    const shown = (p: Placed): string => { const v = val(p); return hasValues && v !== null ? `${p.node.label} · ${fmt(v)}` : p.node.label; };
+    const shownV = (p: Placed): string | null => { const v = val(p); return hasValues && v !== null ? fmt(v) : null; };
 
     // Columns: reserve room on the right for leaf labels, the rest is split evenly between depths.
     const x0 = NR + 4;
     // Label widths get a safety factor: real fonts can run ~10% wider than the tw() estimate.
     const lw = (s: string): number => tw(s, LFS) * 1.12;
-    const leafW = Math.max(...nodes.filter((p) => !p.node.children?.length).map((p) => lw(shown(p)))) + NR + 10;
+    const vw = (s: string): number => tw(s, VFS) * 1.12;
+    // One-line width of a label: name, a gap and the value (when present).
+    const oneW = (p: Placed): number => { const v = shownV(p); return lw(p.node.label) + (v ? 5 + vw(v) : 0); };
+    const leafW = Math.max(...nodes.filter((p) => !p.node.children?.length).map(oneW)) + NR + 10;
     const rightW = Math.min(leafW, ctx.W * 0.4);
     const step = depth > 0 ? Math.max(0, (ctx.W - x0 - rightW - 2) / depth) : 0;
     const X = (p: Placed): number => x0 + p.depth * step;
     const Y = (p: Placed): number => TOP + p.y * ROW + ROW / 2;
 
-    let links = '';
-    for (const p of nodes) {
-      if (p.parent < 0) continue;
-      const q = nodes[p.parent] as Placed;
-      const px = X(q); const py = Y(q); const cx = X(p); const cy = Y(p); const mx = (px + cx) / 2;
-      links += `<path class="lc-tree-link" d="M${n2(px)} ${n2(py)}C${n2(mx)} ${n2(py)} ${n2(mx)} ${n2(cy)} ${n2(cx)} ${n2(cy)}"/>`;
-    }
     const canFocus = nodes.length <= MAX_FOCUS;
-    let marks = '';
+    const kids: number[][] = nodes.map(() => []);
+    nodes.forEach((p, i) => { if (p.parent >= 0) kids[p.parent]?.push(i); });
     let labels = '';
-    nodes.forEach((p, i) => {
+    // Each subtree is one group holding the link from its parent, the node and the child subtrees, so the stylesheet
+    // can keep a hovered node's ancestors and descendants while the other branches fade.
+    const subtree = (i: number): string => {
+      const p = nodes[i] as Placed;
       const x = X(p); const y = Y(p);
+      let s = '';
+      if (p.parent >= 0) {
+        const q = nodes[p.parent] as Placed;
+        const px = X(q) + NR; const py = Y(q); const cx = x - NR; const mx = (px + cx) / 2;
+        s += `<path class="lc-tree-link" d="M${n2(px)} ${n2(py)}C${n2(mx)} ${n2(py)} ${n2(mx)} ${n2(y)} ${n2(cx)} ${n2(y)}"/>`;
+      }
       const v = val(p);
       const miss = hasValues && v === null;
       const leaf = !p.node.children?.length;
       const c = `<circle class="lc-mark lc-node${leaf ? ' lc-node-leaf' : ''}${miss ? ' lc-node-na' : ''} ${colorAttrs(p.branch, p.node.color)} data-i="${i}"${v !== null ? ` data-v="${v}"` : ''} cx="${n2(x)}" cy="${n2(y)}" r="${NR}"/>`;
-      marks += canFocus ? focusable(ctx, 'lc-pt-tree', text(p), c, x, y - NR) : c;
-      // Leaves: label to the right. Inner nodes: label above-right, within one column.
+      s += canFocus ? focusable(ctx, 'lc-pt-tree', text(p), c, x, y - NR) : c;
+      // Leaves: label to the right of the node (name, bold value), on two lines when one does not fit.
+      // Inner nodes: name above-right (wrapped to two lines when needed); the value follows on the line or below the node.
       const lx = leaf ? x + NR + 4 : x + NR + 2;
-      const ly = leaf ? y + LFS * 0.36 : y - NR - 3;
       const room = leaf ? ctx.W - lx - 4 : step - NR - 8;
-      const full = shown(p);
-      const txt = lw(full) <= room ? full : truncate(p.node.label, room / 1.12, LFS);
-      if (room >= lw('가…')) labels += `<text class="lc-tree-lbl${leaf ? '' : ' lc-tree-in'}" x="${n2(lx)}" y="${n2(ly)}">${esc(txt)}</text>`;
-    });
-    const svg = `<g class="lc-tree-links" aria-hidden="true">${links}</g><g class="lc-tree-marks">${marks}</g><g class="lc-tree-labels" aria-hidden="true">${labels}</g>`;
+      const sv = shownV(p);
+      const cls = `lc-tree-lbl${leaf ? '' : ' lc-tree-in'} ${colorAttrs(p.branch, p.node.color)}`;
+      const vt = (attrs: string): string => (sv ? `<tspan class="lc-tree-val"${attrs}>${esc(sv)}</tspan>` : '');
+      if (room >= lw('가…')) {
+        if (oneW(p) <= room) labels += `<text class="${cls} x="${n2(lx)}" y="${n2(leaf ? y + LFS * 0.36 : y - NR - 3)}">${esc(p.node.label)}${vt(' dx="5"')}</text>`;
+        else if (leaf) labels += `<text class="${cls} x="${n2(lx)}" y="${n2(y - 1)}">${esc(truncate(p.node.label, room / 1.12, LFS))}${vt(` x="${n2(lx)}" dy="${LINE}"`)}</text>`;
+        else {
+          const lines = wrapText(p.node.label, room / 1.12, LFS, 2);
+          const y0 = y - NR - 3 - (lines.length - 1) * LINE;
+          labels += `<text class="${cls} x="${n2(lx)}" y="${n2(y0)}">${lines.map((l, k) => `<tspan x="${n2(lx)}"${k ? ` dy="${LINE}"` : ''}>${esc(l)}</tspan>`).join('')}</text>`;
+          if (sv) labels += `<text class="${cls} x="${n2(lx)}" y="${n2(y + NR + VFS + 1)}">${vt('')}</text>`;
+        }
+      }
+      for (const k of kids[i] ?? []) s += subtree(k);
+      return `<g class="lc-tree-sub">${s}</g>`;
+    };
+    const svg = `<g class="lc-tree-marks">${subtree(0)}</g><g class="lc-tree-labels" aria-hidden="true">${labels}</g>`;
 
     const leaves = nodes.filter((p) => !p.node.children?.length).length;
     const present = nodes.filter((p) => val(p) !== null);

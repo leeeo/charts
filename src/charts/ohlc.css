@@ -1,2 +1,5 @@
 .lc-ohlc { fill: none; stroke: var(--c); stroke-width: 1.75; stroke-linecap: butt; }
 .lc-pt:hover .lc-ohlc, .lc-pt:focus .lc-ohlc { stroke-width: 2.75; }
+/* Hover / focus: the hovered day's bar and volume bar stay, the other days fade. */
+.lc-t-ohlc :is(.lc-ohlc, .lc-fin-vol) { transition: opacity 0.15s ease; }
+.lc-t-ohlc .lc-svg:has(.lc-pt-candle:is(:hover, :focus)) .lc-pt-candle:not(:hover, :focus) :is(.lc-ohlc, .lc-fin-vol) { opacity: 0.4; }

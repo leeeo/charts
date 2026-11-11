@@ -3,6 +3,8 @@
 // Directed (default): a group's arc = outflow + inflow; each ribbon starts full-width at the source's outflow
 // section and ends in a point at the target's inflow section. Undirected: the matrix must be symmetric and each
 // pair is one ribbon. A null flow is missing: not drawn, shown as 데이터 없음 and counted in the description.
+// Readability (0.8.0): each arc label carries the group total on a second bold line tinted by the group colour (when
+// the arc is long enough); hovering a ribbon keeps it, hovering an arc keeps its ribbons, the rest fade (chord.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, idList, optBool, optStr, put, str, value, values } from '../check.ts';
@@ -24,6 +26,7 @@ export interface ChordSpec extends BaseSpec {
 
 const MAX_GROUPS = 40;
 const MAX_LINKS = MAX_GROUPS * MAX_GROUPS;
+const LINE = 15;
 const L = {
   ko: { groups: '그룹', flows: '흐름', flowTotal: '총 흐름', largest: '가장 큰 흐름', out: '유출', in: '유입', count: '개' },
   en: { groups: 'groups', flows: 'flows', flowTotal: 'Total flow', largest: 'Largest flow', out: 'out', in: 'in', count: '' },
@@ -139,10 +142,10 @@ export const plugin = definePlugin<ChordSpec>({
     let svg = '';
     if (!(grand > 0)) svg = empty(ctx);
     else {
-      const labMax = Math.min(Math.max(...spec.groups.map((g) => tw(g.label, FS))), ctx.W * 0.2);
+      const labMax = Math.min(Math.max(...spec.groups.map((g, i) => Math.max(tw(g.label, FS), tw(fmt(tot[i]!), FS + 1)))), ctx.W * 0.2);
       const cx = ctx.W / 2;
       const cy = ctx.H / 2;
-      const R = Math.max(30, Math.min(ctx.W / 2 - labMax - 10, ctx.H / 2 - FS - 10));
+      const R = Math.max(30, Math.min(ctx.W / 2 - labMax - 10, ctx.H / 2 - FS - LINE - 10));
       const thick = clamp(R * 0.07, 6, 14);
       const r = R - thick - 2;
       const nz = tot.filter((v) => v > 0).length;
@@ -206,15 +209,21 @@ export const plugin = definePlugin<ChordSpec>({
         const am = (a0 + a1) / 2;
         const inner = `<path class="lc-mark lc-carc ${colorAttrs(i, spec.groups[i]!.color)} data-i="${i}" data-v="${tot[i]}" data-a0="${deg(a0)}" data-a1="${deg(a1)}" d="${d}"/>`;
         arcs += focusable(ctx, 'lc-pt-carc', groupText(i), inner, cx + R * Math.sin(am), cy - R * Math.cos(am));
-        if ((a1 - a0) * R < FS + 2) continue;
+        const arcLen = (a1 - a0) * R;
+        if (arcLen < FS + 2) continue;
         const sa = Math.sin(am);
         const ca = Math.cos(am);
         const rl = R + 6;
         const x = cx + rl * sa;
-        const y = clamp(cy - rl * ca + FS * 0.36 - ca * FS * 0.3, FS, ctx.H - 3);
+        // The total goes on a second bold line when the arc is long enough for two lines; the pair stacks away from
+        // the circle (above it the name moves up, below it the value moves down).
+        const withValue = arcLen >= FS + LINE;
+        const shift = withValue ? (ca > 0.3 ? LINE : ca < -0.3 ? 0 : LINE / 2) : 0;
+        const y = clamp(cy - rl * ca + FS * 0.36 - ca * FS * 0.3 - shift, FS, ctx.H - 3 - (withValue ? LINE : 0));
         const anchor = sa > 0.3 ? 'start' : sa < -0.3 ? 'end' : 'middle';
         const room = anchor === 'start' ? ctx.W - 3 - x : anchor === 'end' ? x - 3 : 2 * Math.min(x - 3, ctx.W - 3 - x);
-        if (room > tw('…', FS)) labels += `<text class="lc-clabel" x="${n2(x)}" y="${n2(y)}" text-anchor="${anchor}">${esc(truncate(lab(i), Math.min(room, labMax + 20), FS))}</text>`;
+        const value = withValue ? `<tspan class="lc-clabel-val" x="${n2(x)}" dy="${LINE}">${esc(truncate(fmt(tot[i]!), Math.min(room, labMax + 20), FS + 1))}</tspan>` : '';
+        if (room > tw('…', FS)) labels += `<text class="lc-clabel ${colorAttrs(i, spec.groups[i]!.color)} x="${n2(x)}" y="${n2(y)}" text-anchor="${anchor}">${esc(truncate(lab(i), Math.min(room, labMax + 20), FS))}${value}</text>`;
       }
       svg = `<g class="lc-ribbons">${ribbons}</g><g class="lc-carcs">${arcs}</g><g class="lc-clabels" aria-hidden="true">${labels}</g>`;
     }

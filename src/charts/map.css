@@ -9,5 +9,11 @@
 .lc-sw.lc-sw-mapna { background: repeating-linear-gradient(45deg, var(--lc-muted) 0 1px, var(--lc-surface) 1px 3px); border: 1px solid var(--lc-muted); box-sizing: border-box; }
 .lc-map-legend { gap: 4px 8px; }
 .lc-maplabel { fill: var(--lc-ink); font-size: 11px; paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+/* Second label line (showValues): bold, tinted by the map hue mixed with ink so it keeps contrast on pale classes. */
+.lc-maplabel-val { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; fill: var(--lc-ink); fill: color-mix(in oklab, var(--c, var(--lc-ink)) 68%, var(--lc-ink)); }
 .lc-pt:hover .lc-region, .lc-pt:focus .lc-region, .lc-pt:hover .lc-region-na, .lc-pt:focus .lc-region-na { stroke: var(--lc-ink); stroke-width: 2; }
 .lc-src { margin: 6px 0 0; color: var(--lc-muted); font-size: 0.6875rem; overflow-wrap: anywhere; }
+/* Hover / focus: the hovered province stays, the others fade; labels fade while the value box is open. */
+.lc-t-map :is(.lc-region, .lc-region-na, .lc-maplabels) { transition: opacity 0.15s ease; }
+.lc-t-map .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-pt:not(:hover, :focus) :is(.lc-region, .lc-region-na) { opacity: 0.45; }
+.lc-t-map .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-maplabels { opacity: 0.3; }

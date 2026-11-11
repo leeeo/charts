@@ -1,5 +1,94 @@
 .lc-ribbon { fill: var(--c); fill-opacity: 0.55; stroke: var(--c); stroke-opacity: 0.8; stroke-width: 0.5; }
 .lc-carc { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1; }
-.lc-clabel { fill: var(--lc-ink); font-size: 12px; }
+.lc-clabel { fill: var(--lc-ink); font-size: 12px; pointer-events: none; }
+/* Second label line: the group total, bold and tinted by the group colour (mixed with ink for contrast). */
+.lc-clabel-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; fill: var(--lc-ink); fill: color-mix(in oklab, var(--c, var(--lc-ink)) 68%, var(--lc-ink)); }
 .lc-pt:hover .lc-ribbon, .lc-pt:focus .lc-ribbon { fill-opacity: 0.9; stroke: var(--lc-ink); stroke-width: 1.5; }
 .lc-pt:hover .lc-carc, .lc-pt:focus .lc-carc { stroke: var(--lc-ink); stroke-width: 2; }
+/* Hover / focus: a hovered ribbon stays and the other ribbons fade; a hovered arc keeps the ribbons that start or
+   end at it (data-s / data-t are the ribbon's group indices; rules exist for the first 40 groups). Labels fade while
+   a value box is open. */
+.lc-t-chord :is(.lc-ribbon, .lc-carc, .lc-clabels) { transition: opacity 0.15s ease; }
+.lc-t-chord .lc-svg:has(.lc-pt-ribbon:is(:hover, :focus)) .lc-ribbon { opacity: 0.12; }
+.lc-t-chord .lc-svg .lc-pt-ribbon:is(:hover, :focus) .lc-ribbon { opacity: 1; }
+.lc-t-chord .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-clabels { opacity: 0.3; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="0"]) .lc-ribbon:not([data-s="0"], [data-t="0"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="0"]) .lc-carc:not([data-i="0"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="1"]) .lc-ribbon:not([data-s="1"], [data-t="1"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="1"]) .lc-carc:not([data-i="1"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="2"]) .lc-ribbon:not([data-s="2"], [data-t="2"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="2"]) .lc-carc:not([data-i="2"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="3"]) .lc-ribbon:not([data-s="3"], [data-t="3"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="3"]) .lc-carc:not([data-i="3"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="4"]) .lc-ribbon:not([data-s="4"], [data-t="4"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="4"]) .lc-carc:not([data-i="4"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="5"]) .lc-ribbon:not([data-s="5"], [data-t="5"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="5"]) .lc-carc:not([data-i="5"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="6"]) .lc-ribbon:not([data-s="6"], [data-t="6"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="6"]) .lc-carc:not([data-i="6"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="7"]) .lc-ribbon:not([data-s="7"], [data-t="7"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="7"]) .lc-carc:not([data-i="7"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="8"]) .lc-ribbon:not([data-s="8"], [data-t="8"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="8"]) .lc-carc:not([data-i="8"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="9"]) .lc-ribbon:not([data-s="9"], [data-t="9"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="9"]) .lc-carc:not([data-i="9"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="10"]) .lc-ribbon:not([data-s="10"], [data-t="10"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="10"]) .lc-carc:not([data-i="10"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="11"]) .lc-ribbon:not([data-s="11"], [data-t="11"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="11"]) .lc-carc:not([data-i="11"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="12"]) .lc-ribbon:not([data-s="12"], [data-t="12"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="12"]) .lc-carc:not([data-i="12"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="13"]) .lc-ribbon:not([data-s="13"], [data-t="13"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="13"]) .lc-carc:not([data-i="13"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="14"]) .lc-ribbon:not([data-s="14"], [data-t="14"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="14"]) .lc-carc:not([data-i="14"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="15"]) .lc-ribbon:not([data-s="15"], [data-t="15"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="15"]) .lc-carc:not([data-i="15"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="16"]) .lc-ribbon:not([data-s="16"], [data-t="16"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="16"]) .lc-carc:not([data-i="16"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="17"]) .lc-ribbon:not([data-s="17"], [data-t="17"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="17"]) .lc-carc:not([data-i="17"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="18"]) .lc-ribbon:not([data-s="18"], [data-t="18"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="18"]) .lc-carc:not([data-i="18"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="19"]) .lc-ribbon:not([data-s="19"], [data-t="19"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="19"]) .lc-carc:not([data-i="19"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="20"]) .lc-ribbon:not([data-s="20"], [data-t="20"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="20"]) .lc-carc:not([data-i="20"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="21"]) .lc-ribbon:not([data-s="21"], [data-t="21"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="21"]) .lc-carc:not([data-i="21"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="22"]) .lc-ribbon:not([data-s="22"], [data-t="22"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="22"]) .lc-carc:not([data-i="22"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="23"]) .lc-ribbon:not([data-s="23"], [data-t="23"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="23"]) .lc-carc:not([data-i="23"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="24"]) .lc-ribbon:not([data-s="24"], [data-t="24"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="24"]) .lc-carc:not([data-i="24"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="25"]) .lc-ribbon:not([data-s="25"], [data-t="25"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="25"]) .lc-carc:not([data-i="25"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="26"]) .lc-ribbon:not([data-s="26"], [data-t="26"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="26"]) .lc-carc:not([data-i="26"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="27"]) .lc-ribbon:not([data-s="27"], [data-t="27"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="27"]) .lc-carc:not([data-i="27"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="28"]) .lc-ribbon:not([data-s="28"], [data-t="28"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="28"]) .lc-carc:not([data-i="28"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="29"]) .lc-ribbon:not([data-s="29"], [data-t="29"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="29"]) .lc-carc:not([data-i="29"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="30"]) .lc-ribbon:not([data-s="30"], [data-t="30"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="30"]) .lc-carc:not([data-i="30"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="31"]) .lc-ribbon:not([data-s="31"], [data-t="31"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="31"]) .lc-carc:not([data-i="31"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="32"]) .lc-ribbon:not([data-s="32"], [data-t="32"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="32"]) .lc-carc:not([data-i="32"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="33"]) .lc-ribbon:not([data-s="33"], [data-t="33"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="33"]) .lc-carc:not([data-i="33"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="34"]) .lc-ribbon:not([data-s="34"], [data-t="34"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="34"]) .lc-carc:not([data-i="34"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="35"]) .lc-ribbon:not([data-s="35"], [data-t="35"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="35"]) .lc-carc:not([data-i="35"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="36"]) .lc-ribbon:not([data-s="36"], [data-t="36"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="36"]) .lc-carc:not([data-i="36"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="37"]) .lc-ribbon:not([data-s="37"], [data-t="37"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="37"]) .lc-carc:not([data-i="37"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="38"]) .lc-ribbon:not([data-s="38"], [data-t="38"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="38"]) .lc-carc:not([data-i="38"]) { opacity: 0.45; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="39"]) .lc-ribbon:not([data-s="39"], [data-t="39"]) { opacity: 0.12; }
+.lc-t-chord .lc-svg:has(.lc-pt-carc:is(:hover, :focus) > .lc-carc[data-i="39"]) .lc-carc:not([data-i="39"]) { opacity: 0.45; }

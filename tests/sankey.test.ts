@@ -107,3 +107,12 @@ test('sankey: text is escaped; links and nodes are focusable and labelled', () =
   assert.match(html, /<g class="lc-pt lc-pt-node" tabindex="0" aria-label="&lt;i&gt;검색: 유출 1,500명">/);
   assert.match(html, /aria-label="설치 &quot;앱&quot;: 유입 1,200명"/);
 });
+
+test('sankey 0.8: a middle-column name splits into halves of two or more letters (a trailing * is not a letter)', () => {
+  const html = renderChart({ type: 'sankey', title: 't', width: 240, height: 220, unit: { suffix: '억' }, computedNote: 'n', nodes: [
+    { id: 'rev', label: '매출' }, { id: 'op', label: '영업이익', computed: true }, { id: 'sga', label: '판매관리비' }, { id: 'net', label: '순이익' }, { id: 'tax', label: '법인세' },
+  ], links: [{ source: 'rev', target: 'op', value: 40 }, { source: 'rev', target: 'sga', value: 60 }, { source: 'op', target: 'net', value: 30 }, { source: 'op', target: 'tax', value: 10 }] });
+  assert.match(html, /<tspan x="[\d.]+">영업<\/tspan><tspan x="[\d.]+" dy="15">이익\*<\/tspan>/);
+  assert.match(html, /<tspan x="[\d.]+">판매<\/tspan><tspan x="[\d.]+" dy="15">관리비<\/tspan>/);
+  assert.ok(!/<tspan[^>]*>.\*?<\/tspan>/.test(html), 'no one-letter line');
+});

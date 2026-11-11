@@ -2,6 +2,41 @@
 .lc-sb-d2 { fill-opacity: 0.78; }
 .lc-sb-d3 { fill-opacity: 0.58; }
 .lc-pt:hover .lc-sb, .lc-pt:focus .lc-sb { stroke: var(--lc-ink); stroke-width: 2; fill-opacity: 1; }
-.lc-sb-lbl { fill: var(--lc-ink); font-size: 11px; font-weight: 600; pointer-events: none; }
+/* Curved labels along the ring: name, then the bold value tinted by the branch colour (mixed with ink for contrast). */
+.lc-sb-lbl { fill: var(--lc-ink); font-size: 11px; font-weight: 600; pointer-events: none; paint-order: stroke; stroke: var(--lc-surface); stroke-width: 2.5px; stroke-linejoin: round; stroke-opacity: 0.6; }
+.lc-sb-val { font-size: 13px; font-weight: 700; pointer-events: none; font-variant-numeric: tabular-nums; fill: var(--lc-ink); fill: color-mix(in oklab, var(--c, var(--lc-ink)) 68%, var(--lc-ink)); paint-order: stroke; stroke: var(--lc-surface); stroke-width: 2.5px; stroke-linejoin: round; stroke-opacity: 0.6; }
+/* Outside labels (leaves whose arc is too short): name in ink, value below, leader to the arc. */
+.lc-sb-out { fill: var(--lc-ink); font-size: 11px; font-weight: 600; pointer-events: none; }
+.lc-sb-lead { fill: none; stroke: var(--lc-muted); stroke-width: 1; pointer-events: none; }
 .lc-sb-cl { fill: var(--lc-muted); font-size: 12px; }
 .lc-sb-ct { fill: var(--lc-ink); font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+/* Hover / focus: the hovered arc and its whole branch (data-b = top-level index, rules for the first 24) stay, the
+   rest fade; labels fade while the value box is open. */
+.lc-t-sunburst .lc-sb, .lc-t-sunburst .lc-sb-labels { transition: opacity 0.15s ease; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-sb { opacity: 0.3; }
+.lc-t-sunburst .lc-svg .lc-pt:is(:hover, :focus) > .lc-sb { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus)) .lc-sb-labels { opacity: 0.35; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="0"]) .lc-sb[data-b="0"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="1"]) .lc-sb[data-b="1"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="2"]) .lc-sb[data-b="2"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="3"]) .lc-sb[data-b="3"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="4"]) .lc-sb[data-b="4"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="5"]) .lc-sb[data-b="5"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="6"]) .lc-sb[data-b="6"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="7"]) .lc-sb[data-b="7"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="8"]) .lc-sb[data-b="8"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="9"]) .lc-sb[data-b="9"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="10"]) .lc-sb[data-b="10"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="11"]) .lc-sb[data-b="11"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="12"]) .lc-sb[data-b="12"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="13"]) .lc-sb[data-b="13"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="14"]) .lc-sb[data-b="14"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="15"]) .lc-sb[data-b="15"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="16"]) .lc-sb[data-b="16"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="17"]) .lc-sb[data-b="17"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="18"]) .lc-sb[data-b="18"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="19"]) .lc-sb[data-b="19"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="20"]) .lc-sb[data-b="20"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="21"]) .lc-sb[data-b="21"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="22"]) .lc-sb[data-b="22"] { opacity: 1; }
+.lc-t-sunburst .lc-svg:has(.lc-pt:is(:hover, :focus) > .lc-sb[data-b="23"]) .lc-sb[data-b="23"] { opacity: 1; }

@@ -80,3 +80,12 @@ test('map: invalid specs throw ChartSpecError with the right path', () => {
   assert.equal(pathOf(spec({ '서울': 1 }, { color: 'red;x' })), 'color');
   assert.equal(pathOf(spec({ '서울': 1 }, { regions: [] })), 'spec.regions');
 });
+
+test('map 0.8: showValues adds a bold value line; nudged labels keep the largest provinces labelled when narrow', () => {
+  const values = { '서울': 4820, '경기': 5960, '인천': 1310, '강원': 380, '충북': 450, '충남': 610, '대전': 640, '세종': null };
+  const html = renderChart(spec(values, { labels: true, showValues: true, width: 340, unit: { suffix: '건' } }));
+  assert.match(html, /<text class="lc-maplabel"[^>]*>경기<tspan class="lc-maplabel-val" x="[\d.]+" dy="14">5,960건<\/tspan><\/text>/, 'the largest value is labelled first');
+  assert.match(html, /<text class="lc-maplabel"[^>]*>서울<tspan class="lc-maplabel-val"/);
+  assert.match(html, /<g class="lc-maplabels lc-c1" aria-hidden="true">/);
+  assert.ok(!renderChart(spec(values, { labels: true, width: 340 })).includes('lc-maplabel-val'));
+});

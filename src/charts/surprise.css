@@ -3,9 +3,15 @@
 .lc-sp-bar { fill: var(--c); }
 .lc-sp-unknown.lc-sp-bar { fill-opacity: 0.45; stroke: var(--c); stroke-width: 1; stroke-dasharray: 3 2; }
 .lc-sp-est { stroke: var(--lc-ink); stroke-width: 2.5; stroke-linecap: round; }
-.lc-sp-lbl { font-size: 10.5px; font-weight: 650; fill: var(--lc-ink); }
+/* Surprise label: bold, tinted by its state (rise colour for a beat, fall colour for a miss) mixed with ink. */
+.lc-sp-lbl { font-size: 10.5px; font-weight: 700; fill: var(--lc-ink); paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; }
 .lc-sp-sm { font-size: 9px; }
+.lc-sp-t-beat { fill: color-mix(in oklab, var(--lc-up) 68%, var(--lc-ink)); }
+.lc-sp-t-miss { fill: color-mix(in oklab, var(--lc-down) 68%, var(--lc-ink)); }
 .lc-sp-t-unknown { fill: var(--lc-muted); font-weight: 400; }
 .lc-sp-sw.lc-sp-unknown { opacity: 0.6; }
 .lc-sp-sw-est { flex: none; width: 12px; height: 3px; border-radius: 1px; background: var(--lc-ink); }
 .lc-pt-sp:focus .lc-sp-bar, .lc-pt-sp:hover .lc-sp-bar { stroke: var(--lc-ink); stroke-width: 2; }
+/* Hover / focus: the hovered period stays, the other periods (bar, estimate tick, label) fade. */
+.lc-t-surprise :is(.lc-sp-bar, .lc-sp-est, .lc-sp-lbl) { transition: opacity 0.15s ease; }
+.lc-t-surprise .lc-svg:has(.lc-pt-sp:is(:hover, :focus)) .lc-pt-sp:not(:hover, :focus) :is(.lc-sp-bar, .lc-sp-est, .lc-sp-lbl) { opacity: 0.35; }

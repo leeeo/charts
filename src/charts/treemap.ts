@@ -1,10 +1,13 @@
 // Treemap: a hierarchy of up to two levels laid out with the squarified algorithm, so every leaf's area is
 // proportional to its value. Top-level items are either leaves ({value}) or groups ({children}). Null leaves are
 // missing: they get no area and are listed as missing in the table and description.
+// Readability (0.8.0): a group tall enough carries a header strip with its name and total, cells print the name
+// (wrapped to two lines when the cell is narrow but tall) and a bold value with its share, and hovering a cell keeps
+// its group while the other groups fade (see treemap.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, base, color, dict, fail, idList, optStr, str, value } from '../check.ts';
-import { type Ctx, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, pct, table, wrapTable } from '../kit.ts';
+import { type Ctx, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, pct, table, wrapTable, wrapText } from '../kit.ts';
 import { esc, makeFmt, n2, truncate, tw } from '../format.ts';
 
 export interface TreemapLeaf { id: string; label: string; value: Value; color?: string; quality?: string }
@@ -18,6 +21,9 @@ export interface TreemapSpec extends BaseSpec {
 
 const MAX_TOP = 200;
 const LFS = 11;
+const LINE = LFS + 3;
+/** Group header strip height; drawn only when the group is at least this tall four times over and 60px wide. */
+const HEAD = LFS + 7;
 const L = {
   ko: { group: '그룹', groups: '개 그룹', largest: '가장 큰 항목', smallest: '가장 작은 항목' },
   en: { group: 'Group', groups: ' groups', largest: 'Largest', smallest: 'Smallest' },
@@ -150,22 +156,39 @@ export const plugin = definePlugin<TreemapSpec>({
         const tr = topRects[k] as Rect;
         const kids = isGroup(it) ? it.children : [it];
         const live = kids.map((_, i) => i).filter((i) => { const v = kids[i]?.value; return v !== null && v !== undefined && v > 0; });
-        const rects = isGroup(it) ? squarify(live.map((i) => kids[i]?.value as number), tr) : [tr];
+        // Group header: name and total on a strip above the cells (only when the group has room for it).
+        const head = isGroup(it) && tr.h >= 4 * LFS + 8 && tr.w >= 60 ? HEAD : 0;
+        const area: Rect = { x: tr.x, y: tr.y + head, w: tr.w, h: tr.h - head };
+        const rects = isGroup(it) ? squarify(live.map((i) => kids[i]?.value as number), area) : [tr];
+        let cells = '';
         live.forEach((ci, j) => {
           const lf = kids[ci] as TreemapLeaf;
           const r = rects[j] as Rect;
           const idx = leaves.findIndex((x) => x.lf === lf);
           const c = lf.color ?? it.color;
           const rect = `<rect class="lc-mark lc-tm ${colorAttrs(ti, c)} data-i="${idx}" data-v="${lf.value}" x="${n2(r.x)}" y="${n2(r.y)}" width="${n2(r.w)}" height="${n2(r.h)}"/>`;
-          marks += canFocus ? focusable(ctx, 'lc-pt-tm', leafText(leaves[idx] as (typeof leaves)[number]), rect, r.x + r.w / 2, r.y + Math.min(r.h / 2, 18)) : rect;
-          // Labels only where they fit: at least a few characters wide and one line tall.
+          cells += canFocus ? focusable(ctx, 'lc-pt-tm', leafText(leaves[idx] as (typeof leaves)[number]), rect, r.x + r.w / 2, r.y + Math.min(r.h / 2, 44)) : rect;
+          // Labels only where they fit: at least a few characters wide and one line tall. A name wider than the cell
+          // wraps onto two lines when the cell is tall enough; the value line (bold, with the share) follows when it fits.
           const room = r.w - 8;
           if (r.h >= LFS + 8 && room >= tw('가…', LFS)) {
-            labelsSvg += `<text class="lc-tm-lbl" x="${n2(r.x + 4)}" y="${n2(r.y + 4 + LFS)}">${esc(truncate(lf.label, room, LFS))}</text>`;
+            const lines = tw(lf.label, LFS) <= room ? [lf.label] : r.h >= 3 * LINE + 10 ? wrapText(lf.label, room, LFS, 2) : [truncate(lf.label, room, LFS)];
+            const x = n2(r.x + 4);
+            labelsSvg += `<text class="lc-tm-lbl" x="${x}" y="${n2(r.y + 4 + LFS)}">${lines.map((l, q) => `<tspan x="${x}"${q ? ` dy="${LINE}"` : ''}>${esc(l)}</tspan>`).join('')}</text>`;
+            const vy = r.y + 4 + LFS + lines.length * LINE + 1;
             const vt = fmt(lf.value as number);
-            if (r.h >= 2 * LFS + 12 && tw(vt, LFS) <= room) labelsSvg += `<text class="lc-tm-val" x="${n2(r.x + 4)}" y="${n2(r.y + 8 + 2 * LFS)}">${esc(vt)}</text>`;
+            const vs = `${vt} · ${share(lf.value as number)}`;
+            if (vy + 4 <= r.y + r.h && tw(vt, LFS) <= room) labelsSvg += `<text class="lc-tm-val" x="${x}" y="${n2(vy)}">${esc(tw(vs, LFS) <= room ? vs : vt)}</text>`;
           }
         });
+        marks += `<g class="lc-tm-g">${cells}</g>`;
+        if (head) {
+          const sum = fmt(topSums[ti] as number);
+          const room = tr.w - 8;
+          const both = tw(it.label, LFS) + 6 + tw(sum, LFS) <= room;
+          outlines += `<rect class="lc-tm-head" x="${n2(tr.x)}" y="${n2(tr.y)}" width="${n2(tr.w)}" height="${n2(head)}"/>`;
+          labelsSvg += `<text class="lc-tm-glbl" x="${n2(tr.x + 4)}" y="${n2(tr.y + LFS + 2)}">${esc(both ? it.label : truncate(it.label, room, LFS))}${both ? `<tspan class="lc-tm-gval" dx="6">${esc(sum)}</tspan>` : ''}</text>`;
+        }
         if (isGroup(it)) outlines += `<rect class="lc-tm-group" x="${n2(tr.x)}" y="${n2(tr.y)}" width="${n2(tr.w)}" height="${n2(tr.h)}"/>`;
       });
       svg = `<g class="lc-tm-marks">${marks}</g><g class="lc-tm-outlines" aria-hidden="true">${outlines}</g><g class="lc-tm-labels" aria-hidden="true">${labelsSvg}</g>`;

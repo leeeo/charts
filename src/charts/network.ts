@@ -1,6 +1,8 @@
 // Network: nodes on a circle (deterministic order: by group, then input order), links as lines whose width is
 // proportional to the weight. Directed links bend slightly and end in an arrowhead, so A→B and B→A stay apart.
 // A null link weight is missing: the connection is drawn as a thin dashed line, never as a 0-width link.
+// Readability (0.8.0): when every node gets a label, it carries the weighted total on a second bold line tinted by
+// the node's colour; hovering a link keeps that link, hovering a node keeps its links, and the rest fade (network.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, idList, optBool, optStr, put, str, value } from '../check.ts';
@@ -20,6 +22,9 @@ export interface NetworkSpec extends BaseSpec {
 const MAX_NODES = 100;
 const MAX_LINKS = 500;
 const MAX_W = 8;
+const LINE = 15;
+/** Up to this many nodes the label gets a second line with the weighted total. */
+const VALUE_LINES_MAX = 24;
 const L = {
   ko: { nodes: '노드', links: '링크', degree: '연결 수', conn: '연결', weight: '가중 합계', group: '그룹', largest: '가장 큰 연결', hub: '가장 많이 연결된 노드', count: '개' },
   en: { nodes: 'nodes', links: 'links', degree: 'Links', conn: 'links', weight: 'Weighted total', group: 'Group', largest: 'Largest link', hub: 'Most connected node', count: '' },
@@ -104,10 +109,11 @@ export const plugin = definePlugin<NetworkSpec>({
     let svg = '';
     if (!pres.length) svg = empty(ctx);
     else {
-      const labMax = Math.min(Math.max(...spec.nodes.map((nd) => tw(nd.label, FS))), ctx.W * 0.2);
+      const twoLine = n <= VALUE_LINES_MAX;
+      const labMax = Math.min(Math.max(...spec.nodes.map((nd, i) => Math.max(tw(nd.label, FS), twoLine ? tw(fmt(wdeg[i]!), FS + 1) : 0))), ctx.W * 0.2);
       const cx = ctx.W / 2;
       const cy = ctx.H / 2;
-      const R0 = Math.max(24, Math.min(ctx.W / 2 - labMax - 10, ctx.H / 2 - FS - 10));
+      const R0 = Math.max(24, Math.min(ctx.W / 2 - labMax - 10, ctx.H / 2 - FS - (twoLine ? LINE : 0) - 10));
       const rmax = clamp((Math.PI * R0) / n * 0.8, 3, 14);
       const R = Math.max(16, R0 - rmax);
       const rmin = Math.min(4, rmax);
@@ -155,7 +161,7 @@ export const plugin = definePlugin<NetworkSpec>({
           const bx = tipX - ux * al;
           const by = tipY - uy * al;
           dPath = `M${n2(x0)} ${n2(y0)}Q${n2(qx)} ${n2(qy)} ${n2(bx)} ${n2(by)}`;
-          if (v !== null) head = `<path class="lc-narrow ${colorAttrs(gIdx[s]!, spec.nodes[s]!.color)} d="M${n2(tipX)} ${n2(tipY)}L${n2(bx - uy * hw)} ${n2(by + ux * hw)}L${n2(bx + uy * hw)} ${n2(by - ux * hw)}Z"/>`;
+          if (v !== null) head = `<path class="lc-narrow ${colorAttrs(gIdx[s]!, spec.nodes[s]!.color)} data-s="${s}" data-t="${d}" d="M${n2(tipX)} ${n2(tipY)}L${n2(bx - uy * hw)} ${n2(by + ux * hw)}L${n2(bx + uy * hw)} ${n2(by - ux * hw)}Z"/>`;
           ax = 0.25 * x0 + 0.5 * qx + 0.25 * x2;
           ay = 0.25 * y0 + 0.5 * qy + 0.25 * y2;
         } else {
@@ -176,9 +182,11 @@ export const plugin = definePlugin<NetworkSpec>({
         nodes += canFocusNodes ? focusable(ctx, 'lc-pt-nnode', nodeText(i), inner, x, y - rad[i]!) : inner;
       });
 
-      // Labels outside the circle; thinned when neighbours are closer than one text line.
+      // Labels outside the circle; thinned when neighbours are closer than one text line. With few nodes the label
+      // has a second line: the weighted total, bold and tinted by the node colour.
       const gap = (2 * Math.PI * R) / n;
       const lstep = Math.max(1, Math.ceil((FS + 1) / gap));
+      const withValue = twoLine && lstep === 1 && gap >= FS + LINE;
       let labels = '';
       order.forEach((i, k) => {
         if (k % lstep) return;
@@ -187,11 +195,15 @@ export const plugin = definePlugin<NetworkSpec>({
         const sa = Math.sin(a);
         const ca = Math.cos(a);
         const x = cx + rl * sa;
-        const y = clamp(cy - rl * ca + FS * 0.36 - ca * FS * 0.3, FS, ctx.H - 3);
+        const y1 = cy - rl * ca + FS * 0.36 - ca * FS * 0.3;
+        // Two lines stack away from the circle: above it the name moves up, below it the value moves down.
+        const shift = withValue ? (ca > 0.3 ? LINE : ca < -0.3 ? 0 : LINE / 2) : 0;
+        const y = clamp(y1 - shift, FS, ctx.H - 3 - (withValue ? LINE : 0));
         const anchor = sa > 0.3 ? 'start' : sa < -0.3 ? 'end' : 'middle';
         const room = anchor === 'start' ? ctx.W - 3 - x : anchor === 'end' ? x - 3 : 2 * Math.min(x - 3, ctx.W - 3 - x);
         const text = truncate(lab(i), Math.min(room, labMax + 20), FS);
-        if (room > tw('…', FS)) labels += `<text class="lc-nlabel" x="${n2(x)}" y="${n2(y)}" text-anchor="${anchor}">${esc(text)}</text>`;
+        const value = withValue ? `<tspan class="lc-nlabel-val" x="${n2(x)}" dy="${LINE}">${esc(truncate(fmt(wdeg[i]!), Math.min(room, labMax + 20), FS + 1))}</tspan>` : '';
+        if (room > tw('…', FS)) labels += `<text class="lc-nlabel ${colorAttrs(gIdx[i]!, spec.nodes[i]!.color)} x="${n2(x)}" y="${n2(y)}" text-anchor="${anchor}">${esc(text)}${value}</text>`;
       });
       svg = `<g class="lc-nlinks">${links}</g><g class="lc-nnodes">${nodes}</g><g class="lc-nlabels" aria-hidden="true">${labels}</g>`;
     }
