@@ -1,6 +1,6 @@
 /* 공통 차트 소개 사이트. Paper/ink/lime tokens from the leeeo-ui guide (same values as 사이즈표), mobile first.
-   --ink/--muted/--surface/--line are also the host tokens @leeeo/charts reads; --accent is left undefined on purpose so
-   charts keep their own legible series colour instead of the lime button colour. */
+   --ink/--muted/--surface/--line are also the host tokens @leeeo/charts reads; series colours are the library's own
+   palette (charts no longer read --accent since 0.6.0), so the lime button colour never becomes a series colour. */
 :root {
   color-scheme: light;
   --bg: #f7f7f2; --surface: #fff; --ink: #23271f; --muted: #686e60; --line: #dcdfd3; --control-line: #7d8473; --soft: #edeee6;
@@ -105,10 +105,12 @@ pre { max-width: 100%; overflow: auto; padding: var(--s3); border-radius: var(--
   --ink: var(--pane-ink); --muted: var(--pane-muted); --surface: var(--pane-surface); --line: var(--pane-line); --code-bg: #1f251d; --success: #9ed4aa;
 }
 .pane[data-pane="light"] .lc {
-  --lc-s1: #24664d; --lc-s2: #b5651d; --lc-s3: #2f6fa8; --lc-s4: #8a4f9e; --lc-s5: #a8892a; --lc-s6: #3d8f8f; --lc-s7: #b04a5a; --lc-s8: #6b7280;
+  --lc-s1: #3c4dba; --lc-s2: #dd5f1d; --lc-s3: #2b93a1; --lc-s4: #943351; --lc-s5: #4e2175; --lc-s6: #275e08; --lc-s7: #92865a; --lc-s8: #647587;
+  --lc-band-opacity: 0.22; --lc-area-opacity: 0.14; --lc-up-base: #b04a5a; --lc-down-base: #2f6fa8; --lc-gup-base: #3d8f8f;
 }
 .pane[data-pane="dark"] .lc {
-  --lc-s1: #acd2b3; --lc-s2: #e0a060; --lc-s3: #7db3e6; --lc-s4: #c79ad8; --lc-s5: #d9c06a; --lc-s6: #72c7c7; --lc-s7: #e68a98; --lc-s8: #a0a8b4;
+  --lc-s1: #72aaf2; --lc-s2: #feab73; --lc-s3: #5cecf0; --lc-s4: #df5e7a; --lc-s5: #9966ce; --lc-s6: #bcf7bc; --lc-s7: #fedb62; --lc-s8: #8193b3;
+  --lc-band-opacity: 0.3; --lc-area-opacity: 0.18; --lc-up-base: #e68a98; --lc-down-base: #7db3e6; --lc-gup-base: #72c7c7;
 }
 
 /* Playground */

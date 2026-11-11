@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.0
+- Palette v2. Series colours are blue-first and orange-second, then teal, rose, violet, green, ochre, slate
+  (light `#3c4dba #dd5f1d #2b93a1 #943351 #4e2175 #275e08 #92865a #647587`, dark `#72aaf2 #feab73 #5cecf0 #df5e7a
+  #9966ce #bcf7bc #fedb62 #8193b3`). Lightness is staggered so every pair stays apart under protan/deutan/tritan
+  simulation (min OKLab distance x100: 5.6 light / 9.3 dark, was 2.3 / 2.8); contrast is at least 3.3:1 on light and
+  3.5:1 on dark surfaces.
+- **Behaviour change:** series 1 no longer reads the host `--accent`. Hosts set `--chart-1` .. `--chart-8` (or
+  `--lc-s1` .. `--lc-s8`) to replace a colour.
+- Semantic tones get real values: revenue = series 1 blue, profit = series 3 teal, cost = series 2 orange (still
+  hatched), neutral = series 8 slate.
+- Lighter large fills: sankey bands use `--lc-band-opacity` (0.22 light / 0.3 dark, was 0.32), areas use
+  `--lc-area-opacity` (0.14 / 0.18, was 0.18). Tokens only; no style attributes.
+- Up/down colours keep their 0.5 values (`--lc-up-base` / `--lc-down-base`), independent of the series palette.
+- Stock indicator lines (ma / overlays) skip blue and rose so they never read as down/up; the first two stay
+  orange then gold-ochre.
+- Multiples quality subtitle (`lc-psub-q`) is ink and semibold instead of series 2, so it keeps 4.5:1 text contrast.
+
 ## 0.5.0
 - Slim entry points: `@leeeo/charts/core` (`createCharts([...plugins])` -> `renderChart` / `validateSpec` / `mountChart`)
   with the core six types, plus one module per chart type at `@leeeo/charts/charts/<type>` (exports `plugin`). Output

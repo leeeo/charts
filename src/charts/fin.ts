@@ -104,10 +104,11 @@ export const FIN_L = {
 export interface OvLine { name: string; idx: number; w: number; kind: OverlayKind | 'ma'; v: Value[]; upper?: Value[]; lower?: Value[] }
 
 /**
- * Overlay palette as colour indices for colorAttrs (0-based: 1 = lc-c2 orange, 4 = lc-c5 gold, ...). Skips lc-c7 (red)
- * and lc-c3 (blue), the up/down hues, so indicator lines never read as a rise or fall. The first two match 0.3 `ma`.
+ * Overlay palette as colour indices for colorAttrs (0-based: 1 = lc-c2 orange, 6 = lc-c7 ochre, ...). Skips lc-c1 (blue)
+ * and lc-c4 (rose), the hues closest to down/up, so indicator lines never read as a rise or fall. The first two keep the
+ * orange-then-gold look of 0.3 `ma`.
  */
-export const OV_COLORS = [1, 4, 5, 3, 0, 7];
+export const OV_COLORS = [1, 6, 4, 2, 5, 7];
 
 export function overlayLines(lang: 'ko' | 'en', closes: Value[], ma: number[] | undefined, overlays: Overlay[] | undefined): OvLine[] {
   const L = FIN_L[lang];

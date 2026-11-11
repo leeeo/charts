@@ -1,4 +1,4 @@
-.lc-link { fill: var(--c); fill-opacity: 0.32; stroke: none; }
+.lc-link { fill: var(--c); fill-opacity: var(--lc-band-opacity, 0.22); stroke: none; }
 .lc-pt:hover .lc-link, .lc-pt:focus .lc-link { fill-opacity: 0.6; stroke: var(--lc-ink); stroke-width: 1; }
 .lc-node { fill: var(--c); }
 .lc-pt:hover .lc-node, .lc-pt:focus .lc-node { stroke: var(--lc-ink); stroke-width: 2; }

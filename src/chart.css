@@ -1,39 +1,52 @@
 /* @leeeo/charts - theme-aware via CSS custom properties.
-   Reads host tokens (--ink, --muted, --surface, --accent, --line) when defined (@leeeo/theme apps use
-   html[data-theme="light|dark"]); otherwise falls back to built-in light/dark values. */
+   Reads host tokens (--ink, --muted, --surface, --line) when defined (@leeeo/theme apps use
+   html[data-theme="light|dark"]); otherwise falls back to built-in light/dark values.
+   Series palette v2 (0.6.0): blue first, orange second, then teal, rose, violet, green, ochre, slate. Chosen for distance
+   under protan/deutan/tritan simulation and at least 3.3:1 against light surfaces / 3.5:1 against dark ones. Hosts may set
+   --chart-1 .. --chart-8 to replace a series colour; the site accent (--accent) is no longer used for series 1. */
 .lc {
   --lc-ink: var(--ink, #1c2a24);
   --lc-muted: var(--muted, #5b6862);
   --lc-surface: var(--surface, #ffffff);
   --lc-grid: var(--line, #dde3df);
-  --lc-s1: var(--accent, #24664d);
-  --lc-s2: #b5651d; --lc-s3: #2f6fa8; --lc-s4: #8a4f9e;
-  --lc-s5: #a8892a; --lc-s6: #3d8f8f; --lc-s7: #b04a5a; --lc-s8: #6b7280;
+  --lc-s1: var(--chart-1, #3c4dba); --lc-s2: var(--chart-2, #dd5f1d); --lc-s3: var(--chart-3, #2b93a1);
+  --lc-s4: var(--chart-4, #943351); --lc-s5: var(--chart-5, #4e2175); --lc-s6: var(--chart-6, #275e08);
+  --lc-s7: var(--chart-7, #92865a); --lc-s8: var(--chart-8, #647587);
+  /* large translucent fills (sankey bands, areas) */
+  --lc-band-opacity: 0.22; --lc-area-opacity: 0.14;
   margin: 0; color: var(--lc-ink); font-family: var(--font, system-ui, "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif);
   max-width: 100%; min-width: 0;
 }
 [data-theme="dark"] .lc, .lc[data-theme="dark"] {
   --lc-ink: var(--ink, #e8efe9); --lc-muted: var(--muted, #a8b7ae); --lc-surface: var(--surface, #1d2924);
-  --lc-grid: var(--line, #34433b); --lc-s1: var(--accent, #acd2b3);
-  --lc-s2: #e0a060; --lc-s3: #7db3e6; --lc-s4: #c79ad8; --lc-s5: #d9c06a; --lc-s6: #72c7c7; --lc-s7: #e68a98; --lc-s8: #a0a8b4;
+  --lc-grid: var(--line, #34433b);
+  --lc-s1: var(--chart-1, #72aaf2); --lc-s2: var(--chart-2, #feab73); --lc-s3: var(--chart-3, #5cecf0);
+  --lc-s4: var(--chart-4, #df5e7a); --lc-s5: var(--chart-5, #9966ce); --lc-s6: var(--chart-6, #bcf7bc);
+  --lc-s7: var(--chart-7, #fedb62); --lc-s8: var(--chart-8, #8193b3);
+  --lc-band-opacity: 0.3; --lc-area-opacity: 0.18;
+  --lc-up-base: #e68a98; --lc-down-base: #7db3e6; --lc-gup-base: #72c7c7;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) .lc {
     --lc-ink: var(--ink, #e8efe9); --lc-muted: var(--muted, #a8b7ae); --lc-surface: var(--surface, #1d2924);
-    --lc-grid: var(--line, #34433b); --lc-s1: var(--accent, #acd2b3);
-    --lc-s2: #e0a060; --lc-s3: #7db3e6; --lc-s4: #c79ad8; --lc-s5: #d9c06a; --lc-s6: #72c7c7; --lc-s7: #e68a98; --lc-s8: #a0a8b4;
+    --lc-grid: var(--line, #34433b);
+    --lc-s1: var(--chart-1, #72aaf2); --lc-s2: var(--chart-2, #feab73); --lc-s3: var(--chart-3, #5cecf0);
+    --lc-s4: var(--chart-4, #df5e7a); --lc-s5: var(--chart-5, #9966ce); --lc-s6: var(--chart-6, #bcf7bc);
+    --lc-s7: var(--chart-7, #fedb62); --lc-s8: var(--chart-8, #8193b3);
+    --lc-band-opacity: 0.3; --lc-area-opacity: 0.18;
+    --lc-up-base: #e68a98; --lc-down-base: #7db3e6; --lc-gup-base: #72c7c7;
   }
 }
-/* Rise / fall colours for the stock charts. Default Korean convention: up red, down blue. Hosts may set --chart-up /
-   --chart-down, or switch to the global convention (up green, down red) with data-chart-convention="global" on any
-   ancestor or the spec option convention: "global". */
-.lc { --lc-up: var(--chart-up, var(--lc-s7)); --lc-down: var(--chart-down, var(--lc-s3)); --lc-flat: var(--lc-s8); }
-.lc.lc-conv-global, [data-chart-convention="global"] .lc { --lc-up: var(--chart-up, var(--lc-s6)); --lc-down: var(--chart-down, var(--lc-s7)); }
-/* Semantic tones (sankey `tone`). Placeholder aliases of the series palette (revenue blue, profit green-teal, cost
-   red, neutral grey) so light/dark follow the series tokens; the palette owner sets the real values. Hosts may set
-   --chart-revenue / --chart-profit / --chart-cost / --chart-neutral. */
-.lc { --lc-tone-revenue: var(--chart-revenue, var(--lc-s3)); --lc-tone-profit: var(--chart-profit, var(--lc-s6));
-  --lc-tone-cost: var(--chart-cost, var(--lc-s7)); --lc-tone-neutral: var(--chart-neutral, var(--lc-s8)); }
+/* Rise / fall colours for the stock charts, kept at their 0.5 values (independent of the series palette). Default
+   Korean convention: up red, down blue. Hosts may set --chart-up / --chart-down, or switch to the global convention
+   (up green, down red) with data-chart-convention="global" on any ancestor or the spec option convention: "global". */
+.lc { --lc-up-base: #b04a5a; --lc-down-base: #2f6fa8; --lc-gup-base: #3d8f8f; --lc-flat: var(--lc-s8);
+  --lc-up: var(--chart-up, var(--lc-up-base)); --lc-down: var(--chart-down, var(--lc-down-base)); }
+.lc.lc-conv-global, [data-chart-convention="global"] .lc { --lc-up: var(--chart-up, var(--lc-gup-base)); --lc-down: var(--chart-down, var(--lc-up-base)); }
+/* Semantic tones (sankey `tone`): revenue blue (series 1), profit teal (3), cost orange (2, always hatched), neutral
+   slate (8). Hosts may set --chart-revenue / --chart-profit / --chart-cost / --chart-neutral. */
+.lc { --lc-tone-revenue: var(--chart-revenue, var(--lc-s1)); --lc-tone-profit: var(--chart-profit, var(--lc-s3));
+  --lc-tone-cost: var(--chart-cost, var(--lc-s2)); --lc-tone-neutral: var(--chart-neutral, var(--lc-s8)); }
 .lc-tone-revenue{--c:var(--lc-tone-revenue)} .lc-tone-profit{--c:var(--lc-tone-profit)}
 .lc-tone-cost{--c:var(--lc-tone-cost)} .lc-tone-neutral{--c:var(--lc-tone-neutral)}
 .lc-c1{--c:var(--lc-s1)} .lc-c2{--c:var(--lc-s2)} .lc-c3{--c:var(--lc-s3)} .lc-c4{--c:var(--lc-s4)}
@@ -49,12 +62,12 @@
 .lc-axis { stroke: var(--lc-muted); stroke-width: 1; }
 .lc-tick, .lc-axis-title, .lc-psub { fill: var(--lc-muted); font-size: 12px; }
 .lc-t-multiples .lc-tick { font-size: 10.5px; }
-.lc-psub { font-size: 10.5px; } .lc-psub-q { fill: var(--lc-s2); }
+.lc-psub { font-size: 10.5px; } .lc-psub-q { fill: var(--lc-ink); font-weight: 650; }
 .lc-ptitle { fill: var(--lc-ink); font-size: 13px; font-weight: 650; }
 .lc-empty { fill: var(--lc-muted); font-size: 13px; }
 .lc-center { fill: var(--lc-ink); font-weight: 700; } .lc-center-sub { fill: var(--lc-muted); font-size: 11px; }
 .lc-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.lc-area { fill: var(--c); fill-opacity: 0.18; stroke: none; }
+.lc-area { fill: var(--c); fill-opacity: var(--lc-area-opacity); stroke: none; }
 .lc-t-sparkline .lc-area { fill-opacity: 0.12; }
 .lc-bar, .lc-slice { fill: var(--c); }
 .lc-slice { stroke: var(--lc-surface); stroke-width: 2; }
