@@ -15,10 +15,34 @@ function drawHost(host) {
   mountChart(host, { ...e.spec, id: pane === 'page' ? 'lc-hero' : `${e.id}-${pane}` });
   host.classList.add('is-drawn');
 }
-// Spec JSON blocks are filled here from specs.js rather than shipped twice in the page.
-for (const code of document.querySelectorAll('code[data-spec]')) {
-  const e = byId.get(code.dataset.spec);
-  if (e) code.textContent = specJson(e.spec);
+// Each gallery card ships only its heading; build the light/dark panes and the spec JSON block here from specs.js.
+const PANE_LABEL = { light: '밝은 화면', dark: '어두운 화면' };
+const make = (tag, className, text) => {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+for (const card of document.querySelectorAll('article.card[data-card]')) {
+  const e = byId.get(card.dataset.card);
+  if (!e) continue;
+  const panes = make('div', 'panes');
+  for (const theme of ['light', 'dark']) {
+    const pane = make('div', 'pane');
+    pane.dataset.pane = theme;
+    const host = make('div', 'host lazy');
+    Object.assign(host.dataset, { example: e.id, themePane: theme, lazy: '' });
+    pane.append(make('p', 'pane-label', PANE_LABEL[theme]), host);
+    panes.append(pane);
+  }
+  const details = make('details', 'spec');
+  details.open = true;
+  const pre = make('pre');
+  pre.tabIndex = 0;
+  pre.setAttribute('aria-label', `${e.heading} 스펙 JSON`);
+  pre.append(make('code', '', specJson(e.spec)));
+  details.append(make('summary', '', '스펙 JSON'), pre);
+  card.append(panes, details);
 }
 const lazy = [...document.querySelectorAll('[data-example][data-lazy]')];
 for (const host of document.querySelectorAll('[data-example]:not([data-lazy])')) drawHost(host);

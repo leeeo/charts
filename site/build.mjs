@@ -27,28 +27,19 @@ const typeName = { line: '선', area: '영역', bar: '막대', donut: '도넛', 
   ...Object.fromEntries(pluginList.map((p) => [p.type, p.names.ko.replace(/ ?(차트|그래프)$/, '')])) };
 const types = [...new Set(examples.map((e) => e.spec.type))];
 
-// Gallery charts are drawn in the browser as each card scrolls into view, and each card's spec JSON is filled from
-// assets/specs.js (assets/site.js). Inlining every chart twice made the page 1.7 MB and timed out through the tunnel.
-// Without JavaScript the light pane shows the pre-rendered preview image of the same spec (docs/images, made by site/shots.mjs).
+// Gallery cards carry only the heading and, for no-script visitors, the pre-rendered preview image of the same spec
+// (docs/images, made by site/shots.mjs). assets/site.js builds the light/dark panes and the spec JSON block from
+// assets/specs.js and draws each chart as its card nears the viewport. Inlining every chart twice made the page 1.7 MB.
 const pngSize = (file) => { const b = readFileSync(file); return { width: b.readUInt32BE(16), height: b.readUInt32BE(20) }; };
 const preview = (e) => {
   const file = join(root, 'docs', 'images', `${e.id}.png`);
-  if (!existsSync(file)) return '<noscript><p class="pane-label">차트는 JavaScript로 그려요. 아래 스펙 JSON을 참고하세요.</p></noscript>';
+  if (!existsSync(file)) return '';
   const { width, height } = pngSize(file);
   return `<noscript><img class="preview" src="images/${e.id}.png" width="${width}" height="${height}" alt="${esc(e.heading)} 미리보기 이미지" loading="lazy"></noscript>`;
 };
-const pane = (e, theme) => `<div class="pane" data-pane="${theme}">
-        <p class="pane-label">${theme === 'light' ? '밝은 화면' : '어두운 화면'}</p>
-        <div class="host lazy" data-example="${e.id}" data-theme-pane="${theme}" data-lazy>${theme === 'light' ? preview(e) : ''}</div>
-      </div>`;
 
-const card = (e) => `<article class="card${e.wide || e.spec.type === 'multiples' ? ' wide' : ''}" id="g-${e.id}" aria-labelledby="g-${e.id}-h">
-      <div class="card-head"><h3 id="g-${e.id}-h">${esc(e.heading)}</h3>${e.note ? `<p>${esc(e.note)}</p>` : ''}</div>
-      <div class="panes">
-      ${pane(e, 'light')}
-      ${pane(e, 'dark')}
-      </div>
-      <details class="spec" open><summary>스펙 JSON</summary><pre tabindex="0" aria-label="${esc(e.heading)} 스펙 JSON"><code data-spec="${e.id}"></code></pre><noscript><p class="spec-note">스펙 JSON은 JavaScript를 켜면 보여요. 저장소의 examples/specs.ts에도 있어요.</p></noscript></details>
+const card = (e) => `<article class="card${e.wide || e.spec.type === 'multiples' ? ' wide' : ''}" id="g-${e.id}" aria-labelledby="g-${e.id}-h" data-card="${e.id}">
+      <div class="card-head"><h3 id="g-${e.id}-h">${esc(e.heading)}</h3>${e.note ? `<p>${esc(e.note)}</p>` : ''}</div>${preview(e)}
     </article>`;
 
 const hero = examples.find((e) => e.id === 'line');
@@ -97,7 +88,7 @@ const html = `<!doctype html>
     </section>
 
     <section class="section" id="gallery" aria-labelledby="gallery-title">
-      <div class="section-head"><h2 id="gallery-title">갤러리</h2><p>${types.map((t) => typeName[t]).join(' · ')} 차트를 밝은 화면과 어두운 화면에서 함께 보여 줘요. 모두 이 페이지에서 지금 그린 차트예요. 점이나 막대에 마우스를 올리거나 Tab 키로 이동하면 값이 나와요.</p></div>
+      <div class="section-head"><h2 id="gallery-title">갤러리</h2><noscript><p>JavaScript가 꺼져 있어 미리보기 이미지만 보여요. 차트와 스펙 JSON은 JavaScript를 켜면 보이고, 스펙은 저장소의 examples/specs.ts에도 있어요.</p></noscript><p>${types.map((t) => typeName[t]).join(' · ')} 차트를 밝은 화면과 어두운 화면에서 함께 보여 줘요. 모두 이 페이지에서 지금 그린 차트예요. 점이나 막대에 마우스를 올리거나 Tab 키로 이동하면 값이 나와요.</p></div>
       <div class="gallery">
     ${examples.map(card).join('\n    ')}
       </div>
