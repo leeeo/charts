@@ -1,0 +1,2 @@
+# Stylesheets ship byte-for-byte in dist/chart.css; keep them LF on every checkout.
+*.css text eol=lf
