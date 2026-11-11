@@ -27,8 +27,8 @@ const typeName = { line: '선', area: '영역', bar: '막대', donut: '도넛', 
   ...Object.fromEntries(pluginList.map((p) => [p.type, p.names.ko.replace(/ ?(차트|그래프)$/, '')])) };
 const types = [...new Set(examples.map((e) => e.spec.type))];
 
-// Gallery charts are drawn in the browser as each card scrolls into view (assets/site.js); the page itself carries
-// only the specs. Inlining every chart twice made the page 1.7 MB and timed out through the tunnel.
+// Gallery charts are drawn in the browser as each card scrolls into view, and each card's spec JSON is filled from
+// assets/specs.js (assets/site.js). Inlining every chart twice made the page 1.7 MB and timed out through the tunnel.
 // Without JavaScript the light pane shows the pre-rendered preview image of the same spec (docs/images, made by site/shots.mjs).
 const pngSize = (file) => { const b = readFileSync(file); return { width: b.readUInt32BE(16), height: b.readUInt32BE(20) }; };
 const preview = (e) => {
@@ -48,7 +48,7 @@ const card = (e) => `<article class="card${e.wide || e.spec.type === 'multiples'
       ${pane(e, 'light')}
       ${pane(e, 'dark')}
       </div>
-      <details class="spec" open><summary>스펙 JSON</summary><pre tabindex="0" aria-label="${esc(e.heading)} 스펙 JSON"><code>${esc(specJson(e.spec))}</code></pre></details>
+      <details class="spec" open><summary>스펙 JSON</summary><pre tabindex="0" aria-label="${esc(e.heading)} 스펙 JSON"><code data-spec="${e.id}"></code></pre><noscript><p class="spec-note">스펙 JSON은 JavaScript를 켜면 보여요. 저장소의 examples/specs.ts에도 있어요.</p></noscript></details>
     </article>`;
 
 const hero = examples.find((e) => e.id === 'line');

@@ -81,7 +81,8 @@ select, textarea { min-height: var(--touch); padding: var(--s2) var(--s3); borde
 .host { min-width: 0; }
 .host.lazy:not(.is-drawn) { min-height: 16rem; }
 /* Without JavaScript only the light pane's preview image is shown; the dark pane would stay empty. */
-@media (scripting: none) { .pane[data-pane="dark"] { display: none; } .host.lazy:not(.is-drawn) { min-height: 0; } }
+@media (scripting: none) { .pane[data-pane="dark"], .spec pre { display: none; } .host.lazy:not(.is-drawn) { min-height: 0; } }
+.spec-note { color: var(--muted); font-size: var(--small); }
 .host .preview { display: block; width: 100%; height: auto; border-radius: var(--r1); }
 .usage-list { display: grid; gap: var(--s4); margin: var(--s4) 0; padding: 0; list-style: none; }
 .usage-list h3 { font-size: 1rem; }

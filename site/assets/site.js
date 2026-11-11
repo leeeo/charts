@@ -15,6 +15,11 @@ function drawHost(host) {
   mountChart(host, { ...e.spec, id: pane === 'page' ? 'lc-hero' : `${e.id}-${pane}` });
   host.classList.add('is-drawn');
 }
+// Spec JSON blocks are filled here from specs.js rather than shipped twice in the page.
+for (const code of document.querySelectorAll('code[data-spec]')) {
+  const e = byId.get(code.dataset.spec);
+  if (e) code.textContent = specJson(e.spec);
+}
 const lazy = [...document.querySelectorAll('[data-example][data-lazy]')];
 for (const host of document.querySelectorAll('[data-example]:not([data-lazy])')) drawHost(host);
 if ('IntersectionObserver' in window) {
