@@ -60,7 +60,29 @@ export function wrapText(text: string, max: number, size: number, lines: number)
 }
 
 /**
- * Value box (tooltip) anchored at (ax, ay). Never wider than the viewBox: long text wraps (up to 3 lines, then …).
+ * One-dimensional collision resolver for labels: returns a centre for every item (same order as the input) so that
+ * neighbours never overlap (`h` = the height each item needs) and everything stays inside [lo, hi] where possible.
+ * Items keep their vertical order; the shift is deterministic.
+ */
+export function spread(items: { y: number; h: number }[], lo: number, hi: number): number[] {
+  const order = items.map((it, k) => ({ ...it, k })).sort((a, b) => a.y - b.y || a.k - b.k);
+  const ys = order.map((it) => clamp(it.y, lo + it.h / 2, Math.max(lo + it.h / 2, hi - it.h / 2)));
+  for (let i = 1; i < order.length; i++) {
+    const need = ((order[i - 1] as { h: number }).h + (order[i] as { h: number }).h) / 2;
+    ys[i] = Math.max(ys[i] as number, (ys[i - 1] as number) + need);
+  }
+  for (let i = order.length - 1; i >= 0; i--) {
+    const it = order[i] as { h: number };
+    const cap = i === order.length - 1 ? hi - it.h / 2 : (ys[i + 1] as number) - (it.h + (order[i + 1] as { h: number }).h) / 2;
+    ys[i] = Math.max(lo + it.h / 2, Math.min(ys[i] as number, cap));
+  }
+  const out = new Array<number>(items.length);
+  order.forEach((it, i) => { out[it.k] = Math.round((ys[i] as number) * 100) / 100; });
+  return out;
+}
+
+/**
+ * Value box (tooltip) anchored at (ax, ay). The part after the last ": " (the value) is bold on one-line boxes. Never wider than the viewBox: long text wraps (up to 3 lines, then …).
  * Sits above the anchor, flips below it near the top, and is clamped inside the viewBox on every side.
  */
 export function tip(ctx: Ctx, text: string, ax: number, ay: number): string {
@@ -74,8 +96,10 @@ export function tip(ctx: Ctx, text: string, ax: number, ay: number): string {
   if (y < 2) y = ay + 10;
   y = clamp(y, 2, ctx.H - h - 2);
   const base = y + 12 + FS * 0.36;
+  const one = lines[0] ?? '';
+  const cut = one.lastIndexOf(': ');
   const body = lines.length === 1
-    ? `<text x="${n2(x + 7)}" y="${n2(y + h / 2 + FS * 0.36)}">${esc(lines[0] ?? '')}</text>`
+    ? `<text x="${n2(x + 7)}" y="${n2(y + h / 2 + FS * 0.36)}">${cut > 0 ? `${esc(one.slice(0, cut + 2))}<tspan class="lc-tip-v">${esc(one.slice(cut + 2))}</tspan>` : esc(one)}</text>`
     : `<text x="${n2(x + 7)}" y="${n2(base)}">${lines.map((l, i) => `<tspan x="${n2(x + 7)}"${i ? ` dy="${lh}"` : ''}>${esc(l)}</tspan>`).join('')}</text>`;
   return `<g class="lc-tip" aria-hidden="true"><rect x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}" rx="4"/>${body}</g>`;
 }

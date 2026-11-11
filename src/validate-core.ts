@@ -4,6 +4,9 @@ import { BASE, ChartSpecError, type Dict, MAX_SERIES, base, color, dict, fail, l
 
 export { ChartSpecError };
 
+/** Allowed `valueLabels` values (shared with the pie plugin). */
+export const VALUE_LABELS = ['auto', 'none'] as const;
+
 /**
  * Validate untrusted input against the core six types plus the given plugin registry and return a clean, typed copy.
  * Throws ChartSpecError with a JSON path.
@@ -18,9 +21,10 @@ export function validateWith(input: unknown, plugins: Readonly<Record<string, Ch
     case 'bar':
     case 'sparkline': {
       const extra = probe === 'area' ? ['stacked'] : probe === 'bar' ? ['stacked', 'horizontal', 'percent'] : [];
-      const o = dict(input, 'spec', [...BASE, 'labels', 'xLabel', 'yMin', 'yMax', 'series', ...extra]);
+      const o = dict(input, 'spec', [...BASE, 'labels', 'xLabel', 'yMin', 'yMax', 'series', 'valueLabels', ...extra]);
       const out = base(o);
       out.type = probe;
+      put(out, 'valueLabels', oneOf(o.valueLabels, 'valueLabels', VALUE_LABELS));
       const ls = labels(o.labels, 'labels');
       const stacked = optBool(o.stacked, 'stacked');
       out.labels = ls;
@@ -41,9 +45,10 @@ export function validateWith(input: unknown, plugins: Readonly<Record<string, Ch
       return out as unknown as ChartSpec;
     }
     case 'donut': {
-      const o = dict(input, 'spec', [...BASE, 'slices', 'centerLabel']);
+      const o = dict(input, 'spec', [...BASE, 'slices', 'centerLabel', 'valueLabels']);
       const out = base(o);
       out.type = 'donut';
+      put(out, 'valueLabels', oneOf(o.valueLabels, 'valueLabels', VALUE_LABELS));
       const sl = o.slices;
       if (!Array.isArray(sl) || sl.length === 0) fail('slices', 'must be a non-empty array');
       if (sl.length > MAX_SERIES) fail('slices', `must have at most ${MAX_SERIES} entries`);
@@ -67,9 +72,10 @@ export function validateWith(input: unknown, plugins: Readonly<Record<string, Ch
       return out as unknown as ChartSpec;
     }
     case 'multiples': {
-      const o = dict(input, 'spec', [...BASE, 'panelType', 'labels', 'xLabel', 'panels', 'columns', 'sharedY', 'yMin', 'yMax']);
+      const o = dict(input, 'spec', [...BASE, 'panelType', 'labels', 'xLabel', 'panels', 'columns', 'sharedY', 'yMin', 'yMax', 'valueLabels']);
       const out = base(o);
       out.type = 'multiples';
+      put(out, 'valueLabels', oneOf(o.valueLabels, 'valueLabels', VALUE_LABELS));
       const pt = oneOf(o.panelType, 'panelType', ['line', 'area', 'bar'] as const);
       if (pt === undefined) fail('panelType', 'is required');
       out.panelType = pt;

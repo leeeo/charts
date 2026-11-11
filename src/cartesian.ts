@@ -2,7 +2,7 @@
 // Chart types in src/charts/ may reuse domainFor()/plot() for category-based charts.
 import type { Series } from './types.ts';
 import { type Fmt, clamp, esc, n2, niceTicks, truncate, tw } from './format.ts';
-import { type Ctx, FS, colorAttrs, present, runs, tip } from './kit.ts';
+import { type Ctx, FS, colorAttrs, present, runs, spread, tip, wrapText } from './kit.ts';
 
 export interface Domain { min: number; max: number; ticks: number[] }
 
@@ -28,6 +28,34 @@ export function domainFor(list: Series[], kind: 'line' | 'area' | 'bar', stacked
   return { min: yMin !== undefined ? Math.min(yMin, t.min) : t.min, max: yMax !== undefined ? Math.max(yMax, t.max) : t.max, ticks: t.ticks };
 }
 
+/** Font size of value / end labels and the category label line height. */
+const LFS = 11;
+const LH = 13;
+
+/** Hangul syllables and jamo: a label made of one Korean word may break in the middle (no hyphenation needed). */
+const HANGUL = /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/;
+/**
+ * Category label as at most `lines` lines of `max` px: whole when it fits, wrapped at spaces, a single Korean word
+ * split evenly in two, anything else truncated. Never leaves a one-character tail.
+ */
+export function splitCat(raw: string, max: number, fs: number, lines: number): string[] {
+  if (lines < 2 || tw(raw, fs) <= max) return [truncate(raw, max, fs)];
+  if (/\s/.test(raw)) return wrapText(raw, max, fs, 2);
+  const chars = [...raw];
+  if (HANGUL.test(raw) && chars.length >= 4) {
+    const m = Math.ceil(chars.length / 2);
+    return [truncate(chars.slice(0, m).join(''), max, fs), truncate(chars.slice(m).join(''), max, fs)];
+  }
+  return [truncate(raw, max, fs)];
+}
+
+/** True when a category label of a horizontal bar chart has to wrap onto a second line (used to size the rows). */
+export function wrapsCategory(labels: string[], w: number, fs = FS): boolean {
+  const catMax = Math.max(0, ...labels.map((l) => tw(l, fs)));
+  const left = Math.min(w * 0.4, catMax + 12);
+  return catMax > left - 12;
+}
+
 export interface PlotOpts {
   ctx: Ctx; x: number; y: number; w: number; h: number;
   kind: 'line' | 'area' | 'bar'; horizontal: boolean; stacked: boolean;
@@ -37,24 +65,64 @@ export interface PlotOpts {
   labelFor?: (se: Series, i: number, v: number) => string;
   /** Override the tick label formatter (defaults to fmt). */
   tickFmt?: Fmt;
+  /** End-of-series labels for line/area: `full` = series name + last value, `value` = last value only. */
+  endLabels?: 'full' | 'value';
+  /** Bar value labels: at the bar end for plain bars, inside segments plus the total for stacks (only where they fit). */
+  valueLabels?: boolean;
+  /** Formatter for value labels (defaults to fmt); percent bars pass a `%` formatter for the drawn share. */
+  valueFmt?: Fmt;
 }
 
-/** Draw one cartesian plot. `shapes` go below, `points` (focusable) are emitted last so tips stay on top. */
-export function plot(o: PlotOpts): { shapes: string; points: string } {
+export interface PlotOut {
+  /** Axes, grid and the marks that are not focusable. */
+  shapes: string;
+  /** Value / end labels layer (`<g class="lc-lbls">`), drawn above the marks and below the focusable points. */
+  labels: string;
+  /** Focusable marks with their value boxes; emitted last so tips stay on top. */
+  points: string;
+  /** Category centre of index i and the pixel position of a value, for callers that add their own marks. */
+  cx: (i: number) => number;
+  vv: (v: number) => number;
+}
+
+/** Draw one cartesian plot. Concatenate `shapes + labels + points`. */
+export function plot(o: PlotOpts): PlotOut {
   const { ctx, kind, horizontal, stacked, series, labels, dom, fmt, compact, bare } = o;
   const fs = compact ? 10.5 : FS;
   const N = labels.length;
   const tickLabels = dom.ticks.map(o.tickFmt ?? fmt);
   const maxTick = Math.max(0, ...tickLabels.map((t) => tw(t, fs)));
   const catMax = Math.max(0, ...labels.map((l) => tw(l, fs)));
+  const vfmt = o.valueFmt ?? fmt;
+  const lastOf = (se: Series): number => se.values.reduce<number>((a, v, i) => (v === null ? a : i), -1);
+  // end labels (line/area): reserve a right margin for the widest label, capped at 30% of the plot width
+  const ends = kind !== 'bar' && o.endLabels ? series.map((se) => ({ se, i: lastOf(se) })).filter((e) => e.i >= 0) : [];
+  const endText = (se: Series): { name: string; val: string } => ({ name: o.endLabels === 'full' ? se.name : '', val: vfmt(se.values[lastOf(se)] as number) });
+  let endW = 0;
+  if (ends.length) {
+    const need = Math.max(...ends.map(({ se }) => { const t = endText(se); return Math.max(tw(t.val, LFS), t.name ? tw(t.name, LFS) : 0); }));
+    endW = Math.min(need, o.w * 0.3) + 8;
+  }
+  // bar value labels: plain bars reserve room at the bar end; stacks label segments inside and the total at the end
+  const bars = kind === 'bar' && o.valueLabels === true;
+  const nS = stacked ? 1 : series.length;
+  const totals = stacked ? labels.map((_, i) => series.reduce((a, s) => a + (s.values[i] ?? 0), 0)) : [];
+  const diverging = stacked && series.some((s) => s.values.some((v) => v !== null && v < 0));
+  const showTotal = bars && stacked && !diverging && !o.valueFmt;
+  const valW = bars ? Math.max(0, ...series.flatMap((s) => present(s.values).map((v) => tw(vfmt(v), LFS))), ...(showTotal ? totals.map((t) => tw(fmt(t), LFS)) : [])) : 0;
   let left: number; let right: number; let top: number; let bottom: number;
-  if (bare) { left = 4; right = 6; top = 4; bottom = 4; }
+  let catLines = 1;
+  if (bare) { left = 4; right = 6 + endW; top = 4; bottom = 4; }
   else if (horizontal) {
     left = Math.min(o.w * 0.4, catMax + 12);
-    right = Math.ceil(tw(tickLabels[tickLabels.length - 1] ?? '', fs) / 2) + 6; top = 6;
+    right = Math.max(Math.ceil(tw(tickLabels[tickLabels.length - 1] ?? '', fs) / 2) + 6, bars && (!stacked || showTotal) ? valW + 10 : 0); top = 6;
     bottom = fs + 12 + (o.xLabel ? fs + 6 : 0);
   } else {
-    left = maxTick + 12; right = 10; top = 8; bottom = fs + 12 + (o.xLabel ? fs + 6 : 0);
+    left = maxTick + 12; right = 10 + endW; top = bars && (!stacked || showTotal) ? LFS + 10 : 8;
+    // labels with a space may wrap onto a second line (never split inside a word); single words are truncated or thinned
+    const band0 = (o.w - left - right) / N;
+    if (N <= 8 && labels.some((l) => tw(l, fs) + 6 > band0 && splitCat(l, band0 - 4, fs, 2).length > 1)) catLines = 2;
+    bottom = fs + 12 + (catLines - 1) * LH + (o.xLabel ? fs + 6 : 0);
   }
   const px = o.x + left; const py = o.y + top; const pw = Math.max(10, o.w - left - right); const ph = Math.max(10, o.h - top - bottom);
   const span = dom.max - dom.min || 1;
@@ -64,6 +132,7 @@ export function plot(o: PlotOpts): { shapes: string; points: string } {
   const zero = vv(clamp(0, dom.min, dom.max));
   let s = '';
   let pts = '';
+  let lbl = '';
 
   if (!bare) {
     for (const [ti, t] of dom.ticks.entries()) {
@@ -79,18 +148,24 @@ export function plot(o: PlotOpts): { shapes: string; points: string } {
       }
     }
     const lw = horizontal ? fs + 4 : catMax + 8;
-    // all labels when they fit; truncate (never drop) for few categories; otherwise thin out by width
-    const fitAll = !horizontal && (catMax + 6 <= band || N <= 6);
+    // all labels when they fit or there are few categories (wrapped to two lines, then truncated); otherwise thin out
+    const fitAll = !horizontal && (catMax + 6 <= band || N <= 6 || catLines > 1);
     const step = fitAll ? 1 : Math.max(1, Math.ceil(lw / band));
     for (let i = 0; i < N; i += step) {
       const raw = labels[i] ?? '';
       if (horizontal) {
-        const t = truncate(raw, left - 12, fs);
-        s += `<text class="lc-tick" x="${n2(px - 6)}" y="${n2(cc(i) + fs * 0.35)}" text-anchor="end">${esc(t)}</text>`;
+        const lines = splitCat(raw, left - 12, fs, band >= 2 * LH + 2 ? 2 : 1);
+        const y0 = cc(i) + fs * 0.35 - ((lines.length - 1) * LH) / 2;
+        s += `<text class="lc-tick" x="${n2(px - 6)}" y="${n2(y0)}" text-anchor="end">${lines.map((l, k) => `<tspan x="${n2(px - 6)}"${k ? ` dy="${LH}"` : ''}>${esc(l)}</tspan>`).join('')}</text>`;
       } else {
-        const t = truncate(raw, Math.max(24, (fitAll ? band : step * band) - 4), fs);
-        const w = tw(t, fs);
-        s += `<text class="lc-tick" x="${n2(clamp(cc(i) - w / 2, o.x, o.x + o.w - w))}" y="${n2(py + ph + fs + 6)}">${esc(t)}</text>`;
+        const max = Math.max(24, (fitAll ? band : step * band) - 4);
+        const lines = splitCat(raw, max, fs, catLines);
+        const y0 = py + ph + fs + 6;
+        s += `<text class="lc-tick" x="${n2(cc(i))}" y="${n2(y0)}" text-anchor="middle">${lines.map((l, k) => {
+          const w = tw(l, fs);
+          const x = clamp(cc(i), o.x + w / 2, o.x + o.w - w / 2);
+          return `<tspan x="${n2(x)}"${k ? ` dy="${LH}"` : ''}>${esc(l)}</tspan>`;
+        }).join('')}</text>`;
       }
     }
     s += horizontal
@@ -118,11 +193,14 @@ export function plot(o: PlotOpts): { shapes: string; points: string } {
     `${labels[i] ?? ''}, ${se.name}${o.panelName ? ` (${o.panelName})` : ''}: ${fmt(v)}${se.quality ? ` · ${se.quality}` : ''}`);
   const group = (cls: string, aria: string, inner: string, t: string): string =>
     `<g class="lc-pt ${cls}" tabindex="0" aria-label="${esc(aria)}">${inner}${t}</g>`;
+  const tint = (j: number, se: Series): string => colorAttrs(sid(j), se.color);
 
   if (kind === 'bar') {
-    const nS = stacked ? 1 : series.length;
     const gw = band * 0.76;
     const bw = gw / nS;
+    // plain bars: labels only when the widest one fits the bar slot (horizontal bars always have room reserved)
+    const slot = horizontal ? Infinity : band / nS - 1;
+    const endLbl = bars && (!stacked ? valW <= slot : showTotal);
     series.forEach((se, j) => {
       se.values.forEach((v, i) => {
         if (v === null) return;
@@ -133,21 +211,53 @@ export function plot(o: PlotOpts): { shapes: string; points: string } {
         let rect: string;
         if (horizontal) {
           const x0 = Math.min(a, b); const w0 = Math.max(Math.abs(b - a), 1);
-          rect = `<rect class="lc-mark lc-bar ${colorAttrs(sid(j), se.color)} data-s="${j}" data-i="${i}" data-v="${v}" x="${n2(x0)}" y="${n2(off)}" width="${n2(w0)}" height="${n2(wid)}"/>`;
+          rect = `<rect class="lc-mark lc-bar ${tint(j, se)} data-s="${j}" data-i="${i}" data-v="${v}" x="${n2(x0)}" y="${n2(off)}" width="${n2(w0)}" height="${n2(wid)}"/>`;
         } else {
           const y0 = Math.min(a, b); const h0 = Math.max(Math.abs(b - a), 1);
-          rect = `<rect class="lc-mark lc-bar ${colorAttrs(sid(j), se.color)} data-s="${j}" data-i="${i}" data-v="${v}" x="${n2(off)}" y="${n2(y0)}" width="${n2(wid)}" height="${n2(h0)}"/>`;
+          rect = `<rect class="lc-mark lc-bar ${tint(j, se)} data-s="${j}" data-i="${i}" data-v="${v}" x="${n2(off)}" y="${n2(y0)}" width="${n2(wid)}" height="${n2(h0)}"/>`;
+        }
+        // inside-segment labels travel with the (focusable) bar so they stay above it; the rest go to the label layer
+        let inside = '';
+        if (bars) {
+          const text = vfmt(v);
+          const w = tw(text, LFS);
+          const len = Math.abs(b - a);
+          if (stacked) {
+            // inside the segment when it is thick and long enough for the text
+            if (wid >= LFS + 3 && len >= w + 6) {
+              const mx = horizontal ? (a + b) / 2 : off + wid / 2; const my = horizontal ? off + wid / 2 : (a + b) / 2;
+              inside = `<g class="lc-lbls" aria-hidden="true"><text class="lc-val lc-val-in" data-s="${j}" x="${n2(mx)}" y="${n2(my + LFS * 0.36)}" text-anchor="middle">${esc(text)}</text></g>`;
+            }
+          } else if (endLbl) {
+            const neg = v < 0;
+            if (horizontal) {
+              const x = neg ? Math.min(a, b) - 4 : Math.max(a, b) + 4;
+              lbl += `<text class="lc-val ${tint(j, se)} data-s="${j}" x="${n2(x)}" y="${n2(off + wid / 2 + LFS * 0.36)}"${neg ? ' text-anchor="end"' : ''}>${esc(text)}</text>`;
+            } else {
+              const y = neg ? Math.min(Math.max(a, b) + LFS + 3, py + ph - 2) : Math.min(a, b) - 4;
+              lbl += `<text class="lc-val ${tint(j, se)} data-s="${j}" x="${n2(off + wid / 2)}" y="${n2(y)}" text-anchor="middle">${esc(text)}</text>`;
+            }
+          }
         }
         if (o.focus) {
           const ax = horizontal ? Math.max(a, b) : off + wid / 2;
           const ay = horizontal ? off + wid / 2 : Math.min(a, b);
-          pts += group('lc-pt-bar', pointLabel(se, i, v), rect, tip(ctx, pointLabel(se, i, v), ax, ay));
-        } else s += rect;
+          pts += group('lc-pt-bar', pointLabel(se, i, v), rect + inside, tip(ctx, pointLabel(se, i, v), ax, ay));
+        } else s += rect + inside;
       });
     });
+    if (endLbl && stacked) {
+      totals.forEach((t, i) => {
+        if (!series.some((se) => se.values[i] !== null)) return;
+        const e = vv(t); const off = cc(i);
+        lbl += horizontal
+          ? `<text class="lc-val lc-val-sum" x="${n2(e + 4)}" y="${n2(off + LFS * 0.36)}">${esc(fmt(t))}</text>`
+          : `<text class="lc-val lc-val-sum" x="${n2(off)}" y="${n2(e - 4)}" text-anchor="middle">${esc(fmt(t))}</text>`;
+      });
+    }
   } else {
     series.forEach((se, j) => {
-      const c = colorAttrs(sid(j), se.color);
+      const c = tint(j, se);
       const top = (i: number): number => vv(stacked ? (spans[j]?.[i]?.[1] ?? 0) : (se.values[i] ?? 0));
       const bot = (i: number): number => (stacked ? vv(spans[j]?.[i]?.[0] ?? 0) : zero);
       const xs = (i: number): number => cc(i);
@@ -173,6 +283,28 @@ export function plot(o: PlotOpts): { shapes: string; points: string } {
         } else if (solo.has(i) || visible) s += dot;
       });
     });
+    if (ends.length) {
+      // name above the bold value, right of the last point; neighbours are pushed apart and get a leader line
+      const maxW = endW - 8;
+      const items = ends.map(({ se, i }) => {
+        const t = endText(se);
+        const name = t.name ? truncate(t.name, maxW, LFS) : '';
+        const j = series.indexOf(se);
+        const y = vv(stacked ? (spans[j]?.[i]?.[1] ?? 0) : (se.values[i] ?? 0));
+        return { se, j, i, name, val: t.val, y, lines: name ? 2 : 1 };
+      });
+      const hgt = (it: { lines: number }): number => it.lines * LH;
+      // labels may overhang the plot by a few px (a bare sparkline uses its whole height) before neighbours push them
+      const ys = spread(items.map((it) => ({ y: it.y, h: hgt(it) + 2 })), bare ? o.y : py - 6, bare ? o.y + o.h : py + ph + 6);
+      // one label column right of the plot; a bare strip (sparkline) tucks the label next to its last point
+      const x = bare ? Math.min(px + pw + 6, Math.max(...items.map((it) => cc(it.i))) + 8) : px + pw + 6;
+      items.forEach((it, k) => {
+        const yc = ys[k] ?? it.y;
+        const y0 = yc - ((it.lines - 1) * LH) / 2 + LFS * 0.36;
+        if (Math.abs(yc - it.y) > LH / 2) lbl += `<path class="lc-lead" d="M${n2(cc(it.i) + 4)},${n2(it.y)}L${n2(x - 2)},${n2(yc)}"/>`;
+        lbl += `<text class="lc-end ${tint(it.j, it.se)} data-s="${it.j}" x="${n2(x)}" y="${n2(y0)}">${it.name ? `<tspan class="lc-lbl">${esc(it.name)}</tspan><tspan class="lc-lbl-v" x="${n2(x)}" dy="${LH}">${esc(it.val)}</tspan>` : `<tspan class="lc-lbl-v">${esc(it.val)}</tspan>`}</text>`;
+      });
+    }
   }
-  return { shapes: s, points: pts };
+  return { shapes: s, labels: lbl ? `<g class="lc-lbls" aria-hidden="true">${lbl}</g>` : '', points: pts, cx: cc, vv };
 }

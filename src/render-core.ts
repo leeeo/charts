@@ -3,7 +3,7 @@ import { validateWith } from './validate-core.ts';
 import type { ChartPlugin } from './plugin.ts';
 import { type Fmt, clamp, esc, hash, makeFmt, n2, truncate, tw } from './format.ts';
 import { type Ctx, MAX_FOCUS, STR, colorAttrs, empty, frame, legend, pct, present, seriesTable, summarize, table, tip, wrapTable } from './kit.ts';
-import { type Domain, domainFor, plot } from './cartesian.ts';
+import { type Domain, domainFor, plot, wrapsCategory } from './cartesian.ts';
 import { renderRing } from './radial.ts';
 
 export interface RenderOptions {
@@ -31,19 +31,24 @@ function renderCartesian(spec: Exclude<CoreSpec, DonutSpec | MultiplesSpec>, ctx
     : spec.series;
   const dom = spark ? sparkDomain(all) : percent ? percentDomain(drawn) : domainFor(drawn, kind, stacked, spec.yMin, spec.yMax, 5);
   const total = present(all).length;
+  const vl = spec.valueLabels !== 'none';
   let inner: string;
   if (!dom) inner = empty(ctx);
-  else if (spark) inner = renderSpark(spec, ctx, dom, fmt);
+  else if (spark) inner = renderSpark(spec, ctx, dom, fmt, vl);
   else {
+    const pctFmt = (v: number): string => `${Math.round(v)}%`;
     const extra = percent ? {
-      tickFmt: (v: number): string => `${Math.round(v)}%`,
+      tickFmt: pctFmt,
+      valueFmt: pctFmt,
       labelFor: (se: Series, i: number, v: number): string => {
         const raw = spec.series.find((s) => s.id === se.id)?.values[i];
         return `${spec.labels[i] ?? ''}, ${se.name}: ${pct(v / 100)}${raw === null || raw === undefined ? '' : ` (${fmt(raw)})`}${se.quality ? ` · ${se.quality}` : ''}`;
       },
     } : {};
-    const r = plot({ ctx, x: 0, y: 0, w: ctx.W, h: ctx.H, kind, horizontal, stacked, series: drawn, sidx: spec.series.map((_, i) => i), labels: spec.labels, fmt, dom, compact: false, bare: false, ...(spec.xLabel ? { xLabel: spec.xLabel } : {}), focus: total <= MAX_FOCUS, ...extra });
-    inner = r.shapes + r.points;
+    // end labels name every series (up to 8) so the reader does not have to go back to the legend
+    const ends = vl && kind !== 'bar' && spec.series.length <= 8 ? { endLabels: 'full' as const } : {};
+    const r = plot({ ctx, x: 0, y: 0, w: ctx.W, h: ctx.H, kind, horizontal, stacked, series: drawn, sidx: spec.series.map((_, i) => i), labels: spec.labels, fmt, dom, compact: false, bare: false, ...(spec.xLabel ? { xLabel: spec.xLabel } : {}), focus: total <= MAX_FOCUS, valueLabels: vl && kind === 'bar', ...ends, ...extra });
+    inner = r.shapes + r.labels + r.points;
   }
   const first = spec.labels[0] ?? ''; const last = spec.labels[spec.labels.length - 1] ?? '';
   const desc = `${spec.labels.length}${ctx.t.items} (${first}–${last}). ${summarize(ctx.t, spec.labels, spec.series, fmt)}`;
@@ -67,9 +72,11 @@ function sparkDomain(all: Value[]): Domain | null {
   return { min: lo - pad, max: hi + pad, ticks: [] };
 }
 
-function renderSpark(spec: Extract<ChartSpec, { type: 'sparkline' }>, ctx: Ctx, dom: Domain, fmt: Fmt): string {
+function renderSpark(spec: Extract<ChartSpec, { type: 'sparkline' }>, ctx: Ctx, dom: Domain, fmt: Fmt, valueLabels: boolean): string {
   const se = spec.series[0] as Series;
-  const r = plot({ ctx, x: 0, y: 0, w: ctx.W, h: ctx.H, kind: 'area', horizontal: false, stacked: false, series: [se], sidx: [0], labels: spec.labels, fmt, dom: { ...dom, min: dom.min }, compact: true, bare: true, focus: false });
+  // the last value sits right of the line when the sparkline is wide enough for it (never on a 36px tall strip's marks)
+  const ends = valueLabels && ctx.W >= 120 ? { endLabels: 'value' as const } : {};
+  const r = plot({ ctx, x: 0, y: 0, w: ctx.W, h: ctx.H, kind: 'area', horizontal: false, stacked: false, series: [se], sidx: [0], labels: spec.labels, fmt, dom: { ...dom, min: dom.min }, compact: true, bare: true, focus: false, ...ends });
   // keep area subtle for sparkline: re-use plot output, then add focusable first/min/max/last markers
   const vs = present(se.values);
   const lo = Math.min(...vs); const hi = Math.max(...vs);
@@ -77,15 +84,14 @@ function renderSpark(spec: Extract<ChartSpec, { type: 'sparkline' }>, ctx: Ctx, 
   const firstI = se.values.findIndex((v) => v !== null);
   const lastI = se.values.reduce<number>((a, v, i) => (v === null ? a : i), -1);
   idx.add(firstI); idx.add(lastI); idx.add(se.values.indexOf(lo)); idx.add(se.values.indexOf(hi));
-  const N = spec.labels.length; const pw = ctx.W - 10; const span = dom.max - dom.min || 1;
   let pts = '';
   for (const i of [...idx].sort((a, b) => a - b)) {
     const v = se.values[i] as number;
-    const cx = 4 + ((i + 0.5) / N) * pw; const cy = 4 + (ctx.H - 8) - ((v - dom.min) / span) * (ctx.H - 8);
+    const cx = r.cx(i); const cy = r.vv(v);
     const text = `${spec.labels[i] ?? ''}, ${se.name}: ${fmt(v)}`;
-    pts += `<g class="lc-pt lc-pt-dot" tabindex="0" aria-label="${esc(text)}"><circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="8"/><circle class="lc-dot${i === lastI ? ' lc-dot-vis' : ''} lc-c1" cx="${n2(cx)}" cy="${n2(cy)}" r="3"/>${tip(ctx, text, cx, cy)}</g>`;
+    pts += `<g class="lc-pt lc-pt-dot" tabindex="0" aria-label="${esc(text)}"><circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="8"/><circle class="lc-dot${i === lastI ? ' lc-dot-vis' : ''} lc-c1" data-s="0" data-i="${i}" cx="${n2(cx)}" cy="${n2(cy)}" r="2.5"/>${tip(ctx, text, cx, cy)}</g>`;
   }
-  return r.shapes + pts;
+  return r.shapes + r.labels + pts;
 }
 
 function renderMultiples(spec: MultiplesSpec, ctx: Ctx): string {
@@ -105,7 +111,8 @@ function renderMultiples(spec: MultiplesSpec, ctx: Ctx): string {
   const total = present(all).length;
   const shared = spec.sharedY !== false;
   const gdom = shared ? domainFor(spec.panels.flatMap((p) => p.series), spec.panelType, false, spec.yMin, spec.yMax, 3) : null;
-  let shapes = ''; let pts = '';
+  const vl = spec.valueLabels !== 'none';
+  let shapes = ''; let lbls = ''; let pts = '';
   spec.panels.forEach((p, k) => {
     const col = k % cols; const row = Math.floor(k / cols);
     const x = col * (pw + gap); const y = row * (ctx.H / rowsN);
@@ -114,17 +121,22 @@ function renderMultiples(spec: MultiplesSpec, ctx: Ctx): string {
     shapes += `<g class="lc-panel" data-panel="${esc(p.id)}"><text class="lc-ptitle" x="${n2(x + 2)}" y="${n2(y + 13)}">${esc(truncate(p.title, pw - 4, 13))}</text>`;
     const sub = [p.subtitle, p.quality ? `${t.quality}: ${p.quality}` : ''].filter(Boolean).join(' · ');
     if (sub) shapes += `<text class="lc-psub${p.quality ? ' lc-psub-q' : ''}" x="${n2(x + 2)}" y="${n2(y + 27)}">${esc(truncate(sub, pw - 4, 10.5))}</text>`;
-    if (!dom || present(p.series.flatMap((s) => s.values)).length === 0) shapes += `<text class="lc-empty" x="${n2(x + pw / 2)}" y="${n2(y + hdr + (ph - hdr) / 2)}" text-anchor="middle">${esc(t.na)}</text>`;
-    else {
-      const r = plot({ ctx, x, y: y + hdr, w: pw, h: ph - hdr, kind: spec.panelType, horizontal: false, stacked: false, series: p.series, sidx: p.series.map((s) => idxById.get(s.id) ?? 0), labels: spec.labels, fmt, dom, compact: true, bare: false, focus: total <= MAX_FOCUS, panelName: p.title });
-      shapes += r.shapes; pts += r.points;
+    if (!dom || present(p.series.flatMap((s) => s.values)).length === 0) {
+      // empty panel: a dashed frame the size of the plot area so the gap reads as "no data", not as a layout hole
+      shapes += `<rect class="lc-panel-empty" x="${n2(x + 0.5)}" y="${n2(y + hdr + 0.5)}" width="${n2(Math.max(0, pw - 1))}" height="${n2(Math.max(0, ph - hdr - 1))}" rx="4"/>`;
+      shapes += `<text class="lc-empty" x="${n2(x + pw / 2)}" y="${n2(y + hdr + (ph - hdr) / 2 + 4)}" text-anchor="middle">${esc(t.na)}</text>`;
+    } else {
+      // panels with one series show its last value; several series get name + value like a line chart
+      const ends = vl && spec.panelType !== 'bar' ? { endLabels: p.series.length > 1 ? 'full' as const : 'value' as const } : {};
+      const r = plot({ ctx, x, y: y + hdr, w: pw, h: ph - hdr, kind: spec.panelType, horizontal: false, stacked: false, series: p.series, sidx: p.series.map((s) => idxById.get(s.id) ?? 0), labels: spec.labels, fmt, dom, compact: true, bare: false, focus: total <= MAX_FOCUS, panelName: p.title, valueLabels: vl && spec.panelType === 'bar', ...ends });
+      shapes += r.shapes; lbls += r.labels; pts += r.points;
     }
     shapes += '</g>';
   });
   const desc = `${spec.panels.length} ${t.panel}. ${spec.panels.map((p) => `${p.title}${p.quality ? ` (${t.quality}: ${p.quality})` : ''} — ${summarize(t, spec.labels, p.series, fmt)}`).join(' ')}`;
   const lg = (spec.legend ?? defs.length > 1) ? legend(defs) : '';
   const tables = spec.panels.map((p) => seriesTable(t, `${spec.title} · ${p.title}${p.quality ? ` (${p.quality})` : ''}`, spec.xLabel ?? t.cat, spec.labels, p.series, fmt)).join('');
-  return frame(ctx, spec, shapes + pts, desc, lg, wrapTable(spec.table ?? 'details', t, tables));
+  return frame(ctx, spec, shapes + lbls + pts, desc, lg, wrapTable(spec.table ?? 'details', t, tables));
 }
 
 /** Validate a spec against the core six types plus `plugins` (throws ChartSpecError) and render it to SVG-in-<figure> HTML. */
@@ -148,7 +160,11 @@ export function renderWith(input: unknown, options: RenderOptions, plugins: Read
   else if (core.type === 'multiples') {
     const cols = clamp(core.columns ?? Math.floor((Wc + 14) / 230), 1, core.panels.length);
     H = Math.ceil(core.panels.length / cols) * 180;
-  } else if (core.type === 'bar' && core.horizontal) H = Math.max(160, core.labels.length * (core.series.length > 1 && !core.stacked ? 14 * core.series.length + 10 : 30) + 50);
+  } else if (core.type === 'bar' && core.horizontal) {
+    // rows grow when a category label needs a second line
+    const row = core.series.length > 1 && !core.stacked ? 14 * core.series.length + 10 : wrapsCategory(core.labels, Wc) ? 36 : 30;
+    H = Math.max(160, core.labels.length * row + 50);
+  }
   else H = Wc < 420 ? 240 : 300;
   const ctx: Ctx = { W: Wc, H, pid, t: STR[lang], typeName: CORE_NAMES[lang][core.type], lang };
   if (core.type === 'donut') return renderRing(core, ctx);

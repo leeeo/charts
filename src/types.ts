@@ -43,12 +43,21 @@ export interface BaseSpec {
   id?: string;
 }
 
+/**
+ * Value labels drawn next to the marks (0.8.0): `auto` (default) shows them where they fit, `none` leaves only the
+ * value boxes, legend and table. Line/area/sparkline: series name and last value at the right end. Bar: the value at
+ * the bar end, inside stacked segments and the stack total. Donut/pie: name and value beside the slice (share inside
+ * the slice when the chart is narrow). Multiples: the last value of every panel.
+ */
+export type ValueLabels = 'auto' | 'none';
+
 export interface CartesianBase extends BaseSpec {
   labels: string[];
   xLabel?: string;
   yMin?: number;
   yMax?: number;
   series: Series[];
+  valueLabels?: ValueLabels;
 }
 
 export interface LineSpec extends CartesianBase { type: 'line' }
@@ -59,7 +68,7 @@ export interface AreaSpec extends CartesianBase { type: 'area'; stacked?: boolea
  */
 export interface BarSpec extends CartesianBase { type: 'bar'; stacked?: boolean; horizontal?: boolean; percent?: boolean }
 export interface SparklineSpec extends CartesianBase { type: 'sparkline' }
-export interface DonutSpec extends BaseSpec { type: 'donut'; slices: Slice[]; centerLabel?: string }
+export interface DonutSpec extends BaseSpec { type: 'donut'; slices: Slice[]; centerLabel?: string; valueLabels?: ValueLabels }
 
 export interface Panel {
   id: string;
@@ -80,6 +89,7 @@ export interface MultiplesSpec extends BaseSpec {
   sharedY?: boolean;
   yMin?: number;
   yMax?: number;
+  valueLabels?: ValueLabels;
 }
 
 export type CoreSpec = LineSpec | AreaSpec | BarSpec | SparklineSpec | DonutSpec | MultiplesSpec;
