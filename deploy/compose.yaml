@@ -1,8 +1,8 @@
 name: leeeo-charts-web
 services:
   web:
-    # Shared patched base (nginx 1.30 stable + apk upgrade), built 2026-11-07 from leeeo-company deploy/static/nginx-base.
-    image: leeeo-nginx-base:20261107
+    # Shared patched base (nginx 1.30 stable + apk upgrade), rebuilt 2026-11-11 (libxslt fix) from leeeo-company deploy/static/nginx-base.
+    image: leeeo-nginx-base:20261111
     pull_policy: never
     container_name: leeeo-charts-web
     restart: unless-stopped

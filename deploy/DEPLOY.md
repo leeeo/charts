@@ -1,7 +1,7 @@
 # 소개 사이트 배포 (charts.leeeo.app)
 
 - 대상: leeeo 개인 VM의 정적 nginx. 다른 leeeo 정적 앱(size·country)과 같은 방식이다.
-- 컨테이너 `leeeo-charts-web`, 공용 패치 이미지 `leeeo-nginx-base:20261107`, loopback `127.0.0.1:8818` → nginx 80.
+- 컨테이너 `leeeo-charts-web`, 공용 패치 이미지 `leeeo-nginx-base:20261111`, loopback `127.0.0.1:8818` → nginx 80.
 - 공개 경로: Cloudflare Tunnel → 방문자 관문(visitors) → 이 컨테이너. 터널 규칙과 DNS 레코드는 `charts.leeeo.app` 하나만 추가한다.
 - 설정 원본: 이 폴더의 `compose.yaml`, `nginx.conf`. 서버 주소·터널 식별값·비밀값은 이 저장소에 적지 않는다.
 
