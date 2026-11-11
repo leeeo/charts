@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0
+- Sankey readability. **Behaviour change:** nodes inside a column are reordered when that strictly reduces how much
+  bands cover each other (`order: "auto"`, the new default). A layout that is already crossing-free renders in spec
+  order, unchanged; `order: "input"` always keeps the spec order.
+- Sankey labels move outside the bands: first column left of the bar, last column right of it (the plot is inset by
+  the widest label, capped at 28% of the width), middle columns above or below the bar, beside it only when there is
+  no room. Two lines: the name, then the value in bold tinted by the node's meaning (`.lc-node-val`, colour mixed
+  with ink for contrast). Side labels are pushed apart vertically with a leader line (`.lc-sk-lead`); narrow middle
+  columns wrap names onto up to three lines instead of cutting them to one letter.
+- Sankey hover / keyboard focus: the hovered band stays and the rest fade; a hovered node keeps its own bands (bands
+  carry `data-s` / `data-t`; node rules cover the first 40 nodes). Labels fade while a tooltip is open.
+- Gallery income example rewritten as a standard income flow (revenue -> gross profit / cost of sales -> operating
+  income / SG&A -> net income / tax), whole numbers.
+
 ## 0.6.0
 - Palette v2. Series colours are blue-first and orange-second, then teal, rose, violet, green, ochre, slate
   (light `#3c4dba #dd5f1d #2b93a1 #943351 #4e2175 #275e08 #92865a #647587`, dark `#72aaf2 #feab73 #5cecf0 #df5e7a

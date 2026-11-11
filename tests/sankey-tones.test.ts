@@ -46,7 +46,7 @@ test('sankey tones: classes by meaning, explicit link tone wins, cost marks are 
   assert.match(legend, /이익/);
   assert.match(legend, /비용·손실 \(빗금\)/);
   assert.match(legend, /\* 공시 수치 간 차액/);
-  assert.match(html, />영업비용 등 순차액\* /, 'computed nodes carry *');
+  assert.match(html, />영업비용 등 순차액\*</, 'computed nodes carry *');
   assert.match(html, /aria-label="영업비용 등 순차액\*: [^"]*비용·손실 · 공시 수치 간 차액/);
 });
 

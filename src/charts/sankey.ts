@@ -4,7 +4,8 @@
 // Optional semantics (0.5.0): `tone` colours a node or link by meaning (revenue / profit / cost / neutral; cost is also
 // hatched so it does not rely on colour alone), `computed` marks a derived node with '*' and a legend note,
 // `align: "justify"` puts every end node in the last column and `relax` moves nodes towards their bands to cut
-// crossings. Nodes keep the input order inside each column, so the spec controls top-to-bottom placement.
+// crossings. Inside each column nodes are reordered to reduce band crossings (`order: "auto"`, default since 0.7.0);
+// `order: "input"` keeps the spec order top to bottom. Auto ordering only moves a node when crossings strictly drop.
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, idList, oneOf, optBool, optStr, str, value } from '../check.ts';
@@ -20,8 +21,10 @@ export interface SankeySpec extends BaseSpec {
   links: SankeyLink[];
   /** "left" (default): column = longest path from a source. "justify": nodes without outgoing links go to the last column. */
   align?: 'left' | 'justify';
-  /** Move nodes towards the bands they connect to (input order inside a column is kept). Default false. */
+  /** Move nodes towards the bands they connect to (the order inside a column is kept). Default false. */
   relax?: boolean;
+  /** "auto" (default): reorder nodes inside a column when that strictly reduces band crossings. "input": spec order. */
+  order?: 'auto' | 'input';
   /** Legend text for nodes marked `computed` (shown after '*'). */
   computedNote?: string;
 }
@@ -34,6 +37,11 @@ const NODE_W = 12;
 const PAD_Y = 8;
 const GAP = 10;
 const FS = 12;
+const VAL_FS = 13;
+const LINE = 15;
+// Auto ordering compares every pair of bands; above this many drawn links the spec order is kept.
+const AUTO_MAX_LINKS = 120;
+const AUTO_MAX_EVALS = 600;
 const L = {
   ko: { nodes: '노드', links: '링크', flow: '총 흐름', largest: '가장 큰 흐름', inflow: '유입', outflow: '유출', ofSource: '출발 노드 유출 대비', count: '개',
     tone: { revenue: '매출', profit: '이익', cost: '비용·손실', neutral: '기타' }, hatched: '빗금', computed: '계산값' },
@@ -73,7 +81,7 @@ export const plugin = definePlugin<SankeySpec>({
   names: { ko: '생키 다이어그램', en: 'Sankey diagram' },
   defaultWidth: 720,
   validate(input) {
-    const o = dict(input, 'spec', [...BASE, 'nodes', 'links', 'align', 'relax', 'computedNote']);
+    const o = dict(input, 'spec', [...BASE, 'nodes', 'links', 'align', 'relax', 'order', 'computedNote']);
     const out = base(o) as unknown as SankeySpec;
     out.type = 'sankey';
     out.nodes = idList(o.nodes, 'nodes', ['label', 'color', 'quality', 'tone', 'computed'], MAX_NODES, (it, p, id) => {
@@ -90,9 +98,11 @@ export const plugin = definePlugin<SankeySpec>({
     });
     const align = oneOf(o.align, 'align', ['left', 'justify'] as const);
     const relax = optBool(o.relax, 'relax');
+    const order = oneOf(o.order, 'order', ['auto', 'input'] as const);
     const note = optStr(o.computedNote, 'computedNote', 60);
     if (align !== undefined) out.align = align;
     if (relax !== undefined) out.relax = relax;
+    if (order !== undefined) out.order = order;
     if (note !== undefined) out.computedNote = note;
     const index = new Map(out.nodes.map((n, i) => [n.id, i]));
     if (!Array.isArray(o.links) || o.links.length === 0) fail('links', 'must be a non-empty array');
@@ -186,14 +196,30 @@ export const plugin = definePlugin<SankeySpec>({
       nodes.forEach((_, i) => { if ((nodeV[i] ?? 0) > 0) byCol[col[i] as number]?.push(i); });
       const avail = ctx.H - 2 * PAD_Y;
       const k = Math.min(...byCol.filter((c) => c.length).map((c) => (avail - GAP * (c.length - 1)) / c.reduce((a, i) => a + (nodeV[i] ?? 0), 0)));
-      const colGap = C > 1 ? (ctx.W - NODE_W - 8) / (C - 1) : 0;
-      const nx = (c: number): number => 4 + c * colGap;
+      // Labels live outside the bands (first column left, last column right), so the plot is inset by the widest
+      // label block of those columns (name line or bold value line), each capped at 28% of the width.
+      const blockW = (i: number): number => Math.max(tw(name(i), FS), tw(fmt(nodeV[i] as number), VAL_FS) * 1.06);
+      const capW = ctx.W * (C > 1 ? 0.28 : 0.5);
+      const sideW = (c: number): number => Math.min(capW, Math.max(0, ...(byCol[c] ?? []).map(blockW)));
+      const leftW = C > 1 ? sideW(0) + 10 : 0;
+      const rightW = sideW(C - 1) + 10;
+      const x0 = 4 + leftW;
+      const colGap = C > 1 ? (ctx.W - 4 - rightW - x0 - NODE_W) / (C - 1) : 0;
+      const nx = (c: number): number => x0 + c * colGap;
       const ny = nodes.map(() => 0);
       const nh = nodes.map((_, i) => (nodeV[i] ?? 0) * k);
-      for (const c of byCol) {
-        const used = c.reduce((a, i) => a + (nh[i] ?? 0), 0) + GAP * Math.max(0, c.length - 1);
-        let y = PAD_Y + (avail - used) / 2;
-        for (const i of c) { ny[i] = y; y += (nh[i] ?? 0) + GAP; }
+      const stack = (): void => {
+        for (const c of byCol) {
+          const used = c.reduce((a, i) => a + (nh[i] ?? 0), 0) + GAP * Math.max(0, c.length - 1);
+          let y = PAD_Y + (avail - used) / 2;
+          for (const i of c) { ny[i] = y; y += (nh[i] ?? 0) + GAP; }
+        }
+      };
+      stack();
+      if ((spec.order ?? 'auto') === 'auto' && drawnLinks.length <= AUTO_MAX_LINKS) {
+        const bands = drawnLinks.map((x) => ({ i: x.i, s: x.s, t: x.t, h: (x.l.value as number) * k }));
+        const left = nodes.map((_, i) => nx(col[i] as number));
+        orderNodes(byCol, stack, () => crossingCost(bands, ny, left));
       }
       if (spec.relax) relaxNodes(byCol, drawnLinks.map((x) => ({ i: x.i, s: x.s, t: x.t, h: (x.l.value as number) * k })), ny, nh, ctx.H);
       const canFocus = drawnLinks.length + byCol.flat().length <= MAX_FOCUS;
@@ -211,12 +237,15 @@ export const plugin = definePlugin<SankeySpec>({
         const d = `M${n2(xa)},${n2(ya)}C${n2(xm)},${n2(ya)} ${n2(xm)},${n2(yb)} ${n2(xb)},${n2(yb)}L${n2(xb)},${n2(yb + th)}C${n2(xm)},${n2(yb + th)} ${n2(xm)},${n2(ya + th)} ${n2(xa)},${n2(ya + th)}Z`;
         const n = nodes[x.s] as SankeyNode;
         const tone = linkTone(x);
-        const path = `<path class="lc-mark lc-link ${toneCls(tone, x.s, n.color)} data-i="${x.i}" data-v="${x.l.value}" d="${d}"/>`;
-        const shape = path + hatch(tone, 'path', `d="${d}"`);
+        // data-s / data-t let the stylesheet light up a node's bands on hover (see sankey.css).
+        const ends = `data-s="${x.s}" data-t="${x.t}"`;
+        const path = `<path class="lc-mark lc-link ${toneCls(tone, x.s, n.color)} data-i="${x.i}" data-v="${x.l.value}" ${ends} d="${d}"/>`;
+        const shape = path + hatch(tone, 'path', `${ends} d="${d}"`);
         linkSvg += canFocus ? focusable(ctx, 'lc-pt-link', linkText(x), shape, xm, (ya + yb) / 2 + th / 2) : shape;
       }
       let nodeSvg = '';
       let labelSvg = '';
+      const spots: { i: number; c: number; x: number; y: number; h: number }[] = [];
       for (const i of byCol.flat()) {
         const n = nodes[i] as SankeyNode;
         const c = col[i] as number;
@@ -224,13 +253,77 @@ export const plugin = definePlugin<SankeySpec>({
         const rect = `<rect class="lc-mark lc-node ${toneCls(nodeTone(i), i, n.color)} data-i="${i}" data-v="${nodeV[i]}" x="${n2(x)}" y="${n2(y)}" width="${NODE_W}" height="${n2(h)}"/>`;
         const shape = rect + hatch(nodeTone(i), 'rect', `x="${n2(x)}" y="${n2(y)}" width="${NODE_W}" height="${n2(h)}"`);
         nodeSvg += canFocus ? focusable(ctx, 'lc-pt-node', nodeText(i), shape, x + NODE_W / 2, y) : shape;
-        // Labels sit to the right of the bar, except in the last column (to the left), within one column gap.
-        const room = Math.max(0, (C > 1 ? colGap : ctx.W) - NODE_W - 14);
-        const full = `${name(i)} ${fmt(nodeV[i] as number)}`;
-        const text = tw(full, FS) <= room ? full : truncate(name(i), room, FS);
-        const last = c === C - 1 && C > 1;
-        const ty = Math.min(Math.max(y + h / 2 + FS * 0.36, FS), ctx.H - 2);
-        if (room >= tw('가…', FS)) labelSvg += `<text class="lc-node-lbl" x="${n2(last ? x - 6 : x + NODE_W + 6)}" y="${n2(ty)}"${last ? ' text-anchor="end"' : ''}>${esc(text)}</text>`;
+        spots.push({ i, c, x, y, h });
+      }
+      // Two-line labels: name, then the bold value coloured by the node's meaning. First column: left of the bar,
+      // last column: right of the bar, both pushed apart vertically with a leader line when moved. Middle columns:
+      // above the bar, below it when there is no room, otherwise beside it.
+      const BLOCK = FS + LINE + 4;
+      // Middle-column names may wrap onto up to three lines before the last line is truncated: words first (a word may
+      // run 15% over the room), and a word that is still too wide splits once into two halves of two or more letters,
+      // so narrow columns keep readable names instead of single letters.
+      const wrapName = (s: string, room: number): string[] => {
+        const soft = room * 1.15;
+        const pieces = s.split(' ').flatMap((word) => {
+          const ch = [...word];
+          if (tw(word, FS) <= soft || ch.length < 4) return [word];
+          const k = Math.ceil(ch.length / 2);
+          return [ch.slice(0, k).join(''), ch.slice(k).join('')];
+        });
+        const lines: string[] = [];
+        let cur = '';
+        for (const p of pieces) {
+          const next = cur ? `${cur} ${p}` : p;
+          if (!cur || tw(next, FS) <= soft) { cur = next; continue; }
+          lines.push(cur);
+          cur = p;
+        }
+        if (cur) lines.push(cur);
+        if (lines.length <= 3) return lines;
+        return [...lines.slice(0, 2), truncate(lines.slice(2).join(' '), soft, FS)];
+      };
+      const lineCount = (i: number, room: number, wrap: boolean): number => (wrap ? wrapName(name(i), Math.max(room, tw('가…', FS))).length : 1);
+      const label = (sp: (typeof spots)[number], lx: number, ty: number, anchor: string, room: number, wrap = false): string => {
+        const r = Math.max(room, tw('가…', FS));
+        const lines = wrap ? wrapName(name(sp.i), r) : [truncate(name(sp.i), r, FS)];
+        const x = n2(lx);
+        return `<text class="lc-node-lbl ${toneCls(nodeTone(sp.i), sp.i, nodes[sp.i]?.color)} x="${x}" y="${n2(ty)}"${anchor}>` +
+          lines.map((ln, k) => `<tspan x="${x}"${k ? ` dy="${LINE}"` : ''}>${esc(ln)}</tspan>`).join('') +
+          `<tspan class="lc-node-val" x="${x}" dy="${LINE + 1}">${esc(fmt(nodeV[sp.i] as number))}</tspan></text>`;
+      };
+      const side = (c: number, right: boolean): void => {
+        const list = spots.filter((s) => s.c === c).map((s) => ({ s, top: s.y + s.h / 2 - BLOCK / 2 })).sort((a, b) => a.top - b.top);
+        let floor = 2;
+        for (const it of list) { it.top = Math.max(it.top, floor); floor = it.top + BLOCK + 2; }
+        let ceil = ctx.H - 2;
+        for (let j = list.length - 1; j >= 0; j--) { const it = list[j] as (typeof list)[number]; it.top = Math.min(it.top, ceil - BLOCK); ceil = it.top - 2; }
+        for (const { s: sp, top } of list) {
+          const edge = right ? sp.x + NODE_W : sp.x;
+          const lx = right ? edge + 8 : edge - 8;
+          labelSvg += label(sp, lx, top + FS, right ? '' : ' text-anchor="end"', (right ? rightW : leftW) - 10);
+          const cy = sp.y + sp.h / 2; const mid = top + BLOCK / 2;
+          if (Math.abs(mid - cy) > 4) labelSvg += `<path class="lc-sk-lead" d="M${n2(edge + (right ? 1 : -1))},${n2(cy)}L${n2(lx + (right ? -2 : 2))},${n2(mid)}"/>`;
+        }
+      };
+      if (C > 1) side(0, false);
+      side(C - 1, true);
+      for (const sp of spots) {
+        if (sp.c === 0 || sp.c === C - 1) continue;
+        const same = spots.filter((s) => s.c === sp.c);
+        const above = Math.max(2, ...same.filter((s) => s.y < sp.y).map((s) => s.y + s.h));
+        const below = Math.min(ctx.H - 2, ...same.filter((s) => s.y > sp.y).map((s) => s.y));
+        const cx = sp.x + NODE_W / 2;
+        // Centred over the bar the label owns its column's width (half a gap each side), so neighbouring columns'
+        // labels cannot meet; beside the bar the width ends at the next column.
+        const room = colGap - 4;
+        const tall = BLOCK + LINE * (lineCount(sp.i, room, true) - 1);
+        if (sp.y - above >= tall + 4) labelSvg += label(sp, cx, sp.y - 4 - tall + FS, ' text-anchor="middle"', room, true);
+        else if (below - (sp.y + sp.h) >= tall + 4) labelSvg += label(sp, cx, sp.y + sp.h + 4 + FS, ' text-anchor="middle"', room, true);
+        else {
+          const room2 = colGap - NODE_W - 8;
+          const tall2 = BLOCK + LINE * (lineCount(sp.i, room2, true) - 1);
+          labelSvg += label(sp, sp.x + NODE_W + 6, Math.min(Math.max(sp.y + sp.h / 2 - tall2 / 2, 2), ctx.H - 2 - tall2) + FS, '', room2, true);
+        }
       }
       const defs = linkSvg.includes('lc-sk-hatch') || nodeSvg.includes('lc-sk-hatch')
         ? `<defs><pattern id="${hatchId}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path class="lc-sk-hatch-line" d="M0 0V6"/></pattern></defs>` : '';
@@ -263,6 +356,70 @@ export const plugin = definePlugin<SankeySpec>({
     return frame(ctx, spec, svg, desc, lg, wrapTable(spec.table ?? 'details', t, linkTbl + nodeTbl));
   },
 });
+
+// Band centre lines are cubic curves with both control points at the horizontal midpoint. For a horizontal fraction
+// s of the band, the vertical fraction is g(s): solve 1.5t(1-t) + t^3 = s for t, then 3t^2 - 2t^3.
+const gMemo = new Map<number, number>();
+function ease(s: number): number {
+  const key = Math.round(s * 1000);
+  const hit = gMemo.get(key);
+  if (hit !== undefined) return hit;
+  let lo = 0; let hi = 1;
+  for (let it = 0; it < 20; it++) { const t = (lo + hi) / 2; if (1.5 * t * (1 - t) + t * t * t < key / 1000) lo = t; else hi = t; }
+  const t = (lo + hi) / 2;
+  const g = 3 * t * t - 2 * t * t * t;
+  gMemo.set(key, g);
+  return g;
+}
+
+/**
+ * Crossing weight of the current layout: the area where two bands cover each other. Bands keep a constant vertical
+ * thickness, so for every pair whose horizontal spans overlap the vertical overlap is sampled at five points. Band ends
+ * use the same stacking as the renderer (outgoing by target position, incoming by source position).
+ */
+export function crossingCost(ls: { i: number; s: number; t: number; h: number }[], ny: number[], left: number[]): number {
+  const sAcc = new Map<number, number>(); const tAcc = new Map<number, number>();
+  const y0 = new Map<number, number>(); const y1 = new Map<number, number>();
+  for (const x of [...ls].sort((a, b) => (ny[a.t] as number) - (ny[b.t] as number) || a.i - b.i)) { y0.set(x.i, (ny[x.s] as number) + (sAcc.get(x.s) ?? 0)); sAcc.set(x.s, (sAcc.get(x.s) ?? 0) + x.h); }
+  for (const x of [...ls].sort((a, b) => (ny[a.s] as number) - (ny[b.s] as number) || a.i - b.i)) { y1.set(x.i, (ny[x.t] as number) + (tAcc.get(x.t) ?? 0)); tAcc.set(x.t, (tAcc.get(x.t) ?? 0) + x.h); }
+  const geo = ls.map((x) => ({ h: x.h, xa: (left[x.s] as number) + NODE_W, xb: left[x.t] as number, ya: y0.get(x.i) as number, yb: y1.get(x.i) as number }));
+  const at = (g: (typeof geo)[number], x: number): number => g.ya + (g.yb - g.ya) * ease((x - g.xa) / (g.xb - g.xa));
+  let cost = 0;
+  for (let a = 0; a < geo.length; a++) {
+    for (let b = a + 1; b < geo.length; b++) {
+      const p = geo[a] as (typeof geo)[number]; const q = geo[b] as (typeof geo)[number];
+      const lo = Math.max(p.xa, q.xa); const hi = Math.min(p.xb, q.xb);
+      if (hi - lo < 1) continue;
+      for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+        const tp = at(p, lo + (hi - lo) * f); const tq = at(q, lo + (hi - lo) * f);
+        const cover = Math.min(tp + p.h, tq + q.h) - Math.max(tp, tq);
+        if (cover > 0.5) cost += cover * (hi - lo) / 5;
+      }
+    }
+  }
+  return cost;
+}
+
+/**
+ * Adjacent swaps inside each column, kept only when the crossing weight strictly drops, until a pass changes nothing.
+ * Ties keep the spec order, so a layout without crossings renders exactly as the input order.
+ */
+function orderNodes(byCol: number[][], stack: () => void, cost: () => number): void {
+  let best = cost();
+  let evals = 1;
+  for (let pass = 0; pass < 8 && best > 0; pass++) {
+    let improved = false;
+    for (const c of byCol) {
+      for (let j = 0; j + 1 < c.length && evals < AUTO_MAX_EVALS; j++) {
+        [c[j], c[j + 1]] = [c[j + 1] as number, c[j] as number];
+        stack();
+        const v = cost(); evals++;
+        if (v < best - 1e-6) { best = v; improved = true; } else { [c[j], c[j + 1]] = [c[j + 1] as number, c[j] as number]; stack(); }
+      }
+    }
+    if (!improved) break;
+  }
+}
 
 /**
  * Iterative relaxation (in the spirit of d3-sankey): each node moves to the value-weighted position that would make

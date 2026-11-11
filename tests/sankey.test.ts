@@ -35,6 +35,41 @@ test('sankey: band thickness and node height are proportional to value; columns 
   assert.ok(Math.abs(h('0') - thick(ab) - thick(ac)) < 0.02, 'outgoing bands fill the source bar');
 });
 
+// Funnel whose spec order (subscribe above churn) makes the install -> churn band cross trial -> subscribe.
+const funnel = (order?: 'auto' | 'input') => ({
+  type: 'sankey', title: 't', width: 720, height: 300, ...(order ? { order } : {}),
+  nodes: [{ id: 'a', label: 'A' }, { id: 'i', label: 'I' }, { id: 't', label: 'T' }, { id: 's', label: 'S' }, { id: 'c', label: 'C' }],
+  links: [
+    { source: 'a', target: 'i', value: 100 }, { source: 'i', target: 't', value: 55 }, { source: 'i', target: 'c', value: 45 },
+    { source: 't', target: 's', value: 12 }, { source: 't', target: 'c', value: 43 },
+  ],
+});
+
+test('sankey order: auto reorders a column only to remove crossings; input keeps the spec order', () => {
+  const y = (html: string, i: number): number => Number(attr(nodes(html).find((t) => attr(t, 'data-i') === String(i)) as string, 'y'));
+  const auto = renderChart(funnel());
+  assert.ok(y(auto, 4) < y(auto, 3), 'churn moves above subscribe so the bands do not cross');
+  const input = renderChart(funnel('input'));
+  assert.ok(y(input, 3) < y(input, 4), 'order: input keeps subscribe above churn');
+  const plain = { type: 'sankey', title: 't', nodes: ns.slice(0, 3), links: [{ source: 'a', target: 'b', value: 2 }, { source: 'a', target: 'c', value: 1 }] };
+  const noId = (html: string): string => html.replace(/lc-[a-z0-9]{6}(?=[-"\s])/g, 'ID'); // per-render figure id
+  assert.equal(noId(renderChart(plain)), noId(renderChart({ ...plain, order: 'input' })), 'no crossing: auto equals input');
+  assert.equal(pathOf({ ...plain, order: 'random' }), 'order');
+});
+
+test('sankey labels: outside the bands, name then value, hover hooks on bands', () => {
+  const html = renderChart(funnel());
+  const n = nodes(html);
+  const first = n.find((t) => attr(t, 'data-i') === '0') as string;
+  const last = n.find((t) => attr(t, 'data-i') === '4') as string;
+  const lbl = (name: string): string => (new RegExp(`<text class="lc-node-lbl[^>]*>(?:(?!</text>).)*>${name}</tspan>`).exec(html) ?? [''])[0];
+  assert.match(lbl('A'), /text-anchor="end"/, 'first column label is left of the bar');
+  assert.ok(Number(attr(lbl('A'), 'x')) < Number(attr(first, 'x')));
+  assert.ok(Number(attr(lbl('C'), 'x')) > Number(attr(last, 'x')) + Number(attr(last, 'width')), 'last column label is right of the bar');
+  assert.match(html, /<tspan x="[\d.]+">A<\/tspan><tspan class="lc-node-val" x="[\d.]+" dy="16">100<\/tspan>/);
+  for (const l of links(html)) assert.match(l, /data-s="\d+" data-t="\d+"/);
+});
+
 test('sankey: null link is missing, not drawn and not zero', () => {
   const html = renderChart({ type: 'sankey', title: 't', nodes: ns.slice(0, 3), links: [
     { source: 'a', target: 'b', value: 5 }, { source: 'a', target: 'c', value: null },

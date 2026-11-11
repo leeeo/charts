@@ -55,7 +55,7 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 | `calendar` | 일별 방문자 캘린더. 6월부터 10월까지 상상플레이 일별 방문자입니다. 로그 장애일과 추석 연휴(집계 없음)는 결측으로 표시합니다. | ![일별 방문자 캘린더](https://charts.leeeo.app/images/calendar.png) |
 | `treemap` | 앱별 · 채널별 월 매출. 사각형 넓이가 매출에 비례합니다. 상상플레이 광고 매출은 아직 정산 전이라 결측으로 표시됩니다. | ![앱별 · 채널별 월 매출](https://charts.leeeo.app/images/treemap.png) |
 | `sankey` | 방문에서 구독까지의 흐름. 띠의 두께가 사용자 수에 비례합니다. 검색 → 체험 경로는 집계 누락으로 결측입니다. | ![방문에서 구독까지의 흐름](https://charts.leeeo.app/images/sankey.png) |
-| `sankey` | 매출에서 순이익까지 (의미 색). 예시 데이터입니다. tone으로 매출·이익·비용을 칠하고(비용은 빗금), computed 노드에 *를 붙입니다. align: justify와 relax로 띠가 교차하지 않게 놓습니다. | ![매출에서 순이익까지 (의미 색)](https://charts.leeeo.app/images/sankey-income.png) |
+| `sankey` | 매출에서 순이익까지 (의미 색). 예시 데이터입니다. tone으로 매출·이익·비용을 칠하고(비용은 빗금), computed 노드에 *를 붙입니다. 비용은 생긴 단계에서 아래로 빠지고, 이익은 오른쪽 끝까지 흐릅니다. | ![매출에서 순이익까지 (의미 색)](https://charts.leeeo.app/images/sankey-income.png) |
 | `pie` | 파이 차트. 비율이 한눈에 보여야 할 때. 미집계 항목은 원에서 빠지고 범례에 남습니다. | ![파이 차트](https://charts.leeeo.app/images/pie.png) |
 | `lollipop` | 롤리팝 차트 (앱별 주간 방문자). 방문자가 많은 순으로 정렬했습니다. 집계가 없는 앱은 0이 아닌 결측으로 표시됩니다. | ![롤리팝 차트 (앱별 주간 방문자)](https://charts.leeeo.app/images/lollipop.png) |
 | `lollipop` | 롤리팝 차트 (월별 순설치 증감). 0선에서 위아래로 뻗는 막대로 증가와 감소를 함께 보여줍니다. | ![롤리팝 차트 (월별 순설치 증감)](https://charts.leeeo.app/images/lollipop-change.png) |
@@ -236,6 +236,7 @@ const wide = renderChart(spec, { width: 720 });  // viewBox 너비 지정
   앱의 `--accent`를 따랐지만 0.6부터는 따르지 않습니다. 앱 강조색이 차트 1번 색이 되면 앱마다 같은 차트가 다르게 보이기 때문입니다.
 - 의미 색(sankey `tone`): 매출 `--lc-tone-revenue` = 1번 파랑, 이익 `-profit` = 3번 청록, 비용 `-cost` = 2번 주황(늘 빗금),
   중립 `-neutral` = 8번 회청. 앱은 `--chart-revenue`·`--chart-profit`·`--chart-cost`·`--chart-neutral`로 바꿀 수 있습니다.
+- sankey(0.7.0): 같은 열 안의 노드는 띠가 덜 겹치도록 자동으로 순서를 바꿉니다(`order: "auto"`, 기본값). 겹침이 줄지 않으면 입력 순서 그대로이고, `order: "input"`이면 항상 입력 순서입니다. 라벨은 띠 바깥에 둡니다(첫 열 왼쪽, 마지막 열 오른쪽, 가운데 열은 막대 위·아래). 첫 줄은 이름, 둘째 줄은 의미 색을 섞은 굵은 값입니다. 띠나 노드에 마우스를 올리거나 키보드로 고르면 그 띠(노드면 연결된 띠)만 남고 나머지는 흐려집니다.
 - 넓은 반투명 면은 옅게 칠합니다. sankey 띠 `--lc-band-opacity`(밝게 0.22, 어둡게 0.3), 영역 `--lc-area-opacity`(0.14, 0.18).
 - 주식 지표선(이동평균·볼린저)은 1번 파랑·4번 장미를 건너뛰어 상승·하락 색으로 읽히지 않게 합니다.
 
