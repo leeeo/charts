@@ -27,9 +27,19 @@ const typeName = { line: '선', area: '영역', bar: '막대', donut: '도넛', 
   ...Object.fromEntries(pluginList.map((p) => [p.type, p.names.ko.replace(/ ?(차트|그래프)$/, '')])) };
 const types = [...new Set(examples.map((e) => e.spec.type))];
 
+// Gallery charts are drawn in the browser as each card scrolls into view (assets/site.js); the page itself carries
+// only the specs. Inlining every chart twice made the page 1.7 MB and timed out through the tunnel.
+// Without JavaScript the light pane shows the pre-rendered preview image of the same spec (docs/images, made by site/shots.mjs).
+const pngSize = (file) => { const b = readFileSync(file); return { width: b.readUInt32BE(16), height: b.readUInt32BE(20) }; };
+const preview = (e) => {
+  const file = join(root, 'docs', 'images', `${e.id}.png`);
+  if (!existsSync(file)) return '<noscript><p class="pane-label">차트는 JavaScript로 그려요. 아래 스펙 JSON을 참고하세요.</p></noscript>';
+  const { width, height } = pngSize(file);
+  return `<noscript><img class="preview" src="images/${e.id}.png" width="${width}" height="${height}" alt="${esc(e.heading)} 미리보기 이미지" loading="lazy"></noscript>`;
+};
 const pane = (e, theme) => `<div class="pane" data-pane="${theme}">
         <p class="pane-label">${theme === 'light' ? '밝은 화면' : '어두운 화면'}</p>
-        <div class="host" data-example="${e.id}" data-theme-pane="${theme}">${renderChart({ ...e.spec, id: `${e.id}-${theme}` }, { width: 420 })}</div>
+        <div class="host lazy" data-example="${e.id}" data-theme-pane="${theme}" data-lazy>${theme === 'light' ? preview(e) : ''}</div>
       </div>`;
 
 const card = (e) => `<article class="card${e.wide || e.spec.type === 'multiples' ? ' wide' : ''}" id="g-${e.id}" aria-labelledby="g-${e.id}-h">
@@ -151,8 +161,13 @@ const wide = renderChart(spec, { width: 720 });`)}</code></pre></div>
     <section class="section" id="usage" aria-labelledby="usage-title">
       <div class="section-head"><h2 id="usage-title">leeeo 앱에서 쓰는 곳</h2></div>
       <div class="panel usage">
-        <p>2026년 11월 10일 기준으로 이 모듈을 설치한 운영 중인 leeeo 앱은 아직 없어요. 지금은 이 소개 페이지와 저장소의 예제 화면에서만 써요.</p>
-        <p>앱에 들어가면 앱 이름과 버전을 여기에 적을게요.</p>
+        <p>2026년 11월 11일 기준으로 아래 leeeo 화면에서 이 모듈을 써요.</p>
+        <ul class="usage-list">
+          <li><h3>leeeo 운영 관리 화면</h3><p>관리자 통계 화면의 막대·작은 다중 차트(코어만 복사해 사용, 2026년 11월 11일부터). 로그인한 운영자만 볼 수 있어요.</p></li>
+          <li><h3><a href="https://stock.leeeo.app/">주식 위키</a> 기업 페이지</h3><p>‘최근 공시’ 아래 공시 실적 비교(복합 차트, 0.4.0). 서버에서 SVG로 그려 스크립트 없이도 보여요.</p></li>
+          <li><h3><a href="https://earnings.leeeo.app/">실적공시</a> 상세 페이지</h3><p>‘한눈에 비교’ 섹션의 공시 수치 비교(복합 차트, 0.4.0). 스크립트가 없으면 아래 표가 그대로 원본이에요.</p></li>
+        </ul>
+        <p>두 공개 앱은 공식 공시에 적힌 값만 그리고, 빠진 값은 비워 둬요.</p>
       </div>
     </section>
   </main>

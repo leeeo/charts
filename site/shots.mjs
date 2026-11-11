@@ -84,8 +84,12 @@ for (const width of [390, 1440]) for (const theme of ['light', 'dark']) {
   await page.goto(url, { waitUntil: 'load' });
   await page.waitForSelector('html[data-ready="1"]');
   for (const id of await page.$$eval('.card', (cards) => cards.map((c) => c.id.slice(2)))) {
-    await page.locator(`#g-${id} .pane[data-pane="light"] .host`).screenshot({ path: join(images, `${id}.png`) });
+    const host = page.locator(`#g-${id} .pane[data-pane="light"] .host`);
+    await host.scrollIntoViewIfNeeded();
+    await page.waitForSelector(`#g-${id} .pane[data-pane="light"] .host.is-drawn svg`); // gallery charts are drawn lazily
+    await host.screenshot({ path: join(images, `${id}.png`) });
   }
+  await page.waitForSelector('#g-line .pane[data-pane="dark"] .host.is-drawn svg');
   await page.locator('#g-line .pane[data-pane="dark"] .host').screenshot({ path: join(images, 'line-dark.png') });
   console.log('readme images ->', images);
   await ctx.close();

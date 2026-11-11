@@ -1,4 +1,4 @@
-// Mounts every gallery chart at its container width and runs the spec playground.
+// Mounts the hero chart, draws gallery charts as their cards come near the viewport, and runs the spec playground.
 import { mountChart } from '../lib/dom.js';
 import { validateSpec, ChartSpecError } from '../lib/index.js';
 import { examples } from './specs.js';
@@ -8,12 +8,30 @@ const byId = new Map(examples.map((e) => [e.id, e]));
 const specJson = (spec) => JSON.stringify(spec, null, 2)
   .replace(/\[\s+([^[\]{}]*?)\s+\]/g, (_, inner) => '[' + inner.split(/,\s+/).join(', ') + ']');
 
-for (const host of document.querySelectorAll('[data-example]')) {
+function drawHost(host) {
   const e = byId.get(host.dataset.example);
-  if (!e) continue;
+  if (!e || host.classList.contains('is-drawn')) return;
   const pane = host.dataset.themePane;
   mountChart(host, { ...e.spec, id: pane === 'page' ? 'lc-hero' : `${e.id}-${pane}` });
+  host.classList.add('is-drawn');
 }
+const lazy = [...document.querySelectorAll('[data-example][data-lazy]')];
+for (const host of document.querySelectorAll('[data-example]:not([data-lazy])')) drawHost(host);
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    for (const entry of entries) if (entry.isIntersecting) { io.unobserve(entry.target); drawHost(entry.target); }
+  }, { rootMargin: '600px 0px' });
+  for (const host of lazy) io.observe(host);
+} else {
+  for (const host of lazy) drawHost(host);
+}
+// A gallery link (#g-...) jumps to a card: draw it at once so the target does not change size after the jump.
+const drawTarget = () => {
+  const card = location.hash.startsWith('#g-') ? document.getElementById(location.hash.slice(1)) : null;
+  if (card) for (const host of card.querySelectorAll('[data-lazy]')) drawHost(host);
+};
+drawTarget();
+window.addEventListener('hashchange', drawTarget);
 
 const input = document.getElementById('play-input');
 const status = document.getElementById('play-status');
