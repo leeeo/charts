@@ -88,7 +88,7 @@ const html = `<!doctype html>
     </section>
 
     <section class="section" id="gallery" aria-labelledby="gallery-title">
-      <div class="section-head"><h2 id="gallery-title">갤러리</h2><noscript><p>JavaScript가 꺼져 있어 미리보기 이미지만 보여요. 차트와 스펙 JSON은 JavaScript를 켜면 보이고, 스펙은 저장소의 examples/specs.ts에도 있어요.</p></noscript><p>${types.map((t) => typeName[t]).join(' · ')} 차트를 밝은 화면과 어두운 화면에서 함께 보여 줘요. 모두 이 페이지에서 지금 그린 차트예요. 점이나 막대에 마우스를 올리거나 Tab 키로 이동하면 값이 나와요.</p></div>
+      <div class="section-head"><h2 id="gallery-title">갤러리</h2><noscript><p>JavaScript가 꺼져 있어 미리보기 이미지만 보여요. 차트와 스펙 JSON은 JavaScript를 켜면 보이고, 스펙은 저장소의 examples/specs.ts에도 있어요.</p></noscript><p>${types.map((t) => typeName[t]).join(' · ')} 차트를 밝은 화면과 어두운 화면에서 함께 보여 줘요. 모두 이 페이지에서 지금 그린 차트예요. 점이나 막대에 마우스를 올리거나 Tab 키로 이동하면 값이 나오고, 그 시리즈만 남고 나머지는 옅어져요. 값은 선 끝과 막대 옆에도 적혀 있어요.</p></div>
       <div class="gallery">
     ${examples.map(card).join('\n    ')}
       </div>
@@ -142,7 +142,7 @@ const wide = renderChart(spec, { width: 720 });`)}</code></pre></div>
       <ul class="notes">
         <li><h3>제목과 요약</h3><p>SVG에 <code>role="img"</code>와 제목·설명이 붙어요. 설명에는 시리즈별 최솟값·최댓값·마지막 값, 빠진 값 개수, 데이터 품질 메모가 자동으로 들어가요.</p></li>
         <li><h3>데이터 표</h3><p>모든 차트 아래에 같은 수치를 담은 표가 있어요. 기본은 접힌 상태로 보이고, 화면에서 숨기고 스크린 리더에만 읽히게 할 수도 있어요.</p></li>
-        <li><h3>키보드</h3><p>점·막대·조각마다 Tab으로 이동할 수 있고, 이동하면 마우스를 올렸을 때와 같은 값 상자가 나와요. 점이 120개를 넘으면 표로 읽도록 바꿔요.</p></li>
+        <li><h3>키보드</h3><p>점·막대·조각마다 Tab으로 이동할 수 있고, 이동하면 마우스를 올렸을 때와 같은 값 상자와 강조가 나와요. 점이 120개를 넘으면 표로 읽도록 바꿔요.</p></li>
         <li><h3>색에만 기대지 않기</h3><p>시리즈 이름은 범례·값 상자·표에 글자로 함께 나와요. 다만 시리즈마다 다른 선 무늬나 채움 무늬는 0.1에 아직 없어요. 다음 버전 후보로 남겨 뒀어요.</p></li>
         <li><h3>빠진 값</h3><p>값이 없으면 0으로 그리지 않고 선을 끊어요. 표에는 ‘데이터 없음’으로 적어요.</p></li>
         <li><h3>움직임</h3><p>그려지는 애니메이션은 기기에서 ‘동작 줄이기’를 켜지 않았을 때만 나와요.</p></li>
