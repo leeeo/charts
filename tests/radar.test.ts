@@ -56,5 +56,6 @@ test('radar: invalid specs throw ChartSpecError with the right path', () => {
 test('radar: user text is escaped and dots are focusable with labels', () => {
   const html = renderChart({ type: 'radar', title: '<t>', unit: { suffix: '점' }, axes: ['<A>', 'B', 'C'], series: [{ id: 's', name: 'S&', values: [1200, 2, 3], quality: '추정' }] });
   assert.ok(!html.includes('<A>'));
-  assert.match(html, /<g class="lc-pt lc-pt-radar" tabindex="0" aria-label="&lt;A&gt;, S&amp;: 1,200점 · 추정">/);
+  // 0.8: the focus group carries data-s (series index) for the hover highlight
+  assert.match(html, /<g class="lc-pt lc-pt-radar" tabindex="0" aria-label="&lt;A&gt;, S&amp;: 1,200점 · 추정" data-s="0">/);
 });

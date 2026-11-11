@@ -1,4 +1,3 @@
 .lc-seg { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
 .lc-pt:hover .lc-seg, .lc-pt:focus .lc-seg { stroke: var(--lc-ink); stroke-width: 2; }
-.lc-seg-lbl { fill: var(--lc-ink); font-size: 12px; }
-.lc-seg-pct { fill: var(--lc-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+/* .lc-seg-lbl / .lc-seg-pct (0.7 and earlier) are replaced by the shared name + bold share label (cmp.css). */

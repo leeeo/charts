@@ -1,0 +1,15 @@
+/* Shared label and hover rules for the comparison, distribution and time types (see cmp.ts). Not a chart type. */
+/* Name line: ink with a surface halo so it stays readable over marks and grid lines. */
+.lc-cm-lbl { fill: var(--lc-ink); font-size: 12px; pointer-events: none; paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; }
+/* Value line: bold, tinted by the mark colour mixed with ink so small text keeps contrast on both themes. */
+.lc-cm-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; fill: var(--lc-ink); fill: color-mix(in oklab, var(--c, var(--lc-ink)) 68%, var(--lc-ink)); }
+.lc-cm-muted { fill: var(--lc-muted); font-size: 11px; }
+/* Small ink value for narrow columns (phone widths). */
+.lc-cm-sm { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lc-cm-lead { fill: none; stroke: var(--lc-muted); stroke-width: 1; pointer-events: none; }
+/* Label layer above the marks: fades while a value box is open so the box reads cleanly. */
+.lc-cm-lbls { transition: opacity 0.15s ease; }
+:is(.lc-t-waffle, .lc-t-segmented, .lc-t-funnel, .lc-t-gauge, .lc-t-bullet, .lc-t-slope, .lc-t-bump, .lc-t-stream, .lc-t-scatter, .lc-t-bubble, .lc-t-box, .lc-t-histogram, .lc-t-heatmap, .lc-t-calendar, .lc-t-lollipop, .lc-t-dumbbell, .lc-t-waterfall, .lc-t-pareto, .lc-t-marimekko, .lc-t-radar, .lc-t-parallel, .lc-t-ridgeline, .lc-t-beeswarm, .lc-t-combo, .lc-t-timeline) .lc-svg:has(.lc-pt:hover, .lc-pt:focus) .lc-cm-lbls { opacity: 0.3; }
+/* Types whose marks are independent items: the hovered or focused item stays and the rest fade. */
+:is(.lc-t-waffle, .lc-t-segmented, .lc-t-funnel, .lc-t-bullet, .lc-t-slope, .lc-t-box, .lc-t-histogram, .lc-t-lollipop, .lc-t-dumbbell, .lc-t-waterfall, .lc-t-pareto, .lc-t-marimekko, .lc-t-parallel, .lc-t-ridgeline, .lc-t-timeline) .lc-pt { transition: opacity 0.15s ease; }
+:is(.lc-t-waffle, .lc-t-segmented, .lc-t-funnel, .lc-t-bullet, .lc-t-slope, .lc-t-box, .lc-t-histogram, .lc-t-lollipop, .lc-t-dumbbell, .lc-t-waterfall, .lc-t-pareto, .lc-t-marimekko, .lc-t-parallel, .lc-t-ridgeline, .lc-t-timeline) .lc-svg:has(.lc-pt:hover, .lc-pt:focus) .lc-pt:not(:hover, :focus) { opacity: 0.3; }

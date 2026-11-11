@@ -1,11 +1,14 @@
 // Waterfall chart: a start value, then signed changes that float from the running total, with optional subtotal /
 // total bars (computed from the running total) and dashed connectors. A null change is missing: it draws no bar,
 // leaves the running total unchanged, is listed under the chart and counted in the description.
+// Value labels are bold and tinted by the bar colour; a label may run wider than its column as long as it does not
+// cover a neighbour's label. Hovering a bar keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, idList, num, oneOf, optStr, put, str, value } from '../check.ts';
 import { type Fmt, clamp, esc, makeFmt, n2, tw } from '../format.ts';
 import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, table, wrapTable } from '../kit.ts';
+import { VAL, inkText, labelLayer, valueText } from './cmp.ts';
 import { catAxes, missingNote, valueDomain } from './lollipop.ts';
 
 export interface WaterfallStep {
@@ -86,6 +89,8 @@ function render(spec: WaterfallSpec, ctx: Ctx): string {
     const focus = bars.length <= MAX_FOCUS;
     let links = '';
     let marks = '';
+    let lbl = '';
+    const boxes: { x0: number; x1: number; y: number }[] = [];
     let prev: { x: number; y: number } | null = null;
     for (const b of bars) {
       if (b.kind === 'na') continue;
@@ -98,11 +103,18 @@ function render(spec: WaterfallSpec, ctx: Ctx): string {
       if (prev) links += `<line class="lc-wf-link" x1="${n2(prev.x)}" y1="${n2(prev.y)}" x2="${n2(x)}" y2="${n2(prev.y)}"/>`;
       prev = { x: x + bw, y: ax.vv(b.level) };
       let g = `<rect class="lc-mark lc-wf ${cls} ${colorAttrs(ci, col)} data-i="${b.pos}" data-v="${b.v}" x="${n2(x)}" y="${n2(y0)}" width="${n2(bw)}" height="${n2(h)}"/>`;
-      const label = valText(b); const w = tw(label, FS);
-      if (w <= ax.band - 2) g += `<text class="lc-wf-val" x="${n2(clamp(ax.cc(b.pos) - w / 2, 2, ctx.W - w - 2))}" y="${n2(Math.max(FS, y0 - 4))}">${esc(label)}</text>`;
+      // Narrow columns (under 40 px) get a smaller ink label so the numbers survive on phone widths.
+      const small = ax.band < 40;
+      const label = valText(b); const w = small ? tw(label, 11) : tw(label, VAL) * 1.06;
+      const lx = clamp(ax.cc(b.pos), w / 2 + 2, ctx.W - w / 2 - 2); const ly = Math.max(VAL, y0 - 4);
+      const box = { x0: lx - w / 2, x1: lx + w / 2, y: ly };
+      if (w <= ax.band * (small ? 2.6 : 2) - 2 && !boxes.some((o) => box.x0 < o.x1 + 4 && box.x1 > o.x0 - 4 && Math.abs(box.y - o.y) < VAL + 2)) {
+        boxes.push(box);
+        lbl += small ? inkText(lx, ly, label, 'middle', Infinity, 'lc-cm-sm') : valueText(lx, ly, label, colorAttrs(ci, col), 'middle');
+      }
       marks += focus ? focusable(ctx, 'lc-pt-wf', aria(b), g, ax.cc(b.pos), y0) : g;
     }
-    inner = ax.svg + links + marks + missingNote(ctx, missing.map((b) => b.label));
+    inner = ax.svg + links + marks + labelLayer(lbl) + missingNote(ctx, missing.map((b) => b.label));
   }
   const deltas = bars.filter((b): b is Bar & { v: number } => (b.kind === 'up' || b.kind === 'down') && b.v !== null);
   const ups = deltas.filter((b) => b.kind === 'up'); const downs = deltas.filter((b) => b.kind === 'down');

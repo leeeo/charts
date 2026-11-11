@@ -1,11 +1,14 @@
 // Pareto chart: categories sorted by value (descending) as bars, plus the cumulative share as a line on a
 // right-hand 0-100% axis and a guide at the threshold (default 80%). Missing values are left off the axis,
 // listed under the chart and excluded from the cumulative total.
+// Each bar carries its value (inside the bar top when the bar is tall enough, else above it) and each dot of the
+// cumulative line its share; hovering a column keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, idList, optNum, optStr, put, str, value } from '../check.ts';
 import { clamp, esc, makeFmt, n2, tw } from '../format.ts';
 import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, pct, table, wrapTable } from '../kit.ts';
+import { VAL, inkText, labelLayer, valueText } from './cmp.ts';
 import { catAxes, missingNote, sortOrder, valueDomain } from './lollipop.ts';
 
 export interface ParetoItem { id: string; label: string; value: Value; quality?: string }
@@ -66,7 +69,8 @@ function render(spec: ParetoSpec, ctx: Ctx): string {
     const gy = py(thr);
     const thrText = pct(thr);
     s += `<line class="lc-pareto-guide" x1="${n2(ax.px)}" y1="${n2(gy)}" x2="${n2(xr)}" y2="${n2(gy)}"/>`;
-    s += `<text class="lc-pareto-guide-lbl" x="${n2(ax.px + 4)}" y="${n2(Math.max(FS, gy - 4))}">${esc(thrText)}</text>`;
+    // Guide label at the right end of the guide, where the cumulative line has already passed above it.
+    s += `<text class="lc-pareto-guide-lbl" x="${n2(xr - 4)}" y="${n2(Math.max(FS, gy - 4))}" text-anchor="end">${esc(thrText)}</text>`;
     const bw = Math.max(1, ax.band * 0.7);
     const focus = rows.length <= MAX_FOCUS;
     const hasLine = rows[0]?.cum !== null;
@@ -74,9 +78,17 @@ function render(spec: ParetoSpec, ctx: Ctx): string {
     // bars below the cumulative line; the focus group (hit area over the bar column + dot) on top so tips stay visible
     let barsSvg = '';
     let marks = '';
+    let lbl = '';
     rows.forEach((r, k) => {
       const x = ax.cc(k);
       const y0 = ax.vv(r.v);
+      // Bar value: inside the bar top (surface colour) when tall and wide enough, else above the bar when the
+      // cumulative dot is not right there. Cumulative share above its dot (ink, halo) when the column is wide enough.
+      const vt = fmt(r.v); const vw = tw(vt, VAL) * 1.06;
+      const dotY = r.cum !== null ? py(r.cum) : -Infinity;
+      if (vw <= bw - 6 && ax.zero - y0 >= VAL + 10) lbl += valueText(x, y0 + VAL + 4, vt, 'lc-pareto-in"', 'middle');
+      else if (vw <= ax.band - 2 && Math.abs(dotY - (y0 - 6)) > VAL + 4) lbl += valueText(x, Math.max(VAL, y0 - 5), vt, colorAttrs(0, spec.color), 'middle');
+      if (r.cum !== null && dotY < y0 - 4 && tw(pct(r.cum), 11) <= ax.band - 2) lbl += inkText(x, Math.max(11, dotY - 8), pct(r.cum), 'middle', Infinity, 'lc-cm-muted');
       const tail = reach >= 0 && k > reach ? ' lc-pareto-tail' : '';
       barsSvg += `<rect class="lc-mark lc-pareto-bar${tail} ${colorAttrs(0, spec.color)} data-i="${r.i}" data-v="${r.v}" x="${n2(x - bw / 2)}" y="${n2(y0)}" width="${n2(bw)}" height="${n2(Math.max(r.v > 0 ? 1 : 0, ax.zero - y0))}"/>`;
       let g = focus ? `<rect class="lc-hit" x="${n2(x - ax.band / 2)}" y="${n2(ax.py)}" width="${n2(ax.band)}" height="${n2(ax.ph)}"/>` : '';
@@ -85,7 +97,7 @@ function render(spec: ParetoSpec, ctx: Ctx): string {
       }
       marks += focus ? focusable(ctx, 'lc-pt-pareto', aria(r), g, x, Math.min(y0, r.cum !== null ? py(r.cum) : y0)) : g;
     });
-    inner = ax.svg + s + barsSvg + line + marks + missingNote(ctx, missing.map((it) => it.label));
+    inner = ax.svg + s + barsSvg + line + marks + labelLayer(lbl) + missingNote(ctx, missing.map((it) => it.label));
   }
   const total = rows.reduce((a, r) => a + r.v, 0);
   let desc = `${items.length}${t.items}. ${t.total} ${fmt(total)}.`;

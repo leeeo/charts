@@ -1,5 +1,6 @@
 // Dumbbell chart: two values per category (e.g. before/after, two segments) as dots joined by a line.
 // Horizontal by default (categories on the y axis). A null end draws only the present dot and no line.
+// Value labels are bold and tinted by their dot's colour; hovering a row keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, idList, oneOf, optBool, optStr, put, str, value } from '../check.ts';
@@ -97,21 +98,22 @@ function render(spec: DumbbellSpec, ctx: Ctx): string {
         const sorted = [...ends].sort((a, b) => a.x - b.x || a.side - b.side);
         const high = sorted[sorted.length - 1] as End;
         const low = sorted.length > 1 && (sorted[0] as End).x !== high.x ? sorted[0] : undefined;
+        const val = (e: End, x: number, y: number, text: string): string => `<text class="lc-cm-lbl lc-cm-val lc-dumbbell-val ${colorAttrs(e.ci, e.col)} x="${n2(x)}" y="${n2(y)}">${esc(text)}</text>`;
         const [hx, hy] = xy(high.x);
-        const hl = fmt(high.x); const hw = tw(hl, FS);
-        if (horizontal) g += `<text class="lc-dumbbell-val" x="${n2(Math.min(hx + r + 4, ctx.W - hw - 2))}" y="${n2(hy + FS * 0.35)}">${esc(hl)}</text>`;
-        else if (hw <= ax.band - 2) g += `<text class="lc-dumbbell-val" x="${n2(clamp(hx - hw / 2, 2, ctx.W - hw - 2))}" y="${n2(Math.max(FS, hy - r - 4))}">${esc(hl)}</text>`;
+        const hl = fmt(high.x); const hw = tw(hl, FS) * 1.06;
+        if (horizontal) g += val(high, Math.min(hx + r + 4, ctx.W - hw - 2), hy + FS * 0.35, hl);
+        else if (hw <= ax.band - 2) g += val(high, clamp(hx - hw / 2, 2, ctx.W - hw - 2), Math.max(FS, hy - r - 4), hl);
         if (low) {
-          const ll = fmt(low.x); const lw = tw(ll, FS);
+          const ll = fmt(low.x); const lw = tw(ll, FS) * 1.06;
           const [lx, ly] = xy(low.x);
           if (horizontal) {
             const outer = lx - r - 4 - lw;
             const x = outer >= ax.px + 1 ? outer : lx + r + 4 + lw <= hx - r - 4 ? lx + r + 4 : null;
-            if (x !== null) g += `<text class="lc-dumbbell-val" x="${n2(x)}" y="${n2(ly + FS * 0.35)}">${esc(ll)}</text>`;
+            if (x !== null) g += val(low, x, ly + FS * 0.35, ll);
           } else if (lw <= ax.band - 2) {
             const outer = ly + r + FS;
             const y = outer <= ax.py + ax.ph - 2 ? outer : ly - r - 4 - FS >= hy + r ? ly - r - 4 : null;
-            if (y !== null) g += `<text class="lc-dumbbell-val" x="${n2(clamp(lx - lw / 2, 2, ctx.W - lw - 2))}" y="${n2(y)}">${esc(ll)}</text>`;
+            if (y !== null) g += val(low, clamp(lx - lw / 2, 2, ctx.W - lw - 2), y, ll);
           }
         }
       }

@@ -1,9 +1,12 @@
-// Segmented bar: one horizontal 100% bar split into shares, with label and share under each wide-enough segment.
+// Segmented bar: one horizontal 100% bar split into shares, with the name and the bold share under every segment.
+// Labels are centred under their segment and pushed sideways (with a leader line) when neighbours would collide, so
+// narrow segments keep a readable name instead of a truncated one.
 import type { BaseSpec, Slice } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, idList, optBool, optStr, str, value } from '../check.ts';
 import { type Ctx, colorAttrs, empty, focusable, frame, legend, pct, table, wrapTable } from '../kit.ts';
-import { esc, makeFmt, n2, truncate, tw } from '../format.ts';
+import { makeFmt, n2 } from '../format.ts';
+import { LBL, LINE, blockW, labelLayer, leader, nameValue, spread } from './cmp.ts';
 
 export interface SegmentedSpec extends BaseSpec {
   type: 'segmented';
@@ -15,6 +18,8 @@ export interface SegmentedSpec extends BaseSpec {
 
 const BAR_Y = 4;
 const BAR_H = 26;
+/** Gap between the bar and the label block (room for the leader line). */
+const LBL_GAP = 8;
 
 export const plugin = definePlugin<SegmentedSpec>({
   type: 'segmented',
@@ -37,7 +42,7 @@ export const plugin = definePlugin<SegmentedSpec>({
     return out;
   },
   height(spec) {
-    return spec.showLabels === false ? BAR_Y * 2 + BAR_H : 70;
+    return spec.showLabels === false ? BAR_Y * 2 + BAR_H : BAR_Y + BAR_H + LBL_GAP + LBL + LINE + 6;
   },
   render(spec, ctx: Ctx) {
     const t = ctx.t;
@@ -53,20 +58,34 @@ export const plugin = definePlugin<SegmentedSpec>({
       const bw = ctx.W - 2;
       const labels = spec.showLabels !== false;
       let x = x0;
+      const blocks: { i: number; cx: number; w: number; name: string; sh: string; cls: string }[] = [];
       spec.items.forEach((s, i) => {
         if (s.value === null || s.value <= 0) return;
         const w = (s.value / total) * bw;
-        let inner = `<rect class="lc-mark lc-seg ${colorAttrs(i, s.color)} data-i="${i}" data-v="${s.value}" x="${n2(x)}" y="${BAR_Y}" width="${n2(w)}" height="${BAR_H}"/>`;
-        if (labels && w >= 28) {
-          const room = w - 4;
-          const sh = share(s.value) as string;
-          inner += `<text class="lc-seg-lbl" x="${n2(x + 2)}" y="${BAR_Y + BAR_H + 15}">${esc(truncate(s.label, room, 12))}</text>`;
-          if (tw(sh, 11) <= room) inner += `<text class="lc-seg-pct" x="${n2(x + 2)}" y="${BAR_Y + BAR_H + 30}">${esc(sh)}</text>`;
-        }
+        const inner = `<rect class="lc-mark lc-seg ${colorAttrs(i, s.color)} data-i="${i}" data-v="${s.value}" x="${n2(x)}" y="${BAR_Y}" width="${n2(w)}" height="${BAR_H}"/>`;
+        const sh = share(s.value) as string;
+        blocks.push({ i, cx: x + w / 2, w: blockW(s.label, sh) + 4, name: s.label, sh, cls: colorAttrs(i, s.color) });
         // At most 12 segments (< MAX_FOCUS): each one is a tab stop.
         svg += focusable(ctx, 'lc-pt-seg', itemText(s), inner, x + w / 2, BAR_Y);
         x += w;
       });
+      if (labels && blocks.length) {
+        // Label blocks are centred under their segment, capped at a third of the width, and pushed apart when they
+        // would collide; when even that cannot fit, every block gets an equal share and the names are truncated.
+        const cap = Math.max(36, Math.min(ctx.W / 3, 180));
+        let widths = blocks.map((b) => Math.min(b.w, cap));
+        const need = widths.reduce((a, b) => a + b, 0) + 6 * (blocks.length - 1);
+        if (need > bw) widths = blocks.map(() => Math.max(24, (bw - 6 * (blocks.length - 1)) / blocks.length));
+        const centres = spread(blocks.map((b) => b.cx), widths, x0, x0 + bw, 6);
+        const top = BAR_Y + BAR_H + LBL_GAP;
+        let lbl = '';
+        blocks.forEach((b, k) => {
+          const lx = centres[k] as number;
+          if (Math.abs(lx - b.cx) > 4) lbl += leader(b.cx, BAR_Y + BAR_H + 1, lx, top - 2);
+          lbl += nameValue(lx, top + LBL, b.name, b.sh, b.cls, 'middle', (widths[k] as number) - 2);
+        });
+        svg += labelLayer(lbl);
+      }
     }
 
     const missing = spec.items.filter((s) => s.value === null).length;

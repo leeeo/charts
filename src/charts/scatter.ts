@@ -1,9 +1,13 @@
 // Scatter plot: numeric x/y points, optional groups as coloured series. Also hosts the shared x/y engine used by bubble.ts.
+// Hovering or focusing a point keeps its series lit and fades the others (scatter.css). Named points can carry their
+// name next to the mark (`pointLabels`; on by default for bubbles), placed right, left, above or below the mark,
+// wherever it neither covers another label nor another mark.
 import type { BaseSpec, Unit, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
-import { BASE, type Dict, MAX_POINTS, MAX_SERIES, base, color, dict, fail, idList, optNum, optStr, put, str, unit, value } from '../check.ts';
+import { BASE, type Dict, MAX_POINTS, MAX_SERIES, base, color, dict, fail, idList, optBool, optNum, optStr, put, str, unit, value } from '../check.ts';
 import { type Fmt, clamp, esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
-import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, table, wrapTable } from '../kit.ts';
+import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, frame, legend, table, wrapTable } from '../kit.ts';
+import { inkText, labelLayer, seriesPt } from './cmp.ts';
 
 export interface ScatterPoint {
   x: Value;
@@ -33,6 +37,8 @@ export interface ScatterSpec extends BaseSpec {
   xMax?: number;
   yMin?: number;
   yMax?: number;
+  /** Write each named point's label next to its mark (default false for scatter, true for bubble). */
+  pointLabels?: boolean;
 }
 
 // ---- shared x/y engine (scatter + bubble) ----
@@ -50,9 +56,10 @@ export interface XYSpec extends BaseSpec {
   yMax?: number;
   sizeLabel?: string;
   sizeUnit?: Unit;
+  pointLabels?: boolean;
 }
 
-export const XY_KEYS = ['series', 'xLabel', 'yLabel', 'xUnit', 'xMin', 'xMax', 'yMin', 'yMax'] as const;
+export const XY_KEYS = ['series', 'xLabel', 'yLabel', 'xUnit', 'xMin', 'xMax', 'yMin', 'yMax', 'pointLabels'] as const;
 
 /** Validate the shared x/y fields of `o` into `out`. `withSize` requires a `size` (>= 0 or null) on every point. */
 export function validateXY(o: Dict, out: Record<string, unknown>, withSize: boolean): void {
@@ -78,6 +85,7 @@ export function validateXY(o: Dict, out: Record<string, unknown>, withSize: bool
   put(out, 'xLabel', optStr(o.xLabel, 'xLabel', 60));
   put(out, 'yLabel', optStr(o.yLabel, 'yLabel', 60));
   put(out, 'xUnit', unit(o.xUnit, 'xUnit'));
+  put(out, 'pointLabels', optBool(o.pointLabels, 'pointLabels'));
   for (const ax of ['x', 'y'] as const) {
     const lo = optNum(o[`${ax}Min`], `${ax}Min`, -1e15, 1e15);
     const hi = optNum(o[`${ax}Max`], `${ax}Max`, -1e15, 1e15);
@@ -183,17 +191,44 @@ export function renderXY(spec: XYSpec, ctx: Ctx, bubble: boolean): string {
     const order = bubble ? [...pts].sort((a, b) => b.size - a.size || a.s - b.s || a.i - b.i) : pts;
     const focus = pts.length <= MAX_FOCUS;
     let marks = '';
+    const geo: { cx: number; cy: number; r: number }[] = [];
     for (const p of order) {
       const se = spec.series[p.s];
       if (!se) continue;
       const cx = sx(p.x); const cy = sy(p.y);
       const r = bubble ? (maxSize > 0 ? Math.sqrt(p.size / maxSize) * rMax : 0) : dotR;
+      geo.push({ cx, cy, r });
       const circle = `<circle class="lc-mark lc-point ${colorAttrs(p.s, se.color)} data-s="${p.s}" data-i="${p.i}" data-x="${p.x}" data-v="${p.y}"${bubble ? ` data-size="${p.size}"` : ''} cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(r)}"/>`;
       if (!focus) { marks += circle; continue; }
       const text = `${p.label}, ${se.name}: ${xName} ${fmtX(p.x)}, ${yName} ${fmtY(p.y)}${bubble ? `, ${sName} ${fmtS(p.size)}` : ''}${se.quality ? ` · ${se.quality}` : ''}`;
-      marks += focusable(ctx, 'lc-pt-point', text, `<circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(Math.max(8, r))}"/>${circle}`, cx, cy - r);
+      marks += seriesPt(ctx, 'lc-pt-point', p.s, text, `<circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(Math.max(8, r))}"/>${circle}`, cx, cy - r);
     }
-    inner = s + marks;
+    // Point names: right of the mark, else left, above or below; a spot is taken when it would cover a placed label
+    // or another mark, and a name with no free spot is left to the value box.
+    let names = '';
+    if (spec.pointLabels ?? bubble) {
+      const named = order.map((p, k) => ({ p, g: geo[k] as (typeof geo)[number] })).filter((e) => spec.series[e.p.s]?.points[e.p.i]?.label);
+      const placed: { x0: number; y0: number; x1: number; y1: number }[] = [];
+      const hits = (b: (typeof placed)[number]): boolean =>
+        placed.some((o) => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0) ||
+        geo.some((g) => b.x0 < g.cx + g.r && b.x1 > g.cx - g.r && b.y0 < g.cy + g.r && b.y1 > g.cy - g.r);
+      for (const { p, g } of named) {
+        const name = p.label;
+        const w = tw(name, FS); const h = FS + 2;
+        const spots: [number, number, 'start' | 'middle' | 'end'][] = [
+          [g.cx + g.r + 4, g.cy, 'start'], [g.cx - g.r - 4, g.cy, 'end'], [g.cx, g.cy - g.r - 4 - h / 2, 'middle'], [g.cx, g.cy + g.r + 4 + h / 2, 'middle'],
+        ];
+        for (const [x, y, anchor] of spots) {
+          const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
+          const box = { x0, y0: y - h / 2, x1: x0 + w, y1: y + h / 2 };
+          if (box.x0 < px - 2 || box.x1 > px + pw + 2 || box.y0 < py - 2 || box.y1 > py + ph + 2 || hits(box)) continue;
+          placed.push(box);
+          names += inkText(x, y + FS * 0.35, name, anchor);
+          break;
+        }
+      }
+    }
+    inner = s + marks + labelLayer(names);
   }
 
   const total = raw.length;

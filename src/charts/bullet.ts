@@ -1,10 +1,12 @@
 // Bullet chart: one row per KPI with qualitative range bands, the actual value as a bar and the target as a tick,
-// on one shared scale starting at 0.
+// on one shared scale starting at 0. The actual value is written in bold (tinted by the bar colour) right after the
+// bar, moved past the target tick when the two would collide.
 import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, color, dict, fail, idList, num, optNum, optStr, str, value } from '../check.ts';
 import { type Ctx, colorAttrs, empty, focusable, frame, present, table, wrapTable } from '../kit.ts';
 import { esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
+import { VAL, labelLayer, valueText } from './cmp.ts';
 
 export interface BulletRow {
   id: string;
@@ -84,6 +86,7 @@ export const plugin = definePlugin<BulletSpec>({
       const padR = tw(fmt(top), 12) / 2 + 2;
       const x0 = labelW; const pw = Math.max(10, ctx.W - labelW - padR);
       const X = (v: number): number => x0 + (Math.min(v, top) / top) * pw;
+      let lbl = '';
       rows.forEach((r, i) => {
         const y = 4 + i * ROW;
         const cy = y + 13;
@@ -101,9 +104,20 @@ export const plugin = definePlugin<BulletSpec>({
           const tx = X(r.target);
           inner += `<line class="lc-bullet-target" data-i="${i}" data-v="${r.target}" x1="${n2(tx)}" y1="${n2(cy - 8)}" x2="${n2(tx)}" y2="${n2(cy + 8)}"/>`;
         }
+        if (r.value !== null) {
+          // Bold value after the bar; past the target tick when it would cross it, inside the row end when out of room.
+          const text = fmt(r.value);
+          const w = tw(text, VAL) * 1.06;
+          let lx = X(r.value) + 6;
+          const tx = r.target !== undefined && r.target !== null ? X(r.target) : null;
+          if (tx !== null && lx < tx + 4 && lx + w > tx - 4) lx = tx + 6;
+          const right = lx + w > ctx.W - 2;
+          lbl += valueText(right ? Math.min(X(r.value), ctx.W - 2) - 6 : lx, cy + VAL * 0.36, text, colorAttrs(i, r.color), right ? 'end' : 'start');
+        }
         // At most 30 rows (< MAX_FOCUS): every row is a tab stop, including rows whose value is missing.
         svg += focusable(ctx, 'lc-pt-bullet', rowText(r), inner, r.value !== null ? X(r.value) : x0, cy - 10);
       });
+      svg += labelLayer(lbl);
       const ay = 4 + rows.length * ROW;
       svg += ticks.ticks.map((tk) => `<line class="lc-grid" x1="${n2(X(tk))}" y1="${n2(ay - 6)}" x2="${n2(X(tk))}" y2="${n2(ay - 2)}"/><text class="lc-tick" x="${n2(X(tk))}" y="${n2(ay + 12)}" text-anchor="middle">${esc(fmt(tk))}</text>`).join('');
     }

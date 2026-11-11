@@ -1,6 +1,8 @@
 // Marimekko (variable-width 100% stacked columns): column width = the column's share of the grand total,
 // segment height = the series' share within its column. A null cell is missing: it is left out of the column
 // (never drawn as 0), shown as 데이터 없음 in the table and counted in the description.
+// Segment labels: name and share on one line, name over share when the segment is narrow but tall, share alone when
+// only that fits. Hovering a segment keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Series } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, dict, fail, labels, seriesList, optStr, put } from '../check.ts';
@@ -90,8 +92,10 @@ function render(spec: MarimekkoSpec, ctx: Ctx): string {
       if (rh >= FS + 4) {
         const share = pct(c.inCol);
         const full = `${se.name} ${share}`;
-        const text = tw(full, FS) <= rw - 8 ? full : tw(share, FS) <= rw - 6 ? share : '';
-        if (text) g += `<text class="lc-mekko-lbl" x="${n2(rx + rw / 2)}" y="${n2(ry + rh / 2 + FS * 0.35)}" text-anchor="middle">${esc(text)}</text>`;
+        const cx = n2(rx + rw / 2);
+        if (tw(full, FS) <= rw - 8) g += `<text class="lc-mekko-lbl" x="${cx}" y="${n2(ry + rh / 2 + FS * 0.35)}" text-anchor="middle">${esc(full)}</text>`;
+        else if (tw(se.name, FS) <= rw - 6 && tw(share, FS) <= rw - 6 && rh >= 2 * FS + 8) g += `<text class="lc-mekko-lbl" x="${cx}" y="${n2(ry + rh / 2 - 2)}" text-anchor="middle"><tspan x="${cx}">${esc(se.name)}</tspan><tspan x="${cx}" dy="${FS + 2}">${esc(share)}</tspan></text>`;
+        else if (tw(share, FS) <= rw - 6) g += `<text class="lc-mekko-lbl" x="${cx}" y="${n2(ry + rh / 2 + FS * 0.35)}" text-anchor="middle">${esc(share)}</text>`;
       }
       marks += focus ? focusable(ctx, 'lc-pt-mekko', aria(c), g, rx + rw / 2, ry) : g;
     }

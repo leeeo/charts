@@ -4,5 +4,7 @@
 .lc-pareto-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
 .lc-pareto-guide { stroke: var(--lc-muted); stroke-width: 1; stroke-dasharray: 4 3; }
 .lc-pareto-guide-lbl { fill: var(--lc-muted); font-size: 11px; }
+/* Value written inside a bar: surface colour, no halo. */
+.lc-pareto-in.lc-cm-val { fill: var(--lc-surface); stroke: none; }
 .lc-pt:hover .lc-pareto-dot, .lc-pt:focus .lc-pareto-dot { stroke: var(--lc-ink); stroke-width: 2; }
 .lc-pt-pareto:hover .lc-hit, .lc-pt-pareto:focus .lc-hit { fill: var(--lc-grid); fill-opacity: 0.35; }

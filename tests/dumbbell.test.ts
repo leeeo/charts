@@ -25,8 +25,9 @@ test('dumbbell: dots sit on a linear value axis and are joined by a line per cat
   assert.match(html, /lc-dumbbell-line lc-db-up/);
   assert.match(html, /lc-dumbbell-line lc-db-down/);
   assert.match(html, /<td>\+20%<\/td>|<td>\+20% \(\+100%\)<\/td>/);
-  assert.match(html, /class="lc-dumbbell-val"[^>]*>20%</, 'start value is labelled');
-  assert.match(html, /class="lc-dumbbell-val"[^>]*>40%</, 'end value is labelled');
+  // 0.8: value labels use the shared bold tinted style (lc-cm-val) with the dot's colour class
+  assert.match(html, /class="lc-cm-lbl lc-cm-val lc-dumbbell-val lc-c8"[^>]*>20%</, 'start value is labelled in the start colour');
+  assert.match(html, /class="lc-cm-lbl lc-cm-val lc-dumbbell-val lc-c1"[^>]*>40%</, 'end value is labelled in the end colour');
 });
 
 test('dumbbell: sort by change and vertical orientation', () => {

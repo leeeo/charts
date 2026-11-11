@@ -1,10 +1,13 @@
 // Streamgraph: stacked areas around a centred baseline ("wiggle" minimises layer slopes, "silhouette" is symmetric).
 // null in a layer is a gap: the layer is not drawn at that label and adds nothing to the stack there.
+// Each layer carries its name inside the band at its thickest point when the band is tall enough there; hovering a
+// band or a dot keeps that layer and fades the others (stream.css).
 import type { BaseSpec, Series } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, base, dict, fail, labels, oneOf, optStr, put, seriesList } from '../check.ts';
 import { clamp, esc, makeFmt, n2, truncate, tw } from '../format.ts';
-import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, pct, runs, seriesTable, summarize, wrapTable } from '../kit.ts';
+import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, frame, legend, pct, runs, seriesTable, summarize, wrapTable } from '../kit.ts';
+import { seriesPt } from './cmp.ts';
 
 export interface StreamSpec extends BaseSpec {
   type: 'stream';
@@ -82,6 +85,7 @@ function render(spec: StreamSpec, ctx: Ctx): string {
     }).join('');
     let areas = '';
     let marks = '';
+    let names = '';
     const focus = presentCount <= MAX_FOCUS;
     spec.series.forEach((se, j) => {
       const row = L[j] ?? [];
@@ -106,10 +110,26 @@ function render(spec: StreamSpec, ctx: Ctx): string {
         const dot = `<circle class="lc-mark lc-dot lc-stream-dot ${c} data-s="${j}" data-i="${i}" data-v="${v}" cx="${n2(cx)}" cy="${n2(cy)}" r="3.5"/>`;
         const tot = totals[i] ?? 0;
         const text = `${spec.labels[i] ?? ''}, ${se.name}: ${fmt(v)}${tot > 0 ? ` (${pct(v / tot)})` : ''}${se.quality ? ` · ${se.quality}` : ''}`;
-        marks += focus ? focusable(ctx, 'lc-pt-dot', text, `<circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="8"/>${dot}`, cx, sy(b[1])) : dot;
+        marks += focus ? seriesPt(ctx, 'lc-pt-dot', j, text, `<circle class="lc-hit" cx="${n2(cx)}" cy="${n2(cy)}" r="8"/>${dot}`, cx, sy(b[1])) : dot;
       });
+      // Layer name at the thickest point, when the band is at least a text line tall there and the name fits the
+      // width between the neighbouring labels (or the whole plot for one label).
+      // Thickness counts most; labels nearer the middle of the plot win ties so names avoid the plot edges.
+      let best = -1; let bestH = 0; let bestScore = 0;
+      row.forEach((b, i) => {
+        if (!b) return;
+        const h = sy(b[0]) - sy(b[1]);
+        const score = h * (0.8 + 0.2 * (N > 1 ? 1 - Math.abs(i - (N - 1) / 2) / ((N - 1) / 2) : 1));
+        if (score > bestScore) { bestScore = score; bestH = h; best = i; }
+      });
+      const nameW = tw(se.name, FS);
+      if (best >= 0 && bestH >= FS + 4 && nameW <= Math.max(band * 2, pw) - 4) {
+        const b = row[best] as [number, number];
+        const cx = clamp(sx(best), px + nameW / 2 + 2, px + pw - nameW / 2 - 2);
+        names += `<text class="lc-stream-lbl ${c} data-s="${j}" x="${n2(cx)}" y="${n2(sy((b[0] + b[1]) / 2) + FS * 0.35)}" text-anchor="middle">${esc(se.name)}</text>`;
+      }
     });
-    inner = s + areas + marks;
+    inner = s + areas + names + marks;
   }
   const first = spec.labels[0] ?? ''; const last = spec.labels[N - 1] ?? '';
   const known = totals.map((v, i) => ({ v, i })).filter((e) => spec.series.some((s) => s.values[e.i] !== null));

@@ -15,7 +15,8 @@ test('segmented: widths are proportional, contiguous and fill the bar', () => {
   const w = s.map((r) => attr(r, 'width'));
   assert.deepEqual(w, [200, 120, 80]);
   assert.equal(attr(s[1] as string, 'x'), attr(s[0] as string, 'x') + w[0]!);
-  assert.match(html, /class="lc-seg-pct"[^>]*>50%</);
+  // 0.8: name + bold share label under the segment (shared lc-cm-lbl / lc-cm-val style)
+  assert.match(html, /<tspan class="lc-cm-val"[^>]*>50%</);
 });
 
 test('segmented: null is skipped (not a zero-width segment) and shown as missing', () => {
@@ -45,5 +46,5 @@ test('segmented: escaping, focusable labelled segments, labels can be turned off
   assert.ok(!html.includes('<i>'));
   assert.match(html, /<g class="lc-pt lc-pt-seg" tabindex="0" aria-label="&quot;&lt;i&gt;: 3,000건 \(75%\) · 잠정">/);
   const off = renderChart({ type: 'segmented', title: 't', showLabels: false, items: [{ id: 'a', label: 'A', value: 1 }] });
-  assert.ok(!off.includes('lc-seg-lbl'));
+  assert.ok(!off.includes('lc-cm-lbls'));
 });

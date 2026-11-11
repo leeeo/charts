@@ -1,2 +1,21 @@
 .lc-stream { fill: var(--c); fill-opacity: 0.85; stroke: var(--lc-surface); stroke-width: 0.75; }
 @media (prefers-reduced-motion: no-preference) { .lc-stream { animation: lc-fade 0.5s ease-out both; } }
+/* Layer name written inside the layer at its thickest point (ink with a surface halo; only when the layer is tall
+   enough there). */
+.lc-stream-lbl { fill: var(--lc-ink); font-size: 12px; font-weight: 650; pointer-events: none; paint-order: stroke; stroke: var(--lc-surface); stroke-width: 3px; stroke-linejoin: round; }
+/* Hover / focus: the pointed layer (band, its name, its dots; data-s = layer index) stays, the rest fade. Rules exist
+   for the first 12 layers (MAX_SERIES). */
+.lc-t-stream :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot) { transition: opacity 0.15s ease; }
+.lc-t-stream .lc-svg:has(.lc-stream:hover, .lc-pt:hover, .lc-pt:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot) { opacity: 0.25; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="0"]:hover, .lc-pt[data-s="0"]:hover, .lc-pt[data-s="0"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="0"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="1"]:hover, .lc-pt[data-s="1"]:hover, .lc-pt[data-s="1"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="1"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="2"]:hover, .lc-pt[data-s="2"]:hover, .lc-pt[data-s="2"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="2"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="3"]:hover, .lc-pt[data-s="3"]:hover, .lc-pt[data-s="3"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="3"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="4"]:hover, .lc-pt[data-s="4"]:hover, .lc-pt[data-s="4"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="4"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="5"]:hover, .lc-pt[data-s="5"]:hover, .lc-pt[data-s="5"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="5"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="6"]:hover, .lc-pt[data-s="6"]:hover, .lc-pt[data-s="6"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="6"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="7"]:hover, .lc-pt[data-s="7"]:hover, .lc-pt[data-s="7"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="7"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="8"]:hover, .lc-pt[data-s="8"]:hover, .lc-pt[data-s="8"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="8"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="9"]:hover, .lc-pt[data-s="9"]:hover, .lc-pt[data-s="9"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="9"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="10"]:hover, .lc-pt[data-s="10"]:hover, .lc-pt[data-s="10"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="10"] { opacity: 1; }
+.lc-t-stream .lc-svg:has(.lc-stream[data-s="11"]:hover, .lc-pt[data-s="11"]:hover, .lc-pt[data-s="11"]:focus) :is(.lc-stream, .lc-stream-lbl, .lc-pt-dot)[data-s="11"] { opacity: 1; }

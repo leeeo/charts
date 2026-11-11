@@ -1,10 +1,13 @@
 // Parallel coordinates: one vertical axis per numeric dimension, each with its own nice range (bottom = min, top = max);
 // one polyline per item. A null value breaks that item's line at the axis (no vertex, never drawn as 0).
+// Axis headings wrap onto two lines when a slot is narrow; above 420 px each item's name is written after the
+// last axis it reaches (pushed apart when they would collide). Hovering a line keeps it and fades the rest (cmp.css).
 import type { BaseSpec, Unit, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, MAX_SERIES, base, color, dict, fail, idList, optNum, optStr, str, unit, values } from '../check.ts';
 import { type Fmt, type Ticks, esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
-import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, present, runs, table, unitLabel, wrapTable } from '../kit.ts';
+import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, present, runs, table, unitLabel, wrapTable, wrapText } from '../kit.ts';
+import { labelLayer, spread } from './cmp.ts';
 
 export interface ParallelDimension {
   id: string;
@@ -90,20 +93,30 @@ export const plugin = definePlugin<ParallelSpec>({
         const hi = Math.max(...vs, d.max ?? -Infinity, ...(d.min !== undefined && !vs.length ? [d.min] : []));
         return Number.isFinite(lo) && Number.isFinite(hi) ? niceTicks(lo, hi, 5) : null;
       });
-      const slot = (ctx.W - 16) / dims.length;
+      // Room for the item names after the last axis (none on phone widths, where the legend names the lines).
+      const nameW = ctx.W < 420 ? 0 : Math.min(ctx.W * 0.18, Math.max(...items.map((it) => tw(it.label, FS))) + 10);
+      const slot = (ctx.W - 16 - nameW) / dims.length;
       const ax = (k: number): number => 8 + slot * (k + 0.5);
-      const top = 2 * FS + 16;
+      const heads = dims.map((d) => {
+        const ul = unitLabel(d.unit);
+        const h = ul ? `${d.label} (${ul})` : d.label;
+        return tw(h, FS) <= slot - 6 ? [h] : wrapText(h, Math.max(slot - 6, 1), FS, 3);
+      });
+      const headLines = Math.max(...heads.map((h) => h.length));
+      const top = (headLines + 1) * FS + 16 + (headLines - 1) * 2;
       const bot = ctx.H - FS - 12;
       const ph = Math.max(10, bot - top);
       const sy = (k: number, v: number): number => {
         const dm = doms[k]!;
         return bot - ((v - dm.min) / (dm.max - dm.min || 1)) * ph;
       };
-      const fit = (s: string, size: number): string => truncate(s, Math.max(slot - 6, 1), size);
+      // Narrow slots (phone widths) use a smaller tick font and the slot's full width before truncating.
+      const ts = slot < 64 ? 10 : TS;
+      const fit = (s: string, size: number): string => truncate(s, Math.max(size === ts ? slot - 2 : slot - 6, 1), size);
       dims.forEach((d, k) => {
         const x = ax(k);
-        const ul = unitLabel(d.unit);
-        svg += `<text class="lc-par-head" x="${n2(x)}" y="${n2(FS + 2)}" text-anchor="middle">${esc(fit(ul ? `${d.label} (${ul})` : d.label, FS))}</text>`;
+        const lines = heads[k] as string[];
+        svg += `<text class="lc-par-head" x="${n2(x)}" y="${n2(FS + 2)}" text-anchor="middle">${lines.map((ln, j) => `<tspan x="${n2(x)}"${j ? ` dy="${FS + 2}"` : ''}>${esc(ln)}</tspan>`).join('')}</text>`;
         svg += `<line class="lc-axis lc-par-axis" x1="${n2(x)}" x2="${n2(x)}" y1="${n2(top)}" y2="${n2(bot)}"/>`;
         const dm = doms[k];
         if (!dm) {
@@ -113,10 +126,12 @@ export const plugin = definePlugin<ParallelSpec>({
         dm.ticks.forEach((tk) => {
           svg += `<line class="lc-grid" x1="${n2(x - 3)}" x2="${n2(x + 3)}" y1="${n2(sy(k, tk))}" y2="${n2(sy(k, tk))}"/>`;
         });
-        svg += `<text class="lc-tick lc-par-tick" x="${n2(x)}" y="${n2(top - 6)}" text-anchor="middle">${esc(fit(fmts[k]!(dm.max), TS))}</text>`;
-        svg += `<text class="lc-tick lc-par-tick" x="${n2(x)}" y="${n2(bot + TS + 6)}" text-anchor="middle">${esc(fit(fmts[k]!(dm.min), TS))}</text>`;
+        const tc = ts === TS ? 'lc-tick lc-par-tick' : 'lc-tick lc-par-tick lc-par-tick-sm';
+        svg += `<text class="${tc}" x="${n2(x)}" y="${n2(top - 6)}" text-anchor="middle">${esc(fit(fmts[k]!(dm.max), ts))}</text>`;
+        svg += `<text class="${tc}" x="${n2(x)}" y="${n2(bot + TS + 6)}" text-anchor="middle">${esc(fit(fmts[k]!(dm.min), ts))}</text>`;
       });
       const canFocus = items.length <= MAX_FOCUS;
+      const ends: { i: number; k: number; y: number }[] = [];
       items.forEach((it, i) => {
         const ca = colorAttrs(i, it.color);
         const vals = it.values.map((v, k) => (v === null || !doms[k] ? null : v));
@@ -128,9 +143,26 @@ export const plugin = definePlugin<ParallelSpec>({
         });
         if (!inner) return;
         const k0 = vals.findIndex((v) => v !== null);
+        const kl = vals.reduce<number>((a, v, k) => (v === null ? a : k), -1);
+        ends.push({ i, k: kl, y: sy(kl, vals[kl] as number) });
         const g = `<g class="lc-par-item ${ca} data-i="${i}">${inner}</g>`;
         svg += canFocus ? focusable(ctx, 'lc-pt-par', itemText(it), g, ax(k0), sy(k0, vals[k0] as number)) : g;
       });
+      // Item names after the last axis each line reaches, in the line colour's ink-mixed tint, pushed apart vertically.
+      if (nameW > 0) {
+        let names = '';
+        for (let k = 0; k < dims.length; k++) {
+          const here = ends.filter((e) => e.k === k);
+          if (!here.length) continue;
+          const ys = spread(here.map((e) => e.y), FS + 2, top, bot);
+          const room = k === dims.length - 1 ? nameW - 4 : slot - 12;
+          here.forEach((e, j) => {
+            const it = items[e.i] as ParallelItem;
+            names += `<text class="lc-cm-lbl lc-par-name ${colorAttrs(e.i, it.color)} x="${n2(ax(k) + 6)}" y="${n2((ys[j] as number) + FS * 0.35)}">${esc(truncate(it.label, room, FS))}</text>`;
+          });
+        }
+        svg += labelLayer(names);
+      }
     }
 
     const dimDesc = dims.map((d, k) => {

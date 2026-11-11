@@ -1,6 +1,7 @@
 .lc-slope-line { stroke: var(--c); stroke-width: 2; stroke-linecap: round; }
 .lc-slope-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
-.lc-slope-label { fill: var(--lc-ink); font-size: 12px; }
+/* Side labels: name in ink with the surface halo, value bold and tinted (cmp.css). */
+.lc-slope-label { font-size: 12px; }
 .lc-slope-head { fill: var(--lc-ink); font-weight: 650; }
 .lc-pt:hover .lc-slope-line, .lc-pt:focus .lc-slope-line { stroke-width: 3.5; }
 .lc-pt:hover .lc-slope-dot, .lc-pt:focus .lc-slope-dot { stroke: var(--lc-ink); stroke-width: 2; }

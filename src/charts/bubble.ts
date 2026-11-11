@@ -1,4 +1,5 @@
 // Bubble chart: a scatter plot whose circle AREA is proportional to a third value (size), with a size key.
+// Named bubbles carry their name beside the circle (see scatter.ts renderXY).
 import type { BaseSpec, Unit, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, base, dict, optStr, put, unit } from '../check.ts';
@@ -33,6 +34,8 @@ export interface BubbleSpec extends BaseSpec {
   xMax?: number;
   yMin?: number;
   yMax?: number;
+  /** Write each named point's label next to its bubble (default true). */
+  pointLabels?: boolean;
 }
 
 export const plugin = definePlugin<BubbleSpec>({

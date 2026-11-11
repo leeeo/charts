@@ -2,3 +2,19 @@
 .lc-bump-dot { fill: var(--c); stroke: var(--lc-surface); stroke-width: 1.5; }
 .lc-bump-label { fill: var(--lc-ink); font-size: 12px; }
 .lc-pt:hover .lc-bump-dot, .lc-pt:focus .lc-bump-dot { stroke: var(--lc-ink); stroke-width: 2; }
+/* Hover / focus: the pointed series (line, dots, end label; data-s = series index) stays, the rest fade. Rules exist
+   for the first 12 series (MAX_SERIES). */
+.lc-t-bump :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label) { transition: opacity 0.15s ease; }
+.lc-t-bump .lc-svg:has(.lc-pt:hover, .lc-pt:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label) { opacity: 0.25; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="0"]:hover, .lc-pt[data-s="0"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="0"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="1"]:hover, .lc-pt[data-s="1"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="1"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="2"]:hover, .lc-pt[data-s="2"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="2"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="3"]:hover, .lc-pt[data-s="3"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="3"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="4"]:hover, .lc-pt[data-s="4"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="4"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="5"]:hover, .lc-pt[data-s="5"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="5"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="6"]:hover, .lc-pt[data-s="6"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="6"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="7"]:hover, .lc-pt[data-s="7"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="7"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="8"]:hover, .lc-pt[data-s="8"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="8"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="9"]:hover, .lc-pt[data-s="9"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="9"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="10"]:hover, .lc-pt[data-s="10"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="10"] { opacity: 1; }
+.lc-t-bump .lc-svg:has(.lc-pt[data-s="11"]:hover, .lc-pt[data-s="11"]:focus) :is(.lc-bump-line, .lc-pt-bump, .lc-bump-label)[data-s="11"] { opacity: 1; }
