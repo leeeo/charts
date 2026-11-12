@@ -341,14 +341,14 @@ export const plugin = definePlugin<SankeySpec>({
         // at the bar's middle, then beside it slid along the bar (nearest the middle first, 6px steps, ending at the
         // plot edges). The first spot that meets no bar or placed label wins; if every spot meets something, the one
         // with the least overlap does. Wide layouts that never collided keep their previous placement.
-        type Cand = { ty: number; x: number; anchor: 'start' | 'middle'; room: number };
+        type Cand = { ty: number; x: number; anchor: 'start' | 'middle'; room: number; slid?: boolean };
         const cands: Cand[] = [];
         if (sp.y - above >= tall + 4) cands.push({ ty: sp.y - 4 - tall + FS, x: cx, anchor: 'middle', room });
         if (below - (sp.y + sp.h) >= tall + 4) cands.push({ ty: sp.y + sp.h + 4 + FS, x: cx, anchor: 'middle', room });
         const mid = fit(sp.y + sp.h / 2 - tall2 / 2);
         cands.push({ ty: mid + FS, x: sp.x + NODE_W + 6, anchor: 'start', room: room2 });
         for (let d = 6; d < ctx.H; d += 6) {
-          for (const top of [mid + d, mid - d]) if (fit(top) === top) cands.push({ ty: top + FS, x: sp.x + NODE_W + 6, anchor: 'start', room: room2 });
+          for (const top of [mid + d, mid - d]) if (fit(top) === top) cands.push({ ty: top + FS, x: sp.x + NODE_W + 6, anchor: 'start', room: room2, slid: true });
         }
         let best = cands[0] as Cand; let bestCost = Infinity;
         for (const cd of cands) {
@@ -357,7 +357,14 @@ export const plugin = definePlugin<SankeySpec>({
           if (v === 0) break;
         }
         labelSvg += label(sp, best.x, best.ty, best.anchor === 'middle' ? ' text-anchor="middle"' : '', best.room, true);
-        taken.push(blockOf(sp.i, best.x, best.ty, best.anchor, best.room, true));
+        const placed = blockOf(sp.i, best.x, best.ty, best.anchor, best.room, true);
+        taken.push(placed);
+        // A label slid past its bar's ends gets the same leader line as the side labels, so it still points at its bar.
+        const lm = (placed[1] + placed[3]) / 2;
+        if (best.slid && (lm < sp.y || lm > sp.y + sp.h)) {
+          const ey = Math.min(Math.max(lm, sp.y), sp.y + Math.max(1, sp.h));
+          labelSvg += `<path class="lc-sk-lead" d="M${n2(sp.x + NODE_W + 1)},${n2(ey)}L${n2(best.x - 2)},${n2(lm)}"/>`;
+        }
       }
       const defs = linkSvg.includes('lc-sk-hatch') || nodeSvg.includes('lc-sk-hatch')
         ? `<defs><pattern id="${hatchId}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path class="lc-sk-hatch-line" d="M0 0V6"/></pattern></defs>` : '';

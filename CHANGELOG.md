@@ -5,7 +5,7 @@
   for every gallery example except histogram and marimekko (below).
 - Sankey: a middle-column label takes the first spot that meets no bar and no other label: above the bar, below it,
   beside it at the bar's middle, then beside it slid along the bar in 6px steps (the one with the least overlap if
-  every spot meets something). In 0.8.0 the choice only looked at bars in the same column, so on a 390px screen
+  every spot meets something); a label slid past its bar's ends gets a leader line. In 0.8.0 the choice only looked at bars in the same column, so on a 390px screen
   "판매관리비 270억" sat on "매출원가 580억" and "매출총이익*" on the next column's bar. Four- and five-column flows
   stay whole on the screen (no horizontal scroll), so the end of the flow (net income) is never hidden off-screen.
 - Bar: vertical end labels and stack totals need the label width (+6% for bold) plus 4px of room per bar or column;
