@@ -293,6 +293,20 @@ export const plugin = definePlugin<SankeySpec>({
           lines.map((ln, k) => `<tspan x="${x}"${k ? ` dy="${LINE}"` : ''}>${esc(ln)}</tspan>`).join('') +
           `<tspan class="lc-node-val" x="${x}" dy="${LINE + 1}">${esc(fmt(nodeV[sp.i] as number))}</tspan></text>`;
       };
+      // Occupied boxes (x, y, right, bottom): every bar, then each label as it is placed. Middle-column labels pick the
+      // first candidate spot that meets none of them, so on narrow screens a label never lands on another label or bar.
+      const taken: [number, number, number, number][] = spots.map((s) => [s.x - 1, s.y - 1, s.x + NODE_W + 1, s.y + Math.max(1, s.h) + 1]);
+      const blockOf = (i: number, lx: number, ty: number, anchor: 'start' | 'middle' | 'end', room: number, wrap: boolean): [number, number, number, number] => {
+        const r = Math.max(room, tw('가…', FS));
+        const lines = wrap ? wrapName(name(i), r) : [truncate(name(i), r, FS)];
+        const w = Math.max(...lines.map((ln) => tw(ln, FS)), tw(fmt(nodeV[i] as number), VAL_FS) * 1.06);
+        const left = anchor === 'start' ? lx : anchor === 'end' ? lx - w : lx - w / 2;
+        return [left, ty - FS, left + w, ty - FS + BLOCK + LINE * (lines.length - 1)];
+      };
+      const overlap = (b: [number, number, number, number]): number => taken.reduce((a, o) => {
+        const w = Math.min(b[2], o[2]) - Math.max(b[0], o[0]); const h = Math.min(b[3], o[3]) - Math.max(b[1], o[1]);
+        return a + (w > 0 && h > 0 ? w * h : 0);
+      }, 0);
       const side = (c: number, right: boolean): void => {
         const list = spots.filter((s) => s.c === c).map((s) => ({ s, top: s.y + s.h / 2 - BLOCK / 2 })).sort((a, b) => a.top - b.top);
         let floor = 2;
@@ -303,6 +317,7 @@ export const plugin = definePlugin<SankeySpec>({
           const edge = right ? sp.x + NODE_W : sp.x;
           const lx = right ? edge + 8 : edge - 8;
           labelSvg += label(sp, lx, top + FS, right ? '' : ' text-anchor="end"', (right ? rightW : leftW) - 10);
+          taken.push(blockOf(sp.i, lx, top + FS, right ? 'start' : 'end', (right ? rightW : leftW) - 10, false));
           const cy = sp.y + sp.h / 2; const mid = top + BLOCK / 2;
           if (Math.abs(mid - cy) > 4) labelSvg += `<path class="lc-sk-lead" d="M${n2(edge + (right ? 1 : -1))},${n2(cy)}L${n2(lx + (right ? -2 : 2))},${n2(mid)}"/>`;
         }
@@ -319,13 +334,30 @@ export const plugin = definePlugin<SankeySpec>({
         // labels cannot meet; beside the bar the width ends at the next column.
         const room = colGap - 4;
         const tall = BLOCK + LINE * (lineCount(sp.i, room, true) - 1);
-        if (sp.y - above >= tall + 4) labelSvg += label(sp, cx, sp.y - 4 - tall + FS, ' text-anchor="middle"', room, true);
-        else if (below - (sp.y + sp.h) >= tall + 4) labelSvg += label(sp, cx, sp.y + sp.h + 4 + FS, ' text-anchor="middle"', room, true);
-        else {
-          const room2 = colGap - NODE_W - 8;
-          const tall2 = BLOCK + LINE * (lineCount(sp.i, room2, true) - 1);
-          labelSvg += label(sp, sp.x + NODE_W + 6, Math.min(Math.max(sp.y + sp.h / 2 - tall2 / 2, 2), ctx.H - 2 - tall2) + FS, '', room2, true);
+        const room2 = colGap - NODE_W - 8;
+        const tall2 = BLOCK + LINE * (lineCount(sp.i, room2, true) - 1);
+        const fit = (top: number): number => Math.min(Math.max(top, 2), ctx.H - 2 - tall2);
+        // Candidates in order of preference: above the bar, below it (both only when the column leaves room), beside it
+        // at the bar's middle, then beside it slid along the bar (nearest the middle first, 6px steps, ending at the
+        // plot edges). The first spot that meets no bar or placed label wins; if every spot meets something, the one
+        // with the least overlap does. Wide layouts that never collided keep their previous placement.
+        type Cand = { ty: number; x: number; anchor: 'start' | 'middle'; room: number };
+        const cands: Cand[] = [];
+        if (sp.y - above >= tall + 4) cands.push({ ty: sp.y - 4 - tall + FS, x: cx, anchor: 'middle', room });
+        if (below - (sp.y + sp.h) >= tall + 4) cands.push({ ty: sp.y + sp.h + 4 + FS, x: cx, anchor: 'middle', room });
+        const mid = fit(sp.y + sp.h / 2 - tall2 / 2);
+        cands.push({ ty: mid + FS, x: sp.x + NODE_W + 6, anchor: 'start', room: room2 });
+        for (let d = 6; d < ctx.H; d += 6) {
+          for (const top of [mid + d, mid - d]) if (fit(top) === top) cands.push({ ty: top + FS, x: sp.x + NODE_W + 6, anchor: 'start', room: room2 });
         }
+        let best = cands[0] as Cand; let bestCost = Infinity;
+        for (const cd of cands) {
+          const v = overlap(blockOf(sp.i, cd.x, cd.ty, cd.anchor, cd.room, true));
+          if (v < bestCost) { best = cd; bestCost = v; }
+          if (v === 0) break;
+        }
+        labelSvg += label(sp, best.x, best.ty, best.anchor === 'middle' ? ' text-anchor="middle"' : '', best.room, true);
+        taken.push(blockOf(sp.i, best.x, best.ty, best.anchor, best.room, true));
       }
       const defs = linkSvg.includes('lc-sk-hatch') || nodeSvg.includes('lc-sk-hatch')
         ? `<defs><pattern id="${hatchId}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path class="lc-sk-hatch-line" d="M0 0V6"/></pattern></defs>` : '';

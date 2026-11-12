@@ -124,7 +124,8 @@ export const plugin = definePlugin<HistogramSpec>({
     else {
       const yd = niceTicks(0, Math.max(...drawn.map((b) => b.count as number)), ctx.H < 220 ? 4 : 5);
       const yLabs = yd.ticks.map(fmtC);
-      const top = 10;
+      // room above the tallest bin for its count label (it used to sit on the bar top, half hidden)
+      const top = 16;
       const left = Math.max(...yLabs.map((l) => tw(l, FS))) + 10 + (spec.yLabel ? FS + 8 : 0);
       const bottom = FS + 12 + (spec.xLabel ? FS + 8 : 0);
       const x0 = bins[0]!.from;

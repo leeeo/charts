@@ -62,7 +62,8 @@ function render(spec: MarimekkoSpec, ctx: Ctx): string {
   if (!cells.length) inner = empty(ctx);
   else {
     const left = tw('100%', FS) + 12;
-    const top = 6; const bottom = FS * 2 + 14 + (spec.xLabel ? FS + 6 : 0);
+    // 8: the 100% tick is centred on the plot top, so its glyphs need room above it (6 cut their tops)
+    const top = 8; const bottom = FS * 2 + 14 + (spec.xLabel ? FS + 6 : 0);
     const px = left; const py = top; const pw = Math.max(10, ctx.W - left - 6); const ph = Math.max(10, ctx.H - top - bottom);
     const X = (u: number): number => px + u * pw;
     const Y = (u: number): number => py + ph - u * ph;

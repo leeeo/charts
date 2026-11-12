@@ -200,7 +200,11 @@ export function plot(o: PlotOpts): PlotOut {
     const bw = gw / nS;
     // plain bars: labels only when the widest one fits the bar slot (horizontal bars always have room reserved)
     const slot = horizontal ? Infinity : band / nS - 1;
-    const endLbl = bars && (!stacked ? valW <= slot : showTotal);
+    // Neighbouring end labels keep a gap (bold text is ~6% wider than the estimate, the halo adds 1.5px a side): on
+    // narrow screens a run of equal values ("1명1명1명") would otherwise read as one word, so the labels are left out
+    // and the value boxes carry them.
+    const totW = Math.max(0, ...totals.map((t) => tw(fmt(t), LFS)));
+    const endLbl = bars && (!stacked ? valW * 1.06 + 4 <= slot : showTotal && (horizontal || totW * 1.06 + 4 <= band));
     series.forEach((se, j) => {
       se.values.forEach((v, i) => {
         if (v === null) return;

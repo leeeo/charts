@@ -116,3 +116,33 @@ test('sankey 0.8: a middle-column name splits into halves of two or more letters
   assert.match(html, /<tspan x="[\d.]+">판매<\/tspan><tspan x="[\d.]+" dy="15">관리비<\/tspan>/);
   assert.ok(!/<tspan[^>]*>.\*?<\/tspan>/.test(html), 'no one-letter line');
 });
+
+// 0.8.1: at phone widths (a 390px screen leaves ~340px for the chart) a 4-column flow used to put a middle label on top
+// of the next column's label or bar. Label blocks are estimated the way the renderer sizes them (tw, CJK = 1em).
+test('sankey 0.8.1: at 320-360px no node label meets another label or a bar', async () => {
+  const { tw } = await import('../src/format.ts');
+  const income = { type: 'sankey', title: 't', unit: { suffix: '억' }, relax: true, nodes: [
+    { id: 'revenue', label: '매출', tone: 'revenue' }, { id: 'gross', label: '매출총이익', tone: 'profit', computed: true },
+    { id: 'cogs', label: '매출원가', tone: 'cost' }, { id: 'op', label: '영업이익', tone: 'profit', computed: true },
+    { id: 'sga', label: '판매관리비', tone: 'cost' }, { id: 'net', label: '순이익', tone: 'profit', computed: true }, { id: 'tax', label: '법인세 등', tone: 'cost' },
+  ], links: [
+    { source: 'revenue', target: 'gross', value: 420 }, { source: 'revenue', target: 'cogs', value: 580 }, { source: 'gross', target: 'op', value: 150 },
+    { source: 'gross', target: 'sga', value: 270 }, { source: 'op', target: 'net', value: 110 }, { source: 'op', target: 'tax', value: 40 },
+  ] };
+  for (const width of [320, 340, 360]) {
+    const html = renderChart(income, { width });
+    const boxes = [...html.matchAll(/<text class="lc-node-lbl[^>]* x="([\d.]+)" y="([\d.]+)"( text-anchor="(end|middle)")?>(.*?)<\/text>/g)].map((m) => {
+      const lines = [...(m[5] as string).matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map((s) => s[1] as string);
+      const val = lines.pop() as string;
+      const w = Math.max(...lines.map((s) => tw(s, 12)), tw(val, 13) * 1.06);
+      const x = Number(m[1]); const left = m[4] === 'end' ? x - w : m[4] === 'middle' ? x - w / 2 : x;
+      const top = Number(m[2]) - 12;
+      return { s: lines.join(''), b: [left, top, left + w, top + 31 + 15 * (lines.length - 1)] };
+    });
+    assert.equal(boxes.length, 7, `${width}: every node is labelled`);
+    const bars = nodes(html).map((r) => { const x = Number(attr(r, 'x')); const y = Number(attr(r, 'y')); return [x, y, x + 12, y + Number(attr(r, 'height'))]; });
+    const meet = (a: number[], b: number[]): boolean => Math.min(a[2] as number, b[2] as number) - Math.max(a[0] as number, b[0] as number) > 0.5 && Math.min(a[3] as number, b[3] as number) - Math.max(a[1] as number, b[1] as number) > 0.5;
+    boxes.forEach((a, i) => boxes.slice(i + 1).forEach((b) => assert.ok(!meet(a.b, b.b), `${width}: ${a.s} meets ${b.s}`)));
+    for (const a of boxes) assert.equal(bars.filter((r) => meet(a.b, r)).length, 0, `${width}: ${a.s} sits on a bar`);
+  }
+});

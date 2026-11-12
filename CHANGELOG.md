@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.8.1
+- Phone widths (a 360-430px screen leaves 270-340px for a chart). Rendered 430px wide or wider, output is byte-identical to 0.8.0
+  for every gallery example except histogram and marimekko (below).
+- Sankey: a middle-column label takes the first spot that meets no bar and no other label: above the bar, below it,
+  beside it at the bar's middle, then beside it slid along the bar in 6px steps (the one with the least overlap if
+  every spot meets something). In 0.8.0 the choice only looked at bars in the same column, so on a 390px screen
+  "판매관리비 270억" sat on "매출원가 580억" and "매출총이익*" on the next column's bar. Four- and five-column flows
+  stay whole on the screen (no horizontal scroll), so the end of the flow (net income) is never hidden off-screen.
+- Bar: vertical end labels and stack totals need the label width (+6% for bold) plus 4px of room per bar or column;
+  otherwise they are left out and the value boxes and table carry them. 17 stacked days on a phone no longer print
+  "1명1명1명" as one word, and grouped bars no longer print "180건210건".
+- Box: a group name wider than its slot wraps onto two lines ("상상플" / "레이") instead of "상상…".
+- Calendar: weekday labels step to every second row when a row is less than 14px tall (12px rows stacked the seven
+  letters into one touching column).
+- Histogram: the plot top is 16px (was 10) so the tallest bin's count sits above the bar instead of on it.
+  Marimekko: the plot top is 8px (was 6) so the 100% tick is not cut at the top. Both change desktop output too.
+
 ## 0.8.0
 - Every chart type follows the 0.7.0 sankey readability rules: labels beside the marks where they collide (name +
   bold value tinted by its colour, mixed with ink for contrast), wrapping instead of truncating to one or two letters,

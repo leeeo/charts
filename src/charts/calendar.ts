@@ -133,8 +133,9 @@ export const plugin = definePlugin<CalendarSpec>({
       const gap = Math.min(2, cs * 0.15);
       const s0 = s - wday(s);
       const col = (n: number): number => Math.floor((n - s0) / 7);
-      // weekday labels (all, or every 2nd/3rd row when cells are small)
-      const wstep = cs >= FS ? 1 : cs * 2 >= FS ? 2 : cs * 3 >= FS ? 3 : 7;
+      // weekday labels (all, or every 2nd/3rd row when cells are small). A row shorter than the glyph plus 2px would
+      // stack the labels into one column of touching letters (phone widths), so that steps to every 2nd row.
+      const wstep = cs >= FS + 2 ? 1 : cs * 2 >= FS ? 2 : cs * 3 >= FS ? 3 : 7;
       for (let k = 0; k < 7; k += wstep) {
         svg += `<text class="lc-tick" x="${n2(left - 6)}" y="${n2(topH + cs * (k + 0.5) + FS * 0.36)}" text-anchor="end">${wd[k]}</text>`;
       }

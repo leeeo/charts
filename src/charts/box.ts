@@ -6,6 +6,7 @@ import type { BaseSpec, Value } from '../types.ts';
 import { definePlugin } from '../plugin.ts';
 import { BASE, MAX_POINTS, MAX_SERIES, base, color, dict, fail, idList, num, optNum, optStr, str, value } from '../check.ts';
 import { clamp, esc, makeFmt, n2, niceTicks, truncate, tw } from '../format.ts';
+import { splitCat } from '../cartesian.ts';
 import { type Ctx, FS, MAX_FOCUS, colorAttrs, empty, focusable, frame, legend, table, wrapTable } from '../kit.ts';
 import { VAL, labelLayer, valueText } from './cmp.ts';
 
@@ -141,10 +142,14 @@ export const plugin = definePlugin<BoxSpec>({
       const yd = niceTicks(lo, hi, ctx.H < 220 ? 4 : 5);
       const labs = yd.ticks.map(fmt);
       const top = 10;
-      const bottom = FS + 14;
       const axisT = spec.yLabel ? FS + 8 : 0;
       const left = Math.max(...labs.map((l) => tw(l, FS))) + 10 + axisT;
       const pw = Math.max(20, ctx.W - left - 10);
+      // Narrow screens: a group name that does not fit its slot wraps onto a second line (like bar categories) instead
+      // of being cut to two letters; the axis band grows by one line only then.
+      const catRoom = Math.max(pw / spec.groups.length - 4, 1);
+      const catLines = spec.groups.some((g) => tw(g.label, FS) > catRoom && splitCat(g.label, catRoom, FS, 2).length > 1) ? 2 : 1;
+      const bottom = FS + 14 + (catLines - 1) * 13;
       const ph = Math.max(20, ctx.H - top - bottom);
       const sy = (v: number): number => top + ph - ((v - yd.min) / (yd.max - yd.min || 1)) * ph;
       yd.ticks.forEach((tk, k) => {
@@ -163,7 +168,9 @@ export const plugin = definePlugin<BoxSpec>({
       let lbl = '';
       spec.groups.forEach((g, i) => {
         const cx = left + slot * (i + 0.5);
-        svg += `<text class="lc-tick" x="${n2(cx)}" y="${n2(top + ph + FS + 4)}" text-anchor="middle">${esc(truncate(g.label, Math.max(slot - 4, 1), FS))}</text>`;
+        svg += catLines > 1
+          ? `<text class="lc-tick" x="${n2(cx)}" y="${n2(top + ph + FS + 4)}" text-anchor="middle">${splitCat(g.label, catRoom, FS, 2).map((l, k) => `<tspan x="${n2(cx)}"${k ? ' dy="13"' : ''}>${esc(l)}</tspan>`).join('')}</text>`
+          : `<text class="lc-tick" x="${n2(cx)}" y="${n2(top + ph + FS + 4)}" text-anchor="middle">${esc(truncate(g.label, Math.max(slot - 4, 1), FS))}</text>`;
         const s = st[i];
         if (!s) {
           if (tw(t.na, 11) <= slot - 4) svg += `<text class="lc-box-na" x="${n2(cx)}" y="${n2(top + ph / 2)}" text-anchor="middle">${t.na}</text>`;
