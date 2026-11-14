@@ -2,11 +2,10 @@
 import { mountChart } from '../lib/dom.js';
 import { validateSpec, ChartSpecError } from '../lib/index.js';
 import { examples } from './specs.js';
+import { addCopyButton, specJson } from './copy.js';
 
 const MAX_INPUT = 20000;
 const byId = new Map(examples.map((e) => [e.id, e]));
-const specJson = (spec) => JSON.stringify(spec, null, 2)
-  .replace(/\[\s+([^[\]{}]*?)\s+\]/g, (_, inner) => '[' + inner.split(/,\s+/).join(', ') + ']');
 
 function drawHost(host) {
   const e = byId.get(host.dataset.example);
@@ -43,7 +42,9 @@ for (const card of document.querySelectorAll('article.card[data-card]')) {
   pre.append(make('code', '', specJson(e.spec)));
   details.append(make('summary', '', '스펙 JSON'), pre);
   card.append(panes, details);
+  addCopyButton(pre, `${e.heading} 스펙 JSON`);
 }
+for (const pre of document.querySelectorAll('.code-card pre')) addCopyButton(pre, pre.getAttribute('aria-label') ?? '코드');
 const lazy = [...document.querySelectorAll('[data-example][data-lazy]')];
 for (const host of document.querySelectorAll('[data-example]:not([data-lazy])')) drawHost(host);
 if ('IntersectionObserver' in window) {

@@ -57,6 +57,8 @@ for (const width of [390, 1440]) for (const theme of ['light', 'dark']) {
     theme: document.documentElement.dataset.theme,
     overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     cls: Math.round(window.__cls * 10000) / 10000,
+    copyButtons: document.querySelectorAll('.code-bar button.copy').length,
+    copyMinHeight: Math.min(...[...document.querySelectorAll('.code-bar button.copy')].map((b) => b.getBoundingClientRect().height)),
     wide: [...document.querySelectorAll('main *')].filter((el) => el.getBoundingClientRect().right > document.documentElement.clientWidth + 1 && !el.closest('pre, .lc-scroll, textarea')).map((el) => el.tagName + '.' + el.className).slice(0, 5),
   }));
   const file = join(out, `site-${width}-${theme}.png`);
@@ -70,6 +72,18 @@ for (const width of [390, 1440]) for (const theme of ['light', 'dark']) {
     await page.locator('#g-bar-grouped .pane[data-pane="' + theme + '"] .lc-pt').first().focus();
     await page.keyboard.press('Tab');
     await page.locator('#g-bar-grouped').screenshot({ path: join(out, `site-${width}-${theme}-focus.png`) });
+    // Copy button by keyboard: the clipboard gets exactly the spec JSON shown, "복사했어요" shows, then clears.
+    await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: url });
+    await page.locator('#g-line .code-bar .copy').focus();
+    await page.waitForSelector(`#g-line .pane[data-pane="${theme}"] .host.is-drawn svg`);
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelector('#g-line .copy-status')?.textContent === '복사했어요');
+    // the Windows clipboard hands text back with CRLF line ends; what was written had LF, like the page
+    const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n');
+    const shown = await page.textContent('#g-line .spec pre');
+    await page.locator('#g-line').screenshot({ path: join(out, `site-${width}-${theme}-copy.png`) });
+    await page.waitForFunction(() => document.querySelector('#g-line .copy-status')?.textContent === '', null, { timeout: 4000 });
+    console.log('copy:', copied === shown ? 'clipboard = shown spec' : 'clipboard DIFFERS from the shown spec', copied.length);
     // Playground: a wrong value type shows an inline error and keeps the last chart.
     await page.fill('#play-input', '{"type":"line","title":"오류 예시","labels":["1월","2월"],"series":[{"id":"a","name":"방문","values":[1,"둘"]}]}');
     await page.click('#play-render');

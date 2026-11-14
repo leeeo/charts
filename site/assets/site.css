@@ -91,7 +91,15 @@ select, textarea { min-height: var(--touch); padding: var(--s2) var(--s3); borde
 pre { max-width: 100%; overflow: auto; padding: var(--s3); border-radius: var(--r1); background: var(--code-bg); border: 1px solid var(--line); line-height: 1.55; tab-size: 2; }
 .spec pre, .code-card pre { white-space: pre-wrap; overflow-wrap: break-word; word-break: keep-all; }
 .spec pre { max-height: 16rem; }
-.code-card pre { margin-top: var(--s3); }
+.code-card pre { margin-top: 0; }
+/* Copy bar above each code block: status text on the left, the button (44px tall) on the right. */
+.code-bar { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3); margin: var(--s2) 0; }
+.code-card .code-bar { margin-top: var(--s3); }
+.copy-status { color: var(--success); font-size: var(--small); font-weight: 700; }
+.copy-status.is-error { color: var(--danger); }
+.button.copy { min-width: var(--touch); }
+/* The off-screen textarea of the execCommand fallback (16px so iOS does not zoom while it holds focus). */
+.copy-buffer { position: fixed; top: 0; left: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; font-size: 16px; }
 
 /* Fixed light and dark panes, independent of the page theme. Values mirror src/chart.css so the comparison is exact. */
 .pane[data-pane="light"] {

@@ -7,6 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { renderChart } from '../src/index.ts';
 import { examples } from '../examples/specs.ts';
 import { pluginList } from '../src/charts/index.ts';
+import { specJson } from './assets/copy.js';
+
+export { specJson };
 
 const site = dirname(fileURLToPath(import.meta.url));
 const root = join(site, '..');
@@ -19,9 +22,6 @@ if (!existsSync(join(root, 'dist', 'dom.js'))) {
 }
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-/** Pretty JSON with arrays of primitives kept on one line, so specs stay readable. */
-export const specJson = (spec) => JSON.stringify(spec, null, 2)
-  .replace(/\[\s+([^[\]{}]*?)\s+\]/g, (_, inner) => '[' + inner.split(/,\s+/).join(', ') + ']');
 
 const typeName = { line: '선', area: '영역', bar: '막대', donut: '도넛', sparkline: '스파크라인', multiples: '작은 다중',
   ...Object.fromEntries(pluginList.map((p) => [p.type, p.names.ko.replace(/ ?(차트|그래프)$/, '')])) };
@@ -174,7 +174,7 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(join(out, 'lib'), { recursive: true });
 // the browser build of the library: every .js module and the stylesheet (no type declarations, no React adapter)
 cpSync(join(root, 'dist'), join(out, 'lib'), { recursive: true, filter: (src) => !src.endsWith('.d.ts') && !src.endsWith('react.js') });
-cpSync(join(site, 'assets'), join(out, 'assets'), { recursive: true });
+cpSync(join(site, 'assets'), join(out, 'assets'), { recursive: true, filter: (src) => !src.endsWith('.d.ts') });
 cpSync(join(site, 'vendor'), join(out, 'vendor'), { recursive: true });
 if (existsSync(join(root, 'docs', 'images'))) cpSync(join(root, 'docs', 'images'), join(out, 'images'), { recursive: true });
 writeFileSync(join(out, 'assets', 'specs.js'), 'export const examples = ' + JSON.stringify(examples.map(({ id, heading, spec }) => ({ id, heading, spec }))) + ';\n');

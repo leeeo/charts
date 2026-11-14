@@ -249,7 +249,8 @@ const wide = renderChart(spec, { width: 720 });  // viewBox 너비 지정
 
 ## 버전과 변경 기록
 
-- 현재 버전: 0.6.0. 변경 내용은 [CHANGELOG.md](CHANGELOG.md)에 적습니다.
+- 현재 버전: 0.8.2. 변경 내용은 [CHANGELOG.md](CHANGELOG.md)에 적습니다.
+- 릴리스 순서(버전·CHANGELOG·레지스트리 게시·블로그 초안)는 [RELEASE.md](RELEASE.md)에 있습니다.
 - 0.x 동안에는 스펙에 필드를 더할 수 있고, 바뀌는 동작은 CHANGELOG에 먼저 적습니다.
 - 참고한 자료와 고지는 [NOTICE.md](NOTICE.md)에 있습니다.
 

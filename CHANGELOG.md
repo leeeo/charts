@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.2
+- Site only. The library is unchanged: `dist/` is the same as 0.8.1 apart from the version in `package.json`.
+- charts.leeeo.app: every gallery card's spec JSON and each usage snippet under "시작하기" has a 복사 (copy) button.
+  It copies exactly the text shown (Clipboard API, falling back to a hidden textarea + `execCommand('copy')`, focus
+  returns to the button), says "복사했어요" in a polite live region for 1.5 s, is a real `<button>` (44px tall,
+  focus ring) and is wired from `assets/copy.js` with no inline script or style, so the site CSP is unchanged.
+- Release rule written down in `RELEASE.md`: every enhancement is a version bump + CHANGELOG + private registry
+  publish (+ public npm once the npm org exists) + a Naver blog draft.
+
 ## 0.8.1
 - Phone widths (a 360-430px screen leaves 270-340px for a chart). Rendered 430px wide or wider, output is byte-identical to 0.8.0
   for every gallery example except histogram and marimekko (below).
