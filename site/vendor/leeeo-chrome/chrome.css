@@ -1,0 +1,246 @@
+/* @leeeo/chrome 0.1.0 (chrome v1.2): shared header, footer and theme switch.
+   Override any token from app CSS with the public --leeeo-<name> variable, e.g.
+   :root { --leeeo-accent: #ffd35c; } :root[data-theme="dark"] { --leeeo-ink: #fff; }
+   A public variable applies to both themes unless the app also sets it under :root[data-theme="dark"].
+   App CSS can still override the internal --lc-* tokens and any rule below. */
+:root {
+  --lc-header-estimate: var(--leeeo-header-estimate, 7rem); /* Two 44px rows and 24px of spacing before measurement. */
+  --lc-anchor-gap: var(--leeeo-anchor-gap, .75rem);
+}
+.leeeo-chrome {
+  --lc-paper: var(--leeeo-paper, #f7f7f2);
+  --lc-surface: var(--leeeo-surface, #ffffff);
+  --lc-soft: var(--leeeo-soft, #edeee6);
+  --lc-ink: var(--leeeo-ink, #23271f);
+  --lc-muted: var(--leeeo-muted, #686e60);
+  --lc-line: var(--leeeo-line, #dcdfd3);
+  --lc-focus-color: var(--leeeo-focus-color, #398156);
+  --lc-accent: var(--leeeo-accent, #d6ef79);
+  --lc-accent-ink: var(--leeeo-accent-ink, #303b16);
+  --lc-font: var(--leeeo-font, Pretendard, "Noto Sans KR", system-ui, sans-serif);
+  --lc-caption: var(--leeeo-caption, .75rem);
+  --lc-small: var(--leeeo-small, .875rem);
+  --lc-body: var(--leeeo-body, 1rem);
+  --lc-title: var(--leeeo-title, 1.25rem);
+  --lc-leading: var(--leeeo-leading, 1.65);
+  --lc-weight: var(--leeeo-weight, 650);
+  --lc-s1: var(--leeeo-s1, .25rem);
+  --lc-s2: var(--leeeo-s2, .5rem);
+  --lc-s3: var(--leeeo-s3, .75rem);
+  --lc-s4: var(--leeeo-s4, 1rem);
+  --lc-s6: var(--leeeo-s6, 1.5rem);
+  --lc-s8: var(--leeeo-s8, 2rem);
+  --lc-radius: var(--leeeo-radius, .5rem);
+  --lc-card-radius: var(--leeeo-card-radius, 1rem);
+  --lc-border: var(--leeeo-border, 1px);
+  --lc-focus: var(--leeeo-focus, 3px);
+  --lc-touch: var(--leeeo-touch, 2.75rem);
+  --lc-icon: var(--leeeo-icon, 2rem);
+  --lc-motion: var(--leeeo-motion, 180ms);
+  --lc-header-layer: var(--leeeo-header-layer, 100);
+  box-sizing: border-box;
+  color: var(--lc-ink);
+  font: var(--lc-body)/var(--lc-leading) var(--lc-font);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  color-scheme: light;
+}
+:root[data-theme="dark"] .leeeo-chrome {
+  --lc-paper: var(--leeeo-paper, #1c211b);
+  --lc-surface: var(--leeeo-surface, #242b22);
+  --lc-soft: var(--leeeo-soft, #30372b);
+  --lc-ink: var(--leeeo-ink, #edf0e5);
+  --lc-muted: var(--leeeo-muted, #a7b09c);
+  --lc-line: var(--leeeo-line, #3b4435);
+  --lc-focus-color: var(--leeeo-focus-color, #9ed4aa);
+  color-scheme: dark;
+}
+.leeeo-chrome *, .leeeo-chrome *::before, .leeeo-chrome *::after {
+  box-sizing: border-box;
+}
+.leeeo-chrome :is(a, button, select):focus-visible {
+  outline: var(--lc-focus) solid var(--lc-focus-color);
+  outline-offset: var(--lc-s1);
+}
+.leeeo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--lc-s2);
+  padding-block: var(--lc-s2);
+  border-bottom: var(--lc-border) solid var(--lc-line);
+}
+.leeeo-app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lc-s2);
+  min-width: 0;
+  min-height: var(--lc-touch);
+  color: var(--lc-ink);
+  font-size: var(--lc-title);
+  font-weight: var(--lc-weight);
+  text-decoration: none;
+}
+.leeeo-app-brand img, .leeeo-app-brand svg {
+  width: var(--lc-icon);
+  height: var(--lc-icon);
+  flex: 0 0 var(--lc-icon);
+  object-fit: contain;
+}
+.leeeo-theme {
+  display: grid;
+  gap: var(--lc-s1);
+  margin: 0;
+  color: var(--lc-muted);
+  font-size: var(--lc-caption);
+}
+.leeeo-theme select {
+  min-height: var(--lc-touch);
+  height: var(--lc-touch);
+  padding: 0 var(--lc-s2);
+  border: var(--lc-border) solid var(--lc-muted);
+  border-radius: var(--lc-radius);
+  background: var(--lc-surface);
+  color: var(--lc-ink);
+  font: inherit;
+  font-size: var(--lc-body);
+  cursor: pointer;
+}
+header[data-leeeo-header] {
+  position: sticky;
+  top: 0;
+  z-index: var(--lc-header-layer);
+  padding-top: calc(var(--lc-s2) + env(safe-area-inset-top, 0px));
+  padding-bottom: var(--lc-s2);
+  background: var(--lc-surface);
+  border-bottom: var(--lc-border) solid transparent;
+}
+header[data-leeeo-header][data-scrolled] {
+  border-bottom-color: var(--lc-line);
+  box-shadow: 0 var(--lc-border) 0 var(--lc-line);
+}
+header[data-leeeo-header] > .leeeo-header {
+  min-height: var(--lc-touch);
+  padding-block: 0;
+  border-bottom: 0;
+}
+header[data-leeeo-header] .leeeo-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+header[data-leeeo-header] .leeeo-theme-label {
+  /* Literal sizes: the label must stay hidden even outside a .leeeo-chrome token scope. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+header[data-leeeo-header] :is(button, select, .button, .btn) {
+  height: var(--lc-touch);
+  min-height: var(--lc-touch);
+  padding-block: 0;
+  border-radius: var(--lc-radius);
+  font-size: var(--lc-body);
+}
+:root:has(header[data-leeeo-header]) :where(main[id], :target) {
+  scroll-margin-top: calc(var(--lc-header-height, calc(var(--lc-header-estimate) + env(safe-area-inset-top, 0px))) + var(--lc-anchor-gap));
+}
+.leeeo-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--lc-s4);
+  margin-top: var(--lc-s8);
+  padding-block: var(--lc-s4);
+  border-top: var(--lc-border) solid var(--lc-line);
+  color: var(--lc-muted);
+  font-size: var(--lc-small);
+}
+.leeeo-footer :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--lc-touch);
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: var(--lc-s1);
+  cursor: pointer;
+}
+.leeeo-footer a:hover, .leeeo-footer button:hover {
+  color: var(--lc-ink);
+}
+/* 0.1.0: toggle control (status/coach style) and zero-specificity menu defaults that any app rule overrides. */
+.leeeo-theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: var(--lc-touch);
+  min-height: var(--lc-touch);
+  padding: 0;
+  border: var(--lc-border) solid var(--lc-muted);
+  border-radius: var(--lc-radius);
+  background: var(--lc-surface);
+  color: var(--lc-ink);
+  font: inherit;
+  font-size: var(--lc-body);
+  cursor: pointer;
+}
+:where(.leeeo-header > nav) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--lc-s4);
+}
+:where(.leeeo-header > nav a) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--lc-touch);
+}
+:where(.leeeo-header > nav [aria-current="page"]) {
+  font-weight: var(--lc-weight);
+}
+@media (prefers-reduced-motion: reduce) {
+  .leeeo-chrome, .leeeo-chrome * {
+    scroll-behavior: auto;
+    transition: none;
+    animation: none;
+  }
+}
+/* v1.2 highlight: a lime marker band behind the lower 58% of the line, for 1-3 key phrases per screen.
+   Not a link: no underline, no pointer. Ink is fixed because muted text on lime is only 4.13:1.
+   Light ink/band 11.93:1, dark ink/band 5.82:1 (WCAG AA). */
+:root {
+  --lc-hl-band: var(--leeeo-hl-band, #d6ef79);
+  --lc-hl-ink: var(--leeeo-hl-ink, #23271f);
+}
+:root[data-theme="dark"] {
+  --lc-hl-band: var(--leeeo-hl-band, #55661d);
+  --lc-hl-ink: var(--leeeo-hl-ink, #f4f6ec);
+}
+mark.hl, .hl {
+  padding-inline: .12em;
+  border-radius: .15em;
+  background: linear-gradient(180deg, transparent 42%, var(--lc-hl-band) 42%);
+  color: var(--lc-hl-ink);
+  text-decoration: none;
+  cursor: inherit;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+@media (forced-colors: active) {
+  mark.hl, .hl {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+  }
+}

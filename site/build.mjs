@@ -51,15 +51,15 @@ const html = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="https://charts.leeeo.app/">
-<meta name="theme-color" content="#f7f7f2">
+<meta name="theme-color" content="#f7f7f2" data-light="#f7f7f2" data-dark="#1c211b">
 <meta name="description" content="JSON 스펙 하나로 같은 SVG 차트를 그리는 leeeo 앱 공통 차트 모듈. 결측은 끊김으로, 수치는 표로도 읽힙니다.">
 <title>공통 차트 — leeeo 앱용 차트 모듈</title>
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-<script src="vendor/theme.js"></script>
-<link rel="stylesheet" href="vendor/chrome.css">
+<script src="vendor/leeeo-chrome/chrome-boot.js"></script>
+<link rel="stylesheet" href="vendor/leeeo-chrome/chrome.css">
 <link rel="stylesheet" href="lib/chart.css">
 <link rel="stylesheet" href="assets/site.css">
-<script type="module" src="vendor/chrome.js"></script>
+<script type="module" src="vendor/leeeo-chrome/chrome.js"></script>
 <script type="module" src="assets/site.js"></script>
 </head>
 <body>
