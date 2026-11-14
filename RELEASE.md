@@ -14,6 +14,7 @@
    `.github/workflows/publish-npm.yml`(provenance 포함, 준비 브랜치 `chore/public-npm-prep-20261113`에 있고 승인 후
    main에 합친다)로 올린다. **그 전까지는 꺼 둔다.** 저장소 변수
    `NPM_PUBLISH_ENABLED`가 `true`가 아니면 워크플로가 아무것도 올리지 않는다.
+   사설 레지스트리와 함께 쓰는 법과 대표 몫 절차는 [docs/PUBLIC-NPM.md](docs/PUBLIC-NPM.md).
 5. **네이버 블로그 초안** — 그 회차 내용을 `leeeo-company/blog/WEEKLY-BLOG.md` 절차대로 초안으로 만든다
    (카테고리 바이브코딩, 임시저장까지만, 발행은 대표).
 

@@ -1,6 +1,7 @@
 # 설치 안내
 
-`@leeeo/charts`는 아직 공개 npm에 올리지 않았습니다. 아래 두 방법 중 하나로 씁니다.
+`@leeeo/charts`는 아직 공개 npm에 올리지 않았습니다(준비 상태는 [PUBLIC-NPM.md](PUBLIC-NPM.md)). leeeo 앱은 사설 레지스트리에서
+`npm i @leeeo/charts`로 받고, 그 밖에는 아래 두 방법 중 하나로 씁니다.
 
 ## 1. 묶음 파일
 

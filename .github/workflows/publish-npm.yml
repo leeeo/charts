@@ -1,0 +1,59 @@
+# Publishes @leeeo/charts to the public npm registry with provenance.
+# Off until the repository variable NPM_PUBLISH_ENABLED is set to "true" (Settings > Secrets and variables > Actions >
+# Variables). Until then every run stops at the gate job and publishes nothing.
+# Trigger: a GitHub release whose tag is v<package.json version>, or a manual run on main.
+name: publish-npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: ${{ vars.NPM_PUBLISH_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # npm provenance (and trusted publishing) needs the OIDC token
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Use an npm that supports trusted publishing
+        run: npm install -g npm@^11.5.1
+      - name: Tag matches package.json
+        if: github.event_name == 'release'
+        run: |
+          v="v$(node -p "require('./package.json').version")"
+          test "$v" = "${{ github.event.release.tag_name }}" || { echo "tag ${{ github.event.release.tag_name }} != $v"; exit 1; }
+      - name: Skip a version that is already public
+        id: seen
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          if npm view "@leeeo/charts@$v" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "already=true" >> "$GITHUB_OUTPUT"; echo "@leeeo/charts@$v is already on npm"
+          fi
+      - run: npm ci
+        if: steps.seen.outputs.already != 'true'
+      - run: npm run typecheck && npm test && npm run build
+        if: steps.seen.outputs.already != 'true'
+      - name: Publish with provenance
+        if: steps.seen.outputs.already != 'true'
+        # With an npm trusted publisher configured for this repository and workflow, no token is needed.
+        # Otherwise store an npm automation token as the environment secret NPM_TOKEN.
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

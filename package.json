@@ -2,7 +2,32 @@
   "name": "@leeeo/charts",
   "version": "0.8.2",
   "description": "Framework-agnostic chart core for leeeo apps: typed JSON spec -> deterministic accessible SVG string. Zero runtime dependencies; optional React adapter.",
+  "keywords": [
+    "chart",
+    "charts",
+    "svg",
+    "data-visualization",
+    "accessibility",
+    "a11y",
+    "ssr",
+    "react",
+    "sankey",
+    "candlestick",
+    "korean",
+    "zero-dependency"
+  ],
+  "homepage": "https://charts.leeeo.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leeeo/charts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leeeo/charts/issues"
+  },
+  "author": "leeeo",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "license": "MIT",
   "exports": {
     ".": {
@@ -30,13 +55,16 @@
   "files": [
     "dist",
     "README.md",
+    "README.ko.md",
     "CHANGELOG.md",
     "NOTICE.md"
   ],
   "engines": {
     "node": ">=20"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -63,5 +91,8 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
