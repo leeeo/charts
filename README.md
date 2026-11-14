@@ -59,7 +59,7 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 | `pie` | 파이 차트. 비율이 한눈에 보여야 할 때. 미집계 항목은 원에서 빠지고 범례에 남습니다. | ![파이 차트](https://charts.leeeo.app/images/pie.png) |
 | `lollipop` | 롤리팝 차트 (앱별 주간 방문자). 방문자가 많은 순으로 정렬했습니다. 집계가 없는 앱은 0이 아닌 결측으로 표시됩니다. | ![롤리팝 차트 (앱별 주간 방문자)](https://charts.leeeo.app/images/lollipop.png) |
 | `lollipop` | 롤리팝 차트 (월별 순설치 증감). 0선에서 위아래로 뻗는 막대로 증가와 감소를 함께 보여줍니다. | ![롤리팝 차트 (월별 순설치 증감)](https://charts.leeeo.app/images/lollipop-change.png) |
-| `dumbbell` | 덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기). 두 시점의 값을 선으로 이어 변화 폭을 비교합니다. 변화가 큰 순으로 정렬했습니다. | ![덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기)](https://charts.leeeo.app/images/dumbbell.png) |
+| `dumbbell` | 덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기). 두 시점의 값을 선으로 연결해 변화 폭을 비교합니다. 변화가 큰 순으로 정렬했습니다. | ![덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기)](https://charts.leeeo.app/images/dumbbell.png) |
 | `waterfall` | 폭포 차트 (10월 → 11월 매출 변화). 시작 매출에서 항목별 증감을 쌓아 최종 매출에 이릅니다. 집계되지 않은 항목은 결측으로 표시하고 합계에서 제외합니다. | ![폭포 차트 (10월 → 11월 매출 변화)](https://charts.leeeo.app/images/waterfall.png) |
 | `pareto` | 파레토 차트 (고객 문의 유형). 문의가 많은 유형부터 정렬하고 누적 비율을 오른쪽 축에 표시합니다. 80% 기준선으로 우선 대응할 유형을 찾습니다. | ![파레토 차트 (고객 문의 유형)](https://charts.leeeo.app/images/pareto.png) |
 | `marimekko` | 마리메코 차트 (앱별 · 유입 경로별 설치). 열 너비는 앱의 전체 설치 비중, 칸 높이는 앱 안에서 유입 경로 비중입니다. 집계가 없는 칸은 0이 아닌 결측입니다. | ![마리메코 차트 (앱별 · 유입 경로별 설치)](https://charts.leeeo.app/images/marimekko.png) |
@@ -78,7 +78,7 @@ leeeo 앱은 만든 방식이 제각각입니다. Next.js·React 앱이 있고, 
 | `marketmap` | 시가총액 맵 (등락률 색). 가상의 예시 데이터입니다. 넓이는 시가총액, 색은 등락률 구간입니다. 칸 안에 ▲/▼와 부호 있는 숫자를 함께 적고, 범례에 구간 범위를 글자로 적어 색만으로 읽지 않게 했습니다. | ![시가총액 맵 (등락률 색)](https://charts.leeeo.app/images/marketmap.png) |
 | `marketmap` | 시가총액 맵 (해외 표기: 상승 초록). 같은 데이터를 convention: "global"로 그렸습니다. 상승은 초록, 하락은 빨강이고 ▲/▼ 표시는 그대로입니다. 페이지 전체는 data-chart-convention="global"로 바꿀 수 있습니다. | ![시가총액 맵 (해외 표기: 상승 초록)](https://charts.leeeo.app/images/marketmap-global.png) |
 | `timeline` | 4분기 앱 출시 일정. 같은 레인에서 겹치는 작업은 아래 줄로 쌓입니다. 상상플레이 정식 출시일은 아직 미정이라 결측입니다. | ![4분기 앱 출시 일정](https://charts.leeeo.app/images/timeline.png) |
-| `skyline` | 1년 일별 방문자. 하루 한 칸씩 이어 붙인 실루엣입니다. 8월 로그 수집 장애 사흘은 0이 아니라 결측(음영)으로 표시됩니다. | ![1년 일별 방문자](https://charts.leeeo.app/images/skyline.png) |
+| `skyline` | 1년 일별 방문자. 하루 한 칸씩 붙여 만든 실루엣입니다. 8월 로그 수집 장애 사흘은 0이 아니라 결측(음영)으로 표시됩니다. | ![1년 일별 방문자](https://charts.leeeo.app/images/skyline.png) |
 | `sunburst` | 설치 경로 구성. 안쪽 고리가 앱, 바깥으로 갈수록 플랫폼·유입 채널입니다. 상상플레이 iOS 검색 유입은 집계 전이라 결측입니다. | ![설치 경로 구성](https://charts.leeeo.app/images/sunburst.png) |
 | `tree` | 월간 활성 사용자 분해. 전체 활성 사용자를 앱과 플랫폼으로 나눈 계층입니다. 상상플레이 iOS는 아직 집계 전이라 결측입니다. | ![월간 활성 사용자 분해](https://charts.leeeo.app/images/tree.png) |
 | `network` | 앱 간 사용자 이동. 한 달 동안 두 앱을 함께 쓴 사용자 수입니다. 선 두께가 공유 사용자 수, 점 크기가 연결 합계입니다. 집계가 끝나지 않은 연결은 점선입니다. | ![앱 간 사용자 이동](https://charts.leeeo.app/images/network.png) |

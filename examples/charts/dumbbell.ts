@@ -1,7 +1,7 @@
 import type { Example } from '../types.ts';
 
 export const examples: Example[] = [
-  { id: 'dumbbell', heading: '덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기)', note: '두 시점의 값을 선으로 이어 변화 폭을 비교합니다. 변화가 큰 순으로 정렬했습니다.', spec: {
+  { id: 'dumbbell', heading: '덤벨 차트 (앱별 7일 리텐션, 1분기 → 3분기)', note: '두 시점의 값을 선으로 연결해 변화 폭을 비교합니다. 변화가 큰 순으로 정렬했습니다.', spec: {
     type: 'dumbbell', title: '앱별 7일 리텐션', unit: { label: '%', suffix: '%', decimals: 1 }, startLabel: '2026년 1분기', endLabel: '2026년 3분기', sort: 'change',
     items: [
       { id: 'sang', label: '상상플레이', start: 21.4, end: 28.9 },

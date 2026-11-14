@@ -18,7 +18,7 @@ export const examples: Example[] = [
   {
     id: 'skyline',
     heading: '1년 일별 방문자',
-    note: '하루 한 칸씩 이어 붙인 실루엣입니다. 8월 로그 수집 장애 사흘은 0이 아니라 결측(음영)으로 표시됩니다.',
+    note: '하루 한 칸씩 붙여 만든 실루엣입니다. 8월 로그 수집 장애 사흘은 0이 아니라 결측(음영)으로 표시됩니다.',
     wide: true,
     spec: {
       type: 'skyline',
